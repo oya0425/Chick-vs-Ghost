@@ -48,7 +48,6 @@ void EnemyPool::Spawn(const XMVECTOR& position/*,int globalLimit*/)
     NewEnemyClass* enemy = GetInactiveEnemy();
     if (enemy)
     {
-        if (enemy->GetState() == NewEnemyClass::eState::Panic)return;
         enemy->Spawn(position);
         m_spawnTimer = SPAWN_INTERVAL;
         // SetActiveはSpwan内でやるなら不要
@@ -74,7 +73,7 @@ NewEnemyClass* EnemyPool::GetInactiveEnemy()
 {
     for (auto e : _enemies)
     {
-        if (!e->GetActive()&&e->IsUnlocked())
+        if ((!e->GetActive()&&e->IsUnlocked())&&e->GetState()==NewEnemyClass::eState::Idel)
         {
             return e;
         }
@@ -200,4 +199,24 @@ void EnemyPool::ShowAllEnemies()
             //e->SetActive(true);
         }
     }
+}
+
+
+// --- 学習データをグループのIDをもとに返す ---
+NewEnemyClass::GroupData* EnemyPool::GetGroupData(int id)
+{
+    //IDがマイナスなら何もしない
+    if (id < 0)return nullptr;
+
+    //指定されたIDを持つデータを検索して返す
+    for (auto& data : m_groupDatas)
+    {
+        if (data->id == id)
+        {
+            return data.get();//生ポインタを返して操作できるようにする
+        }
+    }
+    //見つからなかった場合
+    return nullptr; 
+
 }

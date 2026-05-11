@@ -67,9 +67,6 @@ public:
 	}
 
 
-	// --- 引き寄せ攻撃 ---
-	bool IsPulling()const { return m_pullState == eSkillState::ACTIVE; }	//引き寄せ攻撃中か
-	float GetPullRadius()const { return m_pullRadius; }//敵が範囲に入っているか判定するため
 
 	// --- 弾撃ち ---
 	void SetBulletClass(Bullet* bullet) { m_bullet = bullet; }
@@ -89,6 +86,26 @@ public:
 	// --- レベルアップ演出用 ---
 	void UpdateLevelUp();
 	void FinishLevelUp();	//レベルアップが終わった
+	void ResetSkillCounts()//WAVE終了時にカウントをリセットする
+	{
+		m_pullUseCount = 0;
+		m_areaUseCount = 0;
+	}
+
+	// --- 敵の学習用 ---
+	//スキルの発動回数
+	int GetPullUseCount()const { return m_pullUseCount; }
+	int GetAreaAttackCount()const { return m_areaUseCount; }
+
+
+	//--スキルの発動中か
+	// --- 範囲攻撃 ---
+	bool IsAreaAttacking()const { return m_AreaAttackState == eSkillState::ACTIVE; }//範囲攻撃中か
+
+	// --- 引き寄せ攻撃 ---
+	bool IsPulling()const { return m_pullState == eSkillState::ACTIVE; }	//引き寄せ攻撃中か
+	float GetPullRadius()const { return m_pullRadius; }//敵が範囲に入っているか判定するため
+
 
 	// --- クールタイムのゲッター ---
 	//float Getm_areaAtkCoolTimer
@@ -194,26 +211,6 @@ private:
 
 	void UpdatePullSkill(float deltaTime);	//引き寄せスキルの更新ロジック
 
-	
-	/*
-	プレイヤーがやること
-	発射のタイミング（ボタン入力で撃つ）
-	弾が撃てるか、弾を撃った、クールタイム中で判定
-
-	持つべきもの、クールタイムのみ
-	関数としているのは、弾の速度をあげるためのものと、
-						反射回数を上げるもの
-
-	弾がやること
-	まず初期化（現在地をプレイヤーの位置にする、表示する、）
-	プレイヤーの位置からまっすぐ進む（プレイヤーにとって）、
-	壁又はフェンスが来たら反射する。進んでいる方向の１８０度とし、真逆のランダムな角度で進む
-	壁又はフェンスに当たった時に、反射可能回数がなかった場合、表示を消すと同時に画面外に置く
-	
-	弾は１個固定、弾の速度と反射回数をレベルアップで上がるようにする
-	
-	*/
-
 	// --- 球撃ち攻撃 ---
 	eSkillState m_ShootState = eSkillState::READY;
 	//弾のデータ配列
@@ -231,4 +228,12 @@ private:
 
 
 	bool m_isLevelUp = false;	//レベルアップ中はスキルの時間を止める
+
+	// --- 敵の学習用 ---
+	//--スキルの発動回数
+	// 　//移動での攻撃は移動中かを取る・移動中のスキル発動はスキルの発動を優先
+	int m_pullUseCount = 0;	//引き寄せ攻撃の発動回数
+	int m_areaUseCount = 0;	//範囲攻撃の発動回数
+
+
 };

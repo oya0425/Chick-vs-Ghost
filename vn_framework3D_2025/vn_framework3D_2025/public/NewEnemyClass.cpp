@@ -32,7 +32,7 @@ namespace
     constexpr float attractMinDist     = -0.5f;     //吸収時の距離（0より小さくして目の前で止まるのをなるべくなくす）
 
     // --- リーダー・群れ設定 ---
-    constexpr float leaderScaleMultiplier   = 2.5f;     // リーダーの大きさの倍率
+    constexpr float leaderScaleMultiplier   = 2.0f;     // リーダーの大きさの倍率
     constexpr float leaderSpeedBoost        = 2.0f;     // リーダー専用速度
     constexpr float leaderSenseRadius       = 20.0f;    // プレイヤーを感知して逃げ始める距離
     constexpr float leaderStopRetreatRadius = 60.0f;    // プレイヤーから十分に離れて逃げやめる距離
@@ -137,6 +137,8 @@ void NewEnemyClass::Update(float deltaTime)
     XMVECTOR toPlayer = *m_pPlayer->GetModel()->getPosition() - enemyPos; // 敵からプレイヤーへの方向
     float distance = XMVectorGetX(XMVector3Length(toPlayer));
 
+    //EnemyPool::GetInstance().GetGroupData(GetGroupID());
+
     // 敵のコード内
     if (m_isSpwanStart)
     {
@@ -218,7 +220,6 @@ void NewEnemyClass::Update(float deltaTime)
     }
 
 
-
     //XMVECTOR ropecenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
     //vnDebugDraw::Sphere(ropecenter, GetEffectiveRadius(), GAME_COLOR_LIME);
 
@@ -261,6 +262,8 @@ void NewEnemyClass::Update(float deltaTime)
         DeSpawn();
     }
 
+    //待機状態以外で出てくるのを防ぐ用
+    m_panicRecoveryStartTime -= deltaTime;
 
 
 }
@@ -416,7 +419,7 @@ void NewEnemyClass::Spawn(const XMVECTOR& pos)
 {
     //if (isActive)return;
     GetModel()->setRenderEnable(true);
-
+    m_panicRecoveryStartTime = 0.5f;
     for (int i = 0; i < GetModel()->getPartsNum(); i++)
     {
         GetModel()->getParts(i)->setRenderEnable(true);
@@ -431,7 +434,7 @@ void NewEnemyClass::Spawn(const XMVECTOR& pos)
     rb.SetIsUseGravity(true);
     m_state = eState::Idel; // 待機状態に戻す
     m_currentGroupMode = eGroupMode::Normal;
-
+   
 }
 
 

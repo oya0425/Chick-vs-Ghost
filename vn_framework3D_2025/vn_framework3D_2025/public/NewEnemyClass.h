@@ -238,6 +238,7 @@ protected:
 	XMVECTOR m_panicDir		  = XMVectorZero();		//錯乱時の進行方向
 	float m_panicDirTimer	  = 0.0f;				//方向転換タイマー
 	float m_panicRecoveryTime = 0.0f;				//パニック時に次にリーダーを探し始めるまでの時間
+	float m_panicRecoveryStartTime = 0.5f;			//登場時にパニック状態にならないようにする
 
 	// --- 特攻 ---
 	float m_chargeSpeedMultiplier = 1.2f;			//特攻時の速度倍率

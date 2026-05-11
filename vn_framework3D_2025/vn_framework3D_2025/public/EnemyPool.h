@@ -54,6 +54,9 @@ public:
 
 	std::vector<std::unique_ptr<NewEnemyClass::GroupData>>& GetLatestGroupData() { return m_groupDatas; }
 
+	//自身のグループIDをもとに学習データを持ってくる　
+	NewEnemyClass::GroupData* GetGroupData(int id);
+
 private:
 	EnemyPool();
 	std::vector<NewEnemyClass*> _enemies;

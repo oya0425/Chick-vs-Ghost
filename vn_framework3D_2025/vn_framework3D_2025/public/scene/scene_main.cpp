@@ -42,8 +42,9 @@ namespace {
 	
 	constexpr int leaderCount = 30;	//リーダーを生成する幅（leaderCountごとにリーダーを作る）
 
+	constexpr float defalutFenceRadius = 35.0f;
 
-
+	// --- UI ---
 	constexpr float uiHidePosX = -5000.0f;
 	constexpr float uiHidePosY = -5000.0f;
 
@@ -199,7 +200,7 @@ bool SceneMain::initialize()
 	backGroundBlackScale = 0.0f;
 	isGameFinish = false;
 
-	FenceRadius = 35.0f;
+	FenceRadius = defalutFenceRadius;
 	//FenceRadius = 35.0f;
 
 
@@ -1776,7 +1777,10 @@ void SceneMain::UpdateEnemies(float deltaTime)
 	{
 
 		if (!enemy->GetActive()) continue;
-		// --- 【追加】ここで引き寄せ判定を流し込む ---
+		// ------------------------------------
+		// --- ここで引き寄せ判定を流し込む ---
+		// ------------------------------------
+
 		XMVECTOR enemyPos = *enemy->GetModel()->getPosition();
 		XMVECTOR toPlayerVec = *m_pNewPlayer->GetModel()->getPosition() - enemyPos;
 		float dist = XMVectorGetX(XMVector3Length(toPlayerVec));
@@ -1784,6 +1788,9 @@ void SceneMain::UpdateEnemies(float deltaTime)
 		// 敵に「今は吸い込み中か？」を判断させる
 		enemy->CheckPullTrigger(m_pNewPlayer->IsPulling(), m_pNewPlayer->GetPullRadius(), dist);
 
+
+
+		// --- 移動 ---
 
 		enemy->ChangeSpeed(waveManager->GetCurrentWave() * 0.5);
 
@@ -1874,7 +1881,7 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				pEmitter->SetColor(vnEmitter::colors[index]);
 				pEmitter->setEmit(true, 0.3f);
 				AddCombo();
-
+				
 				enemy->SetIsHitPlayer(true);
 				waveManager->OnEnemyKilled();
 			}
@@ -1920,6 +1927,30 @@ void SceneMain::UpdateEnemies(float deltaTime)
 
 		}
 	}
+	//// enemyPoolの全個体を監視（!enemy->GetActive() の continue を外す）
+	//for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
+	//{
+	//	NewEnemyClass* enemy = enemyPool->GetEnemies()[i];
+
+	//	// 1. アクティブ状態を文字列にする
+	//	const wchar_t* activeStr = enemy->GetActive() ? L"ALIVE" : L"DEAD ";
+
+	//	// 2. ステートに応じた文字列の判定
+	//	const wchar_t* stateStr = L"UNKNOWN";
+	//	switch (enemy->GetState())
+	//	{
+	//	case NewEnemyClass::eState::Idel:      stateStr = L"IDLE";      break;
+	//	case NewEnemyClass::eState::Panic:     stateStr = L"PANIC";     break;
+	//	case NewEnemyClass::eState::Charge:    stateStr = L"CHARGE";    break;
+	//	case NewEnemyClass::eState::KnockBack: stateStr = L"KNOCKBACK"; break;
+	//	}
+
+	//	// 3. 画面に表示
+	//	// 生死状態(activeStr)も一緒に出すことで、
+	//	// 「DEADなのにPANICになっている個体」がいないかチェック
+	//	vnFont::print(20, 100 + (static_cast<int>(i) * 25), L"[%s] Enemy[%d] State: %s",
+	//		activeStr, i, stateStr);
+	//}
 }
 
 // --- コンボ計算・回復 ---
