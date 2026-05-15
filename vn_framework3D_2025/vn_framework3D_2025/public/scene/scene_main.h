@@ -130,6 +130,10 @@ private:
 	vnSprite* pImageS;
 	vnSprite* pImageD;
 
+	//--説明を見やすくする為の黒い背景
+	vnSprite* m_pUIBackGroundBlack;
+	vnSprite* m_pUIBackGroundBlackPause;
+
 	//スキルアイコン
 	SkillButtonUI* m_SkillIcon_PullAtk;
 	vnSprite* m_pImgSkillIcon_PullAtk;
@@ -150,6 +154,7 @@ private:
 	void UpdateIdel();
 	void UpdatePlay(float deltaTime);
 	void UpdateLevelUp();
+	void UpdatePause();
 
 	// --- Play中のサブシステム ---
 	void UpdatePlayer(float deltaTime);			//プレイヤー挙動・衝突判定

@@ -31,6 +31,9 @@ public:
         return XMVectorGetX(m_collision.GetSize()) * 0.5f;
     }
 
+    virtual float GetAreaAttackRadius()const { return 0.0f; }
+    virtual bool IsAreaAttack()const { return false; }
+
     // --- HP ---
     void SetMaxHp(int maxHp);
     int GetCurrentHp() const;

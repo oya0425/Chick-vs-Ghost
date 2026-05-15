@@ -27,6 +27,8 @@ WCHAR		*vnFont::currentPtr=NULL;
 
 IDWriteTextFormat *vnFont::currentTextFormat = NULL;
 
+std::map<int, IDWriteTextFormat*> vnFont::fontCache;
+
 bool vnFont::initialize()
 {
 	registerNum = 0;
@@ -92,6 +94,11 @@ bool vnFont::initialize()
 
 void vnFont::terminate()
 {
+	for (auto& pair : fontCache) {
+		SAFE_RELEASE(pair.second);
+	}
+	fontCache.clear();
+
 	delete[] allocPtr;
 	SAFE_RELEASE(pTextFormat);
 	SAFE_RELEASE(pBrush);
@@ -193,6 +200,7 @@ IDWriteTextFormat *vnFont::create(const WCHAR *fontname, int size)
 	return ret;
 }
 
+
 void vnFont::setPos(float x, float y)
 {
 	X = x;
@@ -232,6 +240,16 @@ float vnFont::getPosY()
 DWORD vnFont::getColor()
 {
 	return Color;
+}
+
+void vnFont::setFontSize(int index, int size) {
+	// すでにそのサイズのフォントを作ったことがあるか確認
+	if (fontCache.find(size) == fontCache.end()) {
+		// なければ作成（フォント名は固定か、今の38番などを使う）
+		fontCache[size] = vnFont::create(vnFont::getFontName(index), size);
+	}
+	// 作成済み（キャッシュ）のものをセット
+	vnFont::setTextFormat(fontCache[size]);
 }
 
 //文字列の描画(ワイド文字)

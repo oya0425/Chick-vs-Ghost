@@ -76,7 +76,7 @@ void UpgradeSelectionUI::UpdateUI()
 	if (!m_isAnimation) return;
 
 	bool allOutOfScreen = true; // 全ての要素が画面外に行ったかチェック用
-
+	vnFont::setFontSize(38, 30);
 	for (int i = 0; i < m_displaySlots.size(); i++)
 	{
 		auto& slot = m_displaySlots[i];

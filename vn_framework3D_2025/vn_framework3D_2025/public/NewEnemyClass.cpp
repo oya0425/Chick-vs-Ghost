@@ -34,8 +34,8 @@ namespace
     // --- リーダー・群れ設定 ---
     constexpr float leaderScaleMultiplier   = 2.0f;     // リーダーの大きさの倍率
     constexpr float leaderSpeedBoost        = 2.0f;     // リーダー専用速度
-    constexpr float leaderSenseRadius       = 20.0f;    // プレイヤーを感知して逃げ始める距離
-    constexpr float leaderStopRetreatRadius = 60.0f;    // プレイヤーから十分に離れて逃げやめる距離
+    constexpr float leaderSenseRadius       = 10.0f;    // プレイヤーを感知して逃げ始める距離
+    constexpr float leaderStopRetreatRadius = 20.0f;    // プレイヤーから十分に離れて逃げやめる距離
     constexpr float leaderRepelRadius       = 20.0f;    // リーダー同士が重ならないように反発する距離（排他範囲）
 
     constexpr float followerStopDistBase    = 5.0f;    // リーダーに対して停止する基本距離
@@ -53,6 +53,7 @@ NewEnemyClass::NewEnemyClass()
       m_type(EnemyType::NONE)
 {
     m_kbData = {};
+
 }
 
 NewEnemyClass::~NewEnemyClass()
@@ -73,27 +74,28 @@ std::vector<NewEnemyClass::GroupColorData> NewEnemyClass::m_availableColors;
 //色の配列の初期化
 std::vector<NewEnemyClass::GroupColorData> NewEnemyClass::g_LeaderColorPalette =
 {
-{ 1,  V_GAME_COLOR_RED },          // 01: 赤
-    { 2,  V_GAME_COLOR_GREEN },        // 02: 緑
-    { 3,  V_GAME_COLOR_BLUE },         // 03: 青
-    { 4,  V_GAME_COLOR_YELLOW },       // 04: 黄
-    { 5,  V_GAME_COLOR_OLIVE },        // 05: オリーブ (渋い緑/黄) ※マゼンタを廃止
-    { 6,  V_GAME_COLOR_CYAN },         // 06: シアン
-    { 7,  V_GAME_COLOR_ORANGE },       // 07: オレンジ
-    { 8,  V_GAME_COLOR_PURPLE },       // 08: 紫 (紫系はこれ1つ)
-    { 9,  V_GAME_COLOR_BROWN },        // 09: 茶色
-    { 10, V_GAME_COLOR_PINK },         // 10: ピンク
-    { 11, V_GAME_COLOR_LIME },         // 11: ライム
-    { 12, V_GAME_COLOR_NAVY },         // 12: 紺 (青系と区別化)
-    { 13, V_GAME_COLOR_TEAL },         // 13: ティール (青緑)
-    { 14, V_GAME_COLOR_GOLD },         // 14: 金色
-    { 15, V_GAME_COLOR_MINT },         // 15: ミント (白に近いが緑寄り) ※白を廃止
-    { 16, V_GAME_COLOR_DARK_GRAY },    // 16: ダークグレー
-    { 17, V_GAME_COLOR_DEEP_BLACK },    // 17: ほぼ黒
-    { 18, V_GAME_COLOR_EMERALD },      // 18: エメラルド
-    { 19, V_GAME_COLOR_CORAL },        // 19: コーラル (朱色に近い)
-    { 20, V_GAME_COLOR_WINE }          // 20: ワインレッド (深い赤紫) ※スカイブルーを廃止
+{ 1,  V_GAME_COLOR_RED,           L"赤" },
+    { 2,  V_GAME_COLOR_GREEN,     L"緑" },
+    { 3,  V_GAME_COLOR_BLUE,      L"青" },
+    { 4,  V_GAME_COLOR_YELLOW,    L"黄" },
+    { 5,  V_GAME_COLOR_OLIVE,     L"オリーブ" },
+    { 6,  V_GAME_COLOR_CYAN,      L"シアン" },
+    { 7,  V_GAME_COLOR_ORANGE,    L"オレンジ" },
+    { 8,  V_GAME_COLOR_PURPLE,    L"紫" },
+    { 9,  V_GAME_COLOR_BROWN,     L"茶色" },
+    { 10, V_GAME_COLOR_PINK,      L"ピンク" },
+    { 11, V_GAME_COLOR_LIME,      L"ライム" },
+    { 12, V_GAME_COLOR_NAVY,      L"紺" },
+    { 13, V_GAME_COLOR_TEAL,      L"ティール" },
+    { 14, V_GAME_COLOR_GOLD,      L"金色" },
+    { 15, V_GAME_COLOR_MINT,      L"ミント" },
+    { 16, V_GAME_COLOR_DARK_GRAY, L"ダークグレー" },
+    { 17, V_GAME_COLOR_DEEP_BLACK,L"ブラック" },
+    { 18, V_GAME_COLOR_EMERALD,   L"エメラルド" },
+    { 19, V_GAME_COLOR_CORAL,     L"コーラル" },
+    { 20, V_GAME_COLOR_WINE,      L"ワインレッド" } 
 };
+
 
 NewEnemyClass::GroupColorData NewEnemyClass::GetRandomGroupData()
 {
@@ -128,6 +130,62 @@ NewEnemyClass* NewEnemyClass::CreateEnemyByType(EnemyType type)
     }
 }
 
+void NewEnemyClass::Spawn(const XMVECTOR& pos)
+{
+    //if (isActive)return;
+    GetModel()->setRenderEnable(true);
+    
+    for (int i = 0; i < GetModel()->getPartsNum(); i++)
+    {
+        GetModel()->getParts(i)->setRenderEnable(true);
+    }
+    GetModel()->setPosition(&pos);
+    GetModel()->setRotation(0, 0, 0);
+    m_kbData.active = false;
+    m_isActive = true;
+    auto& rb = GetRigidbody();
+    rb.SetVerticalVelocity(0.0f);
+    rb.SetIsGround(false);
+    rb.SetIsUseGravity(true);
+    m_state = eState::Idel; // 待機状態に戻す
+    m_currentGroupMode = eGroupMode::Normal;
+
+    // --- 調整用変数初期化(不具合防止用) ---
+    m_isPullChecked = false;    //引き寄せで全員が同じ判定にならないようにする
+
+    if (GetIsLeader())
+    {
+        GroupData* data = GetGroupData();
+        //範囲に入って逃げるを解除
+        data->isLeaderEscaping = false;
+        m_onceStartUI = false;
+    }
+    else
+    {
+        m_panicRecoveryStartTime = 0.5f;
+    }
+
+}
+
+void NewEnemyClass::DeSpawn()
+{
+    m_isActive = false;
+    GetModel()->setPosition(0, -100, 0);
+
+    m_kbData.active = false;
+    GetModel()->setRenderEnable(false);
+    for (int i = 0; i < GetModel()->getPartsNum(); i++)
+    {
+        GetModel()->getParts(i)->setRenderEnable(false);
+    }
+    m_state = eState::Idel;
+    m_panicDirTimer = 0;
+    m_panicRecoveryTime = 0;
+
+}
+
+
+
 void NewEnemyClass::Update(float deltaTime)
 {
     if (!m_isActive) return;
@@ -137,9 +195,9 @@ void NewEnemyClass::Update(float deltaTime)
     XMVECTOR toPlayer = *m_pPlayer->GetModel()->getPosition() - enemyPos; // 敵からプレイヤーへの方向
     float distance = XMVectorGetX(XMVector3Length(toPlayer));
 
-    //EnemyPool::GetInstance().GetGroupData(GetGroupID());
+    EnemyPool::GetInstance().GetGroupData(GetGroupID());
 
-    // 敵のコード内
+    //敵のコード内
     if (m_isSpwanStart)
     {
         m_upgradeTimer -= deltaTime*2;
@@ -170,6 +228,7 @@ void NewEnemyClass::Update(float deltaTime)
             {
                 m_isSpwanStart = false;
                 m_upgradeStep = 0;
+                m_onceStartUI = true;
                 // 次回のためにタイマーなどは戻さない（またはリセット）
             }
         }
@@ -180,7 +239,7 @@ void NewEnemyClass::Update(float deltaTime)
     switch (m_state)
     {
     case Idel:
-        if (GetIsLeader())
+        if (GetIsLeader()&&!m_onceStartUI)
         {
             m_isSpwanStart = true;
         }
@@ -247,6 +306,10 @@ void NewEnemyClass::Update(float deltaTime)
 
         m_state = eState::KnockBack;
     }
+    // --- 学習行動 ---
+
+    UpdateEnemyMessage(deltaTime);
+
 
     //物理更新
     //壁（ブロック）が前に来たらジャンプ
@@ -274,9 +337,13 @@ void NewEnemyClass::ChangeSpeed(float speed)
     m_waveBoostSpeedMultiplier = speedAdjustmentRate * speed;
 }
 
+// ---------------------------------------------------------------
+// 引き寄せ攻撃されたときの処理
+// ---------------------------------------------------------------
 
 void NewEnemyClass::UpdateAttracted(float deltaTime, XMVECTOR toPlayer, float distance)
 {
+
     if (distance > attractMinDist)
     {
         XMVECTOR dir = XMVector3Normalize(toPlayer);
@@ -288,23 +355,89 @@ void NewEnemyClass::UpdateAttracted(float deltaTime, XMVECTOR toPlayer, float di
     }
 
 }
-
+//引き寄せ状態に入ったかどうか
 void NewEnemyClass::CheckPullTrigger(bool isPlayerPulling, float pullRadius, float distance)
 {
-    // 死亡時やノックバック中は無視する
-    if (m_state == Dead || m_state == KnockBack) return;
+    // 状態チェック：死亡、ノックバック、または既に引き寄せ中なら早期リターン
+    if (m_state == Dead || m_state == KnockBack || m_state == Attracted) return;
 
-    if (isPlayerPulling && distance <= pullRadius)
+    // 引き寄せ範囲外、またはプレイヤーが引いていない場合
+    if (!isPlayerPulling || distance > pullRadius)
     {
-        m_state = Attracted;
+        m_isPullChecked = false; // 判定フラグをリセット
+        return;
     }
-    else if (m_state == Attracted)
+
+    // --- ここから「引き寄せ範囲内」かつ「まだ引き寄せられていない」時の処理 ---
+
+    // 既にこの回の引き寄せで判定済みなら何もしない
+    if (m_isPullChecked) return;
+    m_isPullChecked = true;
+
+    // 1. 学習データの獲得（リーダーか自分自身から取得）
+    GroupData* pData = nullptr;
+    if (GetIsLeader())
     {
-        // 吸引が終わったら通常の移動状態に戻す
-        m_state = Run;
+        pData = GetGroupData();
     }
+    else if (m_pMyLeader)
+    {
+        pData = m_pMyLeader->GetGroupData();
+    }
+
+    // 2. データの存在チェックと確率判定
+    if (pData)
+    {
+        float resistance = pData->pullResistance + 1.0f;    //テスト用で0.8低いとほぼ誤差
+        if (resistance > 0)
+        {
+            resistance += m_individualPullResist;
+        }
+        if (GetRandomFloat() < resistance)
+        {
+            // 1. 前フレームから状態が変わった瞬間を検知（エッジトリガー）
+
+            if (m_isPullChecked)
+            {
+                // 状態が変わった時だけタイマーをリセット！
+                m_aiDebugText.Reset(m_defaultTextTime);
+            }
+
+            if (resistance < 1.0f)
+            {
+                // 抵抗成功：状態を変えずに終了
+                m_pullAtkMessage.SetState(eShowUISelect::Text1);
+                return;
+            }
+            else
+            {
+                // 抵抗成功：状態を変えずに終了
+                m_pullAtkMessage.SetState(eShowUISelect::Text2);
+                return;
+            }
+        }
+    }
+    else
+    {
+        m_pullAtkMessage.SetState(eShowUISelect::Text3);
+    }
+
+    // 3. 判定失敗、またはデータなしの場合は引き寄せ状態へ
+    m_state = Attracted;
 }
 
+// ---------------------------------------------------------------
+
+
+
+
+
+
+
+
+// --------------------------------------------------------
+//  ノックバック処理
+// --------------------------------------------------------
 void NewEnemyClass::StartKnockback(
     const XMVECTOR& dir,
     float dist,
@@ -414,46 +547,8 @@ void NewEnemyClass::UpdateKnockback(float deltaTime)
 
 }
 
+// ---------------------------------------------------------
 
-void NewEnemyClass::Spawn(const XMVECTOR& pos)
-{
-    //if (isActive)return;
-    GetModel()->setRenderEnable(true);
-    m_panicRecoveryStartTime = 0.5f;
-    for (int i = 0; i < GetModel()->getPartsNum(); i++)
-    {
-        GetModel()->getParts(i)->setRenderEnable(true);
-    }
-    GetModel()->setPosition(&pos);
-    GetModel()->setRotation(0, 0, 0);
-    m_kbData.active = false;
-    m_isActive = true;
-    auto& rb = GetRigidbody();
-    rb.SetVerticalVelocity(0.0f);
-    rb.SetIsGround(false);
-    rb.SetIsUseGravity(true);
-    m_state = eState::Idel; // 待機状態に戻す
-    m_currentGroupMode = eGroupMode::Normal;
-   
-}
-
-
-void NewEnemyClass::DeSpawn()
-{
-    m_isActive = false;
-    GetModel()->setPosition(0, -100, 0);
-
-    m_kbData.active = false;
-    GetModel()->setRenderEnable(false);
-    for (int i = 0; i < GetModel()->getPartsNum(); i++)
-    {
-        GetModel()->getParts(i)->setRenderEnable(false);
-    }
-    m_state = eState::Idel;
-    m_panicDirTimer = 0;
-    m_panicRecoveryTime = 0;
-
-}
 
 //InPlayerArea(a,b)a以内に入ったら逃走開始、bより遠くへ行ったら止まる
 bool NewEnemyClass::InPlayerArea(float escapeStartDist,float escapeStopDist)//逃げ始める距離、やめる距離
@@ -497,21 +592,52 @@ void NewEnemyClass::ApplyMovement(float deltaTime, const XMVECTOR moveDir)
     {
         float rotY = atan2f(XMVectorGetX(moveDir), XMVectorGetZ(moveDir));
         GetModel()->setRotationY(rotY);
-        
+
     }
 
     // 速度計算
+    // 1. 基礎速度の計算（WAVE補正など）
     float finalSpeed = m_baseMoveSpeed * m_boostSpeedMultiplier * m_waveBoostSpeedMultiplier;
 
-    // リーダーならさらに加算
-    if (m_isLeader)finalSpeed *= m_leaderSpeedMultiplier;
-    else if (!m_isLeader)finalSpeed *= m_otherSpeedMultiplier;
+    // 2. 所属グループの学習データ(Fear)を取得
+    // リーダーなら自分、部下なら m_pMyLeader からデータを取る
+    GroupData* data = GetIsLeader() ? GetGroupData() : (m_pMyLeader ? m_pMyLeader->GetGroupData() : nullptr);
 
+    // 学習データがない（単独個体など）場合の安全策
+    float meleeFear = data ? data->meleeFear : 0.0f;
+    float rangeFear = data ? data->rangeFear : 0.0f;
+
+    // 3. 役割（リーダー/部下）に応じたベース倍率の決定
+    float roleMultiplier = GetIsLeader() ? m_leaderSpeedMultiplier : m_otherSpeedMultiplier;
+
+    // 学習データ(近接への恐怖)をベース倍率に加算
+    roleMultiplier += meleeFear;
+
+    // 4. 状況に応じた追加ブースト（パニック等）の計算
+    float situationBoost = 1.0f;
+    if (data && rangeFear > 0.0f && GetPlayer()->IsAreaAttack())
+    {
+        if (data->isLeaderEscaping)
+        {
+            // リーダー逃走中かつ範囲攻撃中なら大幅加速
+            situationBoost = GetIsLeader() ? 3.0f : (2.0f + rangeFear);
+        }
+        else if (GetIsLeader())
+        {
+            // リーダーが逃げていないが範囲攻撃中のリーダー専用処理
+            roleMultiplier = m_defalutLeaderSpeedMultiplier + meleeFear;
+        }
+    }
+
+
+    // 5. 最終速度の適用
+    finalSpeed *= (roleMultiplier * situationBoost);
     //速度適応
     GetRigidbody().SetBaseVelocity(moveDir * finalSpeed);
 
 }
 
+// --- ジャンプ処理（移動中にブロックが目の前にある時に発動）---
 void NewEnemyClass::Jump()
 {
     // 壁に当たっている 且つ まだジャンプしていないなら
@@ -541,6 +667,38 @@ void NewEnemyClass::Jump()
 }
 
 // ------------------------------------------------------
+//   プレイヤーの範囲攻撃の範囲外に出る
+// ------------------------------------------------------
+void NewEnemyClass::EscapeAreaAttack()
+{
+    if (!GetIsLeader()) return;
+    GroupData* pData = GetGroupData();
+    if (!pData) return;
+    
+    // プレイヤーが攻撃中かどうかに関わらず、
+    // 「プレイヤーの周囲 R メートル」を常に危険地帯とみなす
+    // 学習が進む（rangeFearが上がる）ほど、その半径が広がる
+    
+    float escapeStartDist = m_pPlayer->GetAreaAttackRadius() + pData->rangeFear; // 基礎半径 + 警戒心
+    float escapeStopDist = escapeStartDist + 2.0f;
+    
+    // 常に判定を回しておく
+    pData->isLeaderEscaping = InPlayerArea(escapeStartDist, escapeStopDist);
+
+    if (pData->isLeaderEscaping)
+    {
+        m_leaderSpeedMultiplier *= 2.0f;
+
+    }
+    else
+    {
+        m_leaderSpeedMultiplier = m_defalutLeaderSpeedMultiplier;
+    }
+}
+
+
+
+// ------------------------------------------------------
 //  伸び縮みするアニメーション
 // ------------------------------------------------------
 void NewEnemyClass::UpdateSquashAndStretch(float deltaTime)
@@ -556,9 +714,9 @@ void NewEnemyClass::UpdateSquashAndStretch(float deltaTime)
     }
 }
 
-
-
-
+// -------------------------------------------------------
+//  敵の設定
+// -------------------------------------------------------
 
 // --- リーダー設定 ---
 void NewEnemyClass::SettingLeader(GroupData* groupData)
@@ -586,6 +744,7 @@ void NewEnemyClass::SettingLeader(GroupData* groupData)
 
     //少し速度をあげる
     m_leaderSpeedMultiplier = leaderSpeedBoost;
+    m_defalutLeaderSpeedMultiplier = m_leaderSpeedMultiplier;
 
     //少しモデルのサイズと当たり判定を大きくする
     XMVECTOR leaderSize = *GetModel()->getScale();
@@ -644,6 +803,9 @@ void NewEnemyClass::SettingOther()
 
     m_myStopDist = static_cast<float>(rand() % stopDistRandomRange) / 10;
 
+    // --- 引き寄せ攻撃への抵抗値 ---
+    m_individualPullResist = static_cast<float>(rand() % 41) / 100.0f;
+
     //リーダーを探す範囲
     m_searchLeaderRadius = followerSearchRadius;
 
@@ -651,7 +813,120 @@ void NewEnemyClass::SettingOther()
     float speedVariance = (90 + (rand() % 21)) / 100.0f;
     m_otherSpeedMultiplier *= speedVariance;
     //m_otherSpeedMultiplier = followerSpeedBoost;
+
+    m_defalutOtherSpeedMultiplier = m_otherSpeedMultiplier;
 }
+
+
+
+// -----------------------------------------------------------------------
+//   敵のメッセージ表示
+// -----------------------------------------------------------------------
+void NewEnemyClass::UpdateEnemyMessage(float deltaTime)
+{ 
+#pragma region その他の敵の範囲攻撃から逃げるメッセージ
+    {
+        if (!GetIsLeader() && m_pMyLeader)
+        {
+            GroupData* data = m_pMyLeader->GetGroupData();
+            if (data)
+            {
+                // 1. 前フレームから状態が変わった瞬間を検知（エッジトリガー）
+                bool isChanged = (data->isLeaderEscaping != m_wasLeaderEscaping);
+
+                if (isChanged)
+                {
+                    // 状態が変わった時だけタイマーをリセット！
+                    m_aiDebugText.Reset(m_defaultTextTime);
+                }
+
+                // 2. 現在の状態を保存しておく（次のフレームの比較用）
+                m_wasLeaderEscaping = data->isLeaderEscaping;
+
+                // --- あとはいつもの表示ロジック ---
+                if (data->isLeaderEscaping)
+                {
+                    m_areaAtkMessage.SetState(eShowUISelect::Text1);
+                }
+                else
+                {
+
+                }
+            }
+        }
+
+    }
+
+#pragma endregion
+
+    m_areaAtkMessage.Update(deltaTime);
+    m_pullAtkMessage.Update(deltaTime);
+
+
+    ShowMessage();
+}
+void NewEnemyClass::ShowMessage()
+{
+    //全体のモードを確認し、出すべきでないなら終了
+
+    bool isLeader = GetIsLeader();
+
+    //現在のモードを取得
+    auto currentMode = EnemyPool::GetInstance().GetDisplayMode();
+
+    bool shouldShow = false;
+    vnFont::setFontSize(38, 20);
+
+    switch (currentMode)
+    {
+    case EnemyPool::eDisplayMode::AllOff:      shouldShow = false; break;
+    case EnemyPool::eDisplayMode::LeaderOnly:  shouldShow = isLeader; break;
+    case EnemyPool::eDisplayMode::OthersOnly:  shouldShow = !isLeader; break;
+    case EnemyPool::eDisplayMode::AllOn:       shouldShow = true; break;
+    }
+
+    if (!shouldShow)return;
+    // 1. 表示すべきメッセージ情報を保持する構造体
+    struct MsgInfo { std::wstring text; unsigned int color; };
+    MsgInfo areaMsg = { L"", 0 };
+    MsgInfo pullMsg = { L"", 0 };
+
+    // 2. 範囲攻撃メッセージのテキスト決定
+    switch (m_areaAtkMessage.uiState) {
+    case eShowUISelect::Text1:
+        areaMsg = { isLeader ? L"範囲攻撃内に入ったぞ" : L"逃", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
+    case eShowUISelect::Text2:
+        areaMsg = { L"範囲攻撃外に出た", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
+    }
+
+    // 3. 引き寄せ攻撃メッセージのテキスト決定
+    switch (m_pullAtkMessage.uiState) {
+    case eShowUISelect::Text1:
+        pullMsg = { L"引き寄せ無効化", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
+    case eShowUISelect::Text2:
+        pullMsg = { L"引き寄せ完全抵抗",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
+    case eShowUISelect::Text3:
+        pullMsg = { L"引き寄せ成功！",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+    }
+
+    // 4. 最後にまとめて表示（Noneじゃなければ出す）
+    if (!areaMsg.text.empty())
+    {
+        EnemyAIDebug::ShowStateOnce(*GetModel()->getPosition(), m_aiDebugText, m_areaAtkMessage.remainingTime, areaMsg.text.c_str(), areaMsg.color);
+    }
+    if (!pullMsg.text.empty())
+    {
+        EnemyAIDebug::ShowStateOnce(*GetModel()->getPosition(), m_aiDebugText, m_pullAtkMessage.remainingTime, pullMsg.text.c_str(), pullMsg.color);
+    }
+
+
+}
+
+
 
 //0.0～1.0の値を返す
 float NewEnemyClass::GetRandomFloat()

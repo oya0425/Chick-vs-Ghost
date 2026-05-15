@@ -24,6 +24,8 @@ private:
 	// --- リーダーを設定 ---
 	void LeaderSet(float searchRadius);
 
-
-	
+	// --- パトロール中関数 ---
+	void CheckSurroundings(float distance);		//範囲攻撃が可能の状態に入ったか
+	void StartEscapeTransition(bool can);				//逃げ始める
+	void MoveAlongPath(float deltaTime, float distance);//メインの移動処理
 };

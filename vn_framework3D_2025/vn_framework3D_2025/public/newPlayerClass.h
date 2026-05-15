@@ -100,7 +100,8 @@ public:
 
 	//--ƒXƒLƒ‹‚Ì”­“®’†‚©
 	// --- ”ÍˆÍUŒ‚ ---
-	bool IsAreaAttacking()const { return m_AreaAttackState == eSkillState::ACTIVE; }//”ÍˆÍUŒ‚’†‚©
+	bool IsAreaAttack()const override{ return (m_isHaveAreaAtkSkill&&(m_AreaAttackState == eSkillState::READY)); }//”ÍˆÍUŒ‚‚ğŒ‚‚Ä‚é‚©(ƒXƒLƒ‹‚ğ‚Á‚Ä‚¢‚é‚©)
+	float GetAreaAttackRadius()const override { return m_maxAttackRadius; }				//”ÍˆÍUŒ‚‚Ì‘å‚«‚³
 
 	// --- ˆø‚«Šñ‚¹UŒ‚ ---
 	bool IsPulling()const { return m_pullState == eSkillState::ACTIVE; }	//ˆø‚«Šñ‚¹UŒ‚’†‚©

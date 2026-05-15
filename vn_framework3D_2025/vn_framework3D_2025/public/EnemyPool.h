@@ -10,8 +10,7 @@
 class EnemyPool
 {
 public:
-
-	//インスタンス取得用の静的関数（敵のリーダーを探すため）
+    //インスタンス取得用の静的関数（敵のリーダーを探すため）
 	static EnemyPool& GetInstance()
 	{
 		static EnemyPool instance;
@@ -20,6 +19,18 @@ public:
 	EnemyPool(const EnemyPool&) = delete;
 	EnemyPool& operator=(const EnemyPool&) = delete;
 	~EnemyPool();
+
+
+	// --- 表示オン・オフ ---
+	enum class eDisplayMode
+	{
+		None, // 初期状態用
+		AllOff,	//全敵の文字の表示オフ
+		LeaderOnly,
+		OthersOnly,
+		AllOn,
+	};
+
 
 	//リーダーを探す
 	NewEnemyClass* FindClosestLeader(NewEnemyClass* requester, float radius);
@@ -57,6 +68,8 @@ public:
 	//自身のグループIDをもとに学習データを持ってくる　
 	NewEnemyClass::GroupData* GetGroupData(int id);
 
+	eDisplayMode GetDisplayMode()const { return m_displayMode; }
+	void DrawGroupDebugInfo();
 private:
 	EnemyPool();
 	std::vector<NewEnemyClass*> _enemies;
@@ -65,4 +78,12 @@ private:
 
 	float m_spawnTimer = 0.0f;
 	const float SPAWN_INTERVAL = 10.0f; // 0.1秒待機
+
+	eDisplayMode m_displayMode = eDisplayMode::OthersOnly;
+
+	void DebugSetting();
+	void ChangeDisplayMode(eDisplayMode nextMode);
+
+	int	m_debugGroupIndex = 0;//表示する
+
 };

@@ -170,7 +170,7 @@ void Common::UpdateFlexibleCamera(const XMVECTOR* pPlayerPos, float phi, float r
             //finalTargetPos = XMVectorSetY(finalTargetPos, 0.0f);
 
             //映す範囲の設定
-            float limit = fenceRadius * 0.25f;
+            float limit = fenceRadius * 0.5f;
             float tx = MyClamp(XMVectorGetX(finalTargetPos), -limit, limit);
             float tz = MyClamp(XMVectorGetZ(finalTargetPos), -limit, limit);
 

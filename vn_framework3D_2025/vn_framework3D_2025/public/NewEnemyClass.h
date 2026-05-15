@@ -1,10 +1,12 @@
 #pragma once
-
+#include <string>
 class NewEnemyClass :public CharacterBase
 {
 public:
 	NewEnemyClass();
 	~NewEnemyClass();
+
+
 
 	// --- 敵の種類 ---
 	enum class EnemyType {
@@ -64,6 +66,9 @@ public:
 	{
 		int id;				//群れとしての番号
 		XMVECTOR color;		//群れの色
+
+		wchar_t colorName[32]; // ここに追加（例: L"真紅", L"コバルトブルー"）
+
 	};
 
 	//群の学習データ
@@ -72,16 +77,66 @@ public:
 		int id;	//群の番号
 		XMVECTOR color;	//群の色
 
+		const wchar_t* colorName;
+
 		//学習
 		float meleeFear = 0.0f;		//近接警戒
-		float rangeFear = 0.0f;		//範囲攻撃警戒
+		float rangeFear = 1.0f;		//範囲攻撃警戒(逃げる速度を上げる)プレイヤーの範囲攻撃にこれを掛けて範囲攻撃に当たらないように
 		float pullResistance = 0.0f;//引き寄せ耐性
 
 		//状態
 		int memberCount = 0;		//群の数
 		bool isLeaderAlive = true;	//リーダーが生きているか
 
+		bool isLeaderEscaping = false;	//プレイヤーから全力で逃げる（号令を出す）
+
 	};
+
+	enum class eShowUISelect
+	{
+		Text1,	//例えば（範囲攻撃範囲に入った）
+		Text2,	//		（範囲攻撃外に出た）とか
+		Text3,
+		None,	//この状態の時にタイマーを戻す
+	};
+
+
+
+	struct MessageBanner
+	{
+		float remainingTime = 0.0f;               // 残り表示時間
+		const float defaultDisplayDuration = 2.0f; // 基本の表示時間（定数化）
+		eShowUISelect uiState = eShowUISelect::None;
+
+		// 状態を変更するための関数
+		void SetState(eShowUISelect newState)
+		{
+			// 同じ状態がセットされた場合は何もしない（タイマーをリセットしたくない場合）
+			if (uiState == newState) return;
+
+			uiState = newState;
+
+			// 状態が変わった瞬間にタイマーを初期化
+			// Noneに切り替わった時も、次に備えてリセットしておく
+			remainingTime = defaultDisplayDuration;
+
+			// デバッグ用にログを出しておくと追いやすい
+			// printf("UI State Changed to: %d\n", (int)newState);
+		}
+
+		// 更新処理
+		void Update(float deltaTime)
+		{
+			if (uiState == eShowUISelect::None) return;
+
+			remainingTime -= deltaTime;
+			if (remainingTime <= 0.0f)
+			{
+				SetState(eShowUISelect::None);
+			}
+		}
+	};
+
 
 	// --- セットする色（リーダー）---
 	static std::vector<NewEnemyClass::GroupColorData>g_LeaderColorPalette;
@@ -180,13 +235,18 @@ public:
 		m_pGroupData = data;
 	}
 	//学習データのget
-	GroupData* GetGroupData() const
+	GroupData* GetGroupData() 
 	{
 		return m_pGroupData;
 	}
 
 	// --- 群の色・番号取得
 	GroupColorData GetRandomGroupData();
+
+	// --- 敵の状態メッセージの表示 ---
+	void UpdateEnemyMessage(float deltaTime);
+	void ShowMessage();
+
 
 protected:
 	virtual void OnIdel(float deltaTime, float distance, const XMVECTOR& toPlayer) = 0;
@@ -212,7 +272,10 @@ protected:
 	float m_waveBoostSpeedMultiplier = 1.0f;	//全体の敵に適応されるWAVEごとに早くなるやつ
 	float m_boostSpeedMultiplier = 1.0f;		//それぞれの個体ではなく種全体の基本速度
 	float m_leaderSpeedMultiplier = 1.0f;		//リーダーの追加速度
+	float m_defalutLeaderSpeedMultiplier = 1.0f;		//リーダーの追加速度
+
 	float m_otherSpeedMultiplier = 1.0f;		//リーダー以外の敵の速度
+	float m_defalutOtherSpeedMultiplier = 1.0f;		//リーダー以外の敵の速度
 
 
 	EnemyType m_type = EnemyType::NONE;	//タグ（敵の種類）
@@ -270,6 +333,20 @@ protected:
 	float m_panicTextTimer = m_defaultTextTime;
 	
 	EnemyAIDebug::DebugTextState m_aiDebugText;
+
+
+	// --- 調整変数（不具合防止用）---
+	bool m_isPullChecked = false;	//引き寄せ攻撃の無効化の抽選用（全員が引き寄せられるのを防ぐ）
+	float m_individualPullResist = 0.0f;	//個別に持つランダムな抵抗値、群れの中でもランダムにする
+
+	bool m_wasLeaderEscaping;			//範囲攻撃の逃げるときにタイマーをリセットするため
+
+	bool m_onceStartUI = false;			//登場したときの最初のみ出すUI
+
+
+	// --- 文字の表示UI ---
+	MessageBanner m_areaAtkMessage;	//範囲攻撃に関するメッセージ
+	MessageBanner m_pullAtkMessage;	//引き寄せに関するメッセージ
 
 
 private:
@@ -333,6 +410,10 @@ private:
 	bool m_isSpwanStart = false;
 	float m_upgradeTimer = 3.0f;
 	int m_upgradeStep = 0;			//強化された項目の数、表示するごとに増える
+
+
+	// --- 範囲攻撃から逃げる関数 ---
+	void EscapeAreaAttack();
 
 
 };

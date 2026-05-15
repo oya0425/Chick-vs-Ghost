@@ -5,9 +5,10 @@
 //														Ichii	//
 //--------------------------------------------------------------//
 #pragma once
-
+#include <map>
 #define vnFontSTRING_MAX	(0x0400)	//1フレームで実行できるrenderの数
-#define vnFontCHARACTER_MAX	(0x2000)	//1フレームで描画できる文字の数
+//#define vnFontCHARACTER_MAX	(0x2000)	//1フレームで描画できる文字の数
+#define vnFontCHARACTER_MAX	(0x8000)	//1フレームで描画できる文字の数
 
 #define vnFontNUM_MAX		(256)		//確保しておける使用可能フォント名の最大数
 
@@ -45,7 +46,11 @@ private:
 
 	static void registerString(const WCHAR *string, UINT32 count);
 	
+	// 外部からサイズごとにフォントを管理するマップ（サイズ, インスタンス）
+	static std::map<int, IDWriteTextFormat*> fontCache;
+
 public:
+
 	//[システム管理関数
 	static bool initialize();
 	static void terminate();
@@ -91,4 +96,7 @@ public:
 
 	//ワールド座標をスクリーン座標に変換する
 	static bool CalculateScreenPosition(DirectX::XMVECTOR worldPos, float* outX, float* outY);
+
+	static void setFontSize(int index, int size);
+
 };

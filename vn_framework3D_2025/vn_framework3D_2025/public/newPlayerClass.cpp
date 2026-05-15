@@ -339,12 +339,12 @@ void NewPlayerClass::DrawDebugInfo()
 
 	//vnFont::print(10, 700, L"反射可能回数　%d", m_bullet->GetCurrentBounce());
 
-	vnFont::print(10, 650, L"MoveDir %.f, %.f , %.f",
-		XMVectorGetX(GetMoveDir()),
-		XMVectorGetY(GetMoveDir()),
-		XMVectorGetZ(GetMoveDir())
-		);
-	vnFont::print(10, 700, L"RotY %.f", GetModel()->getRotationY());
+	//vnFont::print(10, 650, L"MoveDir %.f, %.f , %.f",
+	//	XMVectorGetX(GetMoveDir()),
+	//	XMVectorGetY(GetMoveDir()),
+	//	XMVectorGetZ(GetMoveDir())
+	//	);
+	//vnFont::print(10, 700, L"RotY %.f", GetModel()->getRotationY());
 }
 
 // --- 範囲攻撃スキル ---
@@ -444,6 +444,7 @@ void NewPlayerClass::UpdatePullSkill(float deltaTime)
 
 			m_pullState = eSkillState::COOLDOWN;
 			m_pullCooldownTimer = m_pullCooldownMax;
+			//m_pullCooldownTimer = 0;
 			Common::StartCameraShake(3.5f, 3.5f, 1.0f);
 
 		}

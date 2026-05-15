@@ -63,13 +63,15 @@ void EnemyAIDebug::ShowUpgrade(const XMVECTOR& worldPos, const WCHAR* text) {
 	}
 }
 
-void EnemyAIDebug::ShowStateOnce(const XMVECTOR& worldPos, DebugTextState& state, float deltaTime, const WCHAR* text, DWORD color)
+void EnemyAIDebug::ShowStateOnce(const XMVECTOR& worldPos, DebugTextState& state, float timer, const WCHAR* text, DWORD color)
 {
 	// すでに表示が終わっているなら何もしない
-	if (state.isDone) return;
+	//if (state.isDone) return;
 
 	// タイマーを更新
-	state.timer -= deltaTime;
+	state.timer = timer;
+
+	state.timer -= vnScene::getDeltaTime();
 
 	// 描画ロジック（以前作った上昇演出）
 	float floatUp = (1.0f - state.timer) * 2.0f;
@@ -84,4 +86,5 @@ void EnemyAIDebug::ShowStateOnce(const XMVECTOR& worldPos, DebugTextState& state
 	if (state.timer <= 0.0f) {
 		state.isDone = true;
 	}
+
 }

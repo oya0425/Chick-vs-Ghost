@@ -23,7 +23,7 @@ EnemyGhost::EnemyGhost()
     :NewEnemyClass()
 {
     m_type = EnemyType::GHOST;
-	m_boostSpeedMultiplier = 7.0f;
+	m_boostSpeedMultiplier = 1.0f;
     motion_idle_Ghost = loadMotionFile(L"data/model/Ghost/motion/ghost_idle.mot");
     motion_run_Ghost = loadMotionFile(L"data/model/Ghost/motion/ghost_run.mot");
     
@@ -48,16 +48,20 @@ void EnemyGhost::OnIdel(float deltaTime, float distance, const XMVECTOR& toPlaye
     if (GetIsLeader())
     {
         // 1. プレイヤーが来たら逃げる（最優先）
-        if (InPlayerArea(m_leaderEscapeRadius, m_leaderRetreatStopRadius))
+        //範囲攻撃の範囲を取って学習していく（逃げ始める距離を上げる）
+        float dynamicEscapeRadius = m_leaderEscapeRadius + GetGroupData()->rangeFear;
+
+        // 判定距離を書き換えてチェック
+        if (InPlayerArea(dynamicEscapeRadius, m_leaderRetreatStopRadius))
         {
             if (GetRigidbody().GetIsGround())
             {
+
                 SetState(eState::Run);
-                m_patrolWaitTimer = 0.5f; // タイマーリセット
-                return; // 逃走優先なのでここで終了
+                m_patrolWaitTimer = 0.5f;
+                return;
             }
         }
-
         // 2. プレイヤーが遠いなら徘徊の準備
         // Idle用の待機タイマーを減らす（この変数をIdle用に新設するか、Patrol用を流用）
         m_patrolWaitTimer -= deltaTime;
@@ -66,14 +70,19 @@ void EnemyGhost::OnIdel(float deltaTime, float distance, const XMVECTOR& toPlaye
         {
             // 一定時間ボーッとしたら徘徊開始！
             SetState(eState::Patrol);
+            if (GetGroupData()->isLeaderEscaping)
+            {
+                GetGroupData()->isLeaderEscaping = false;
+            }
+
             // OnPatrolに入った瞬間目的地を決めるため、フラグを立てておく
             m_isReachingTarget = true;
         }
     }
     else
     {
-        //リーダーを探してついていく
-        LeaderSet(m_searchLeaderRadius);
+         //リーダーを探してついていく
+         LeaderSet(m_searchLeaderRadius);
     }
 }
 
@@ -210,7 +219,7 @@ void EnemyGhost::OnRun(float deltaTime, float distance, const XMVECTOR& toPlayer
     ApplyMovement(deltaTime, m_lastMoveDir);
 
     // 5. 状態遷移
-    if (!InPlayerArea(m_leaderEscapeRadius, m_leaderRetreatStopRadius))
+    if (!InPlayerArea(m_leaderEscapeRadius+(5.0f*GetGroupData()->rangeFear), m_leaderRetreatStopRadius))
     {
         if (GetRigidbody().GetIsGround())
         {
@@ -300,7 +309,7 @@ void EnemyGhost::OnPanic(float deltaTime)
     m_panicDirTimer -= deltaTime;
     m_panicRecoveryTime -= deltaTime;
 
-    EnemyAIDebug::ShowStateOnce(*GetModel()->getPosition(), m_aiDebugText, deltaTime, L"リーダー！！", GAME_COLOR_BLUE);
+    //EnemyAIDebug::ShowStateOnce(*GetModel()->getPosition(), m_aiDebugText, deltaTime, L"リーダー！！", GAME_COLOR_BLUE);
 
     if (m_panicDirTimer <= 0.0f)
     {
@@ -308,7 +317,7 @@ void EnemyGhost::OnPanic(float deltaTime)
         m_panicDir = GetRandomDirection();
 
         //方向転換までの時間をランダムに設定GetRandomRange(a,b)a~bの間
-        m_panicDirTimer = GetRandomRange(1.0f, 3.0f);
+       m_panicDirTimer = GetRandomRange(1.0f, 3.0f);
     }
     //決まった方向に移動
     ApplyMovement(deltaTime, m_panicDir);
@@ -319,8 +328,8 @@ void EnemyGhost::OnPanic(float deltaTime)
     {
         LeaderSet(m_panicSearchRadius);
     }
-
-
+    
+    
 }
 void EnemyGhost::OnCharge(float deltaTime, const XMVECTOR& toPlayer)
 {
@@ -335,10 +344,24 @@ void EnemyGhost::OnCharge(float deltaTime, const XMVECTOR& toPlayer)
 }
 
 
+// --------------------------------------------------------------
+//   パトロール中処理
+// --------------------------------------------------------------
 void EnemyGhost::OnPatrol(float deltaTime, float distance)
 {
     GetModel()->setMotion(motion_run_Ghost);
     GetModel()->execute(motionSpeed, false, false);
+    
+    //メインの移動
+    MoveAlongPath(deltaTime, distance);
+
+    // プレイヤー検知
+    CheckSurroundings(distance);
+
+}
+//メインの移動
+void EnemyGhost::MoveAlongPath(float deltaTime, float distance)
+{
 
     XMVECTOR enemyPos = *GetModel()->getPosition();
     XMVECTOR toTarget = m_patrolTargetPos - enemyPos;
@@ -412,7 +435,7 @@ void EnemyGhost::OnPatrol(float deltaTime, float distance)
             // 5. 【重要】目的地が「フェンス（壁）」の外なら、内側に戻す
             // GetInFenceが座標を補正してくれるならそれを利用する
             // (もし座標を補正する関数なら、m_patrolTargetPosを引数に入れる)
-            m_patrolTargetPos = GetInFence(m_patrolTargetPos,*GetModel()->getPosition());
+            m_patrolTargetPos = GetInFence(m_patrolTargetPos, *GetModel()->getPosition());
 
             m_isReachingTarget = false;
 
@@ -447,7 +470,7 @@ void EnemyGhost::OnPatrol(float deltaTime, float distance)
                 // 範囲内に仲間がいたら斥力を計算
                 if (d < m_leaderSeparateRadius && d > 0.001f)
                 {
-                    float maxDist = m_leaderSeparateRadius*1.5f;
+                    float maxDist = m_leaderSeparateRadius * 1.5f;
                     float minDist = m_leaderSeparateRadius * 0.5f;
                     float weight = 0.0f;
 
@@ -490,14 +513,47 @@ void EnemyGhost::OnPatrol(float deltaTime, float distance)
         }
     }
 
-    // プレイヤー検知
-    if (distance < m_leaderEscapeRadius)
+
+}
+
+//範囲攻撃可能かの判定
+void EnemyGhost::CheckSurroundings(float distance)
+{
+    bool canE = GetPlayer()->IsAreaAttack();
+    if (canE)
     {
-        SetState(eState::Run);
-        m_isReachingTarget = true;
+        float dist = distance;
+        float limit = m_leaderEscapeRadius + (1.0f + GetGroupData()->rangeFear);
+        if (dist < limit)
+        {
+            StartEscapeTransition(true);
+            m_areaAtkMessage.SetState(eShowUISelect::Text1);
+        }
+        else
+        {
+            m_areaAtkMessage.SetState(eShowUISelect::Text2);
+        }
+    }
+    else
+    {
+        float dist = distance;
+        float limit = m_leaderEscapeRadius;
+        if (dist < limit)StartEscapeTransition(false);
     }
 
 }
+
+void EnemyGhost::StartEscapeTransition(bool can)
+{
+    GetGroupData()->isLeaderEscaping = can;
+    SetState(eState::Run);
+    m_isReachingTarget = true;
+}
+
+// -------------------------------------------------------------------------
+
+
+
 
 // --- 汎用 ---
 
@@ -533,24 +589,32 @@ void EnemyGhost::LeaderSet(float searchRadius)
     // リーダーについていくモードに変える
     
     // リーダー以外：リーダーを探す（既存のFollowロジック）
-    m_pMyLeader = EnemyPool::GetInstance().FindClosestLeader(this, searchRadius);
-    if (m_pMyLeader)
+    if (!m_pMyLeader)
     {
-        //リーダーの色を取得
-        XMVECTOR leaderColor = m_pMyLeader->GetColor();
+        m_pMyLeader = EnemyPool::GetInstance().FindClosestLeader(this, searchRadius);
+        if (m_pMyLeader)
+        {
+            //リーダーの色を取得
+            XMVECTOR leaderColor = m_pMyLeader->GetColor();
 
-        //少し色を足して薄くする
-        XMVECTOR offset = XMVectorSet(0.2f, 0.2f, 0.2f, 0.0f);
-        XMVECTOR followerColor = XMVectorAdd(leaderColor, offset);
+            //少し色を足して薄くする
+            XMVECTOR offset = XMVectorSet(0.2f, 0.2f, 0.2f, 0.0f);
+            XMVECTOR followerColor = XMVectorAdd(leaderColor, offset);
 
-        //1.0を超えないようにクランプ
-        followerColor = XMVectorClamp(followerColor, XMVectorZero(), XMVectorSplatOne());
+            //1.0を超えないようにクランプ
+            followerColor = XMVectorClamp(followerColor, XMVectorZero(), XMVectorSplatOne());
 
-        //群れの番号を適応
-        SetGroupID(m_pMyLeader->GetGroupID());
+            //群れの番号を適応
+            SetGroupID(m_pMyLeader->GetGroupID());
 
-        //自分に色を適用
-        GetModel()->SetAllPartsDiffuse(followerColor, 1.0f);
+            //自分に色を適用
+            GetModel()->SetAllPartsDiffuse(followerColor, 1.0f);
+            SetState(eState::Follow);
+        }
+    }
+    //すでにリーダーを知ってる場合はそのリーダーについていく
+    else
+    {
         SetState(eState::Follow);
     }
 }
