@@ -84,12 +84,25 @@ public:
 		float rangeFear = 1.0f;		//範囲攻撃警戒(逃げる速度を上げる)プレイヤーの範囲攻撃にこれを掛けて範囲攻撃に当たらないように
 		float pullResistance = 0.0f;//引き寄せ耐性
 
+		//一個前の記録上書きしていく比較用
+		float oldMeleeFear = 0.0f;	
+		float oldRangeFear = 1.0f;
+		float oldPullResistance = 0.0f;
+
 		//状態
 		int memberCount = 0;		//群の数
 		bool isLeaderAlive = true;	//リーダーが生きているか
 
 		bool isLeaderEscaping = false;	//プレイヤーから全力で逃げる（号令を出す）
 
+	};
+	//死因
+	enum class DamageSource
+	{
+		NONE,
+		Melee,	//近接攻撃
+		AreaAttack,//範囲攻撃
+		PullAttack,	//引き寄せ攻撃
 	};
 
 	enum class eShowUISelect
@@ -247,6 +260,17 @@ public:
 	void UpdateEnemyMessage(float deltaTime);
 	void ShowMessage();
 
+	// --- 群れ情報を出すときにわかりやすくするために大きくする
+	//void DebugSetScale()
+
+	void OnDie(DamageSource source);
+
+
+
+
+	// --- リスタートしたときに所持していた学習データを削除する ---
+	void ReStartEnemy();
+
 
 protected:
 	virtual void OnIdel(float deltaTime, float distance, const XMVECTOR& toPlayer) = 0;
@@ -347,6 +371,12 @@ protected:
 	// --- 文字の表示UI ---
 	MessageBanner m_areaAtkMessage;	//範囲攻撃に関するメッセージ
 	MessageBanner m_pullAtkMessage;	//引き寄せに関するメッセージ
+	MessageBanner m_panicMessage;	//パニックに関するメッセージ（リーダー探し中も出す）
+	MessageBanner m_chargeMessage;	//特攻に関するメッセージ
+	MessageBanner m_patrolMessage;	//パトロールに関するメッセージ
+	MessageBanner m_followMessage;	//リーダーを追跡に関するメッセージ
+	MessageBanner m_runMessage;		//プレイヤーから逃走中メッセージ
+
 
 
 private:
@@ -410,7 +440,9 @@ private:
 	bool m_isSpwanStart = false;
 	float m_upgradeTimer = 3.0f;
 	int m_upgradeStep = 0;			//強化された項目の数、表示するごとに増える
+	std::vector<std::wstring>m_upgradeTexts;	//進化した項目の文字リスト(強化した項目)
 
+	void CheckEvolutionOnSpawn();	//スポーン時に何が強化されたか出す
 
 	// --- 範囲攻撃から逃げる関数 ---
 	void EscapeAreaAttack();

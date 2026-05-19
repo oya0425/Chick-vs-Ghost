@@ -95,8 +95,8 @@ private:
     int m_killedCount;       // 現在撃破数
 
     float m_waveTimer = 0;            //WAVE中の時間
-    float m_waveTimeLimit=30;         //WAVEクリアまでの時間
-    const float m_waveTimeBase = 30;  //基準の時間
+    float m_waveTimeLimit=20;         //WAVEクリアまでの時間
+    const float m_waveTimeBase = 20;  //基準の時間
     const float m_addTime = 10;       //増える時間   
 
     int m_nextKillTarget;    // 次の必要キル数

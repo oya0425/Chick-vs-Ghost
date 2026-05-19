@@ -12,7 +12,7 @@ void EnemyAIDebug::ShowPanic(const XMVECTOR& worldPos,float timer)
 	float floatUp = (1.0f - timer) * 2.0f;
 	float sx = 0, sy = 0;
 	//座標を入れる
-	XMVECTOR pos = XMVectorSetY(worldPos, XMVectorGetY(worldPos) + 4.0f+floatUp);
+	XMVECTOR pos = XMVectorSetY(worldPos, XMVectorGetY(worldPos) +floatUp);
 	pos = XMVectorSetX(pos, XMVectorGetX(pos) - 2.0f);
 	if (vnFont::CalculateScreenPosition(pos, &sx, &sy))
 	{
@@ -55,8 +55,8 @@ void EnemyAIDebug::ShowSearching(const XMVECTOR& worldPos)
 // 学習・強化の表示（一定時間だけ呼ぶ想定）
 void EnemyAIDebug::ShowUpgrade(const XMVECTOR& worldPos, const WCHAR* text) {
 	float sx, sy;
-	XMVECTOR pos = XMVectorSetY(worldPos, XMVectorGetY(worldPos) + 5.0f); // 状態より少し上
-	pos = XMVectorSetX(pos, XMVectorGetX(pos) - 2.0f);
+	XMVECTOR pos = XMVectorSetY(worldPos, XMVectorGetY(worldPos)); // 状態より少し上
+	pos = XMVectorSetX(pos, XMVectorGetX(pos) - 3.0f);
 
 	if (vnFont::CalculateScreenPosition(pos, &sx, &sy)) {
 		vnFont::print(sx, sy, GAME_COLOR_YELLOW, text);
@@ -75,7 +75,8 @@ void EnemyAIDebug::ShowStateOnce(const XMVECTOR& worldPos, DebugTextState& state
 
 	// 描画ロジック（以前作った上昇演出）
 	float floatUp = (1.0f - state.timer) * 2.0f;
-	XMVECTOR displayPos = XMVectorSetY(worldPos, XMVectorGetY(worldPos) + 4.0f + floatUp);
+	XMVECTOR displayPos = XMVectorSetY(worldPos, XMVectorGetY(worldPos) + floatUp + 3.0f);
+	displayPos = XMVectorSetX(displayPos, XMVectorGetX(worldPos) - 3.0f);
 
 	float sx, sy;
 	if (vnFont::CalculateScreenPosition(displayPos, &sx, &sy)) {
@@ -87,4 +88,16 @@ void EnemyAIDebug::ShowStateOnce(const XMVECTOR& worldPos, DebugTextState& state
 		state.isDone = true;
 	}
 
+}
+
+void EnemyAIDebug::ShowStateArrow(const XMVECTOR& worldPos, const WCHAR* text, DWORD color)
+{
+
+	// 描画ロジック（以前作った上昇演出）
+	XMVECTOR displayPos = XMVectorSetY(worldPos, XMVectorGetY(worldPos)+2.0f);
+
+	float sx, sy;
+	if (vnFont::CalculateScreenPosition(displayPos, &sx, &sy)) {
+		vnFont::print(sx, sy, color, text);
+	}
 }

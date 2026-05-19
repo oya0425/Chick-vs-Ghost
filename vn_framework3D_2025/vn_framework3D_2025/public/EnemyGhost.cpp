@@ -23,7 +23,7 @@ EnemyGhost::EnemyGhost()
     :NewEnemyClass()
 {
     m_type = EnemyType::GHOST;
-	m_boostSpeedMultiplier = 1.0f;
+	m_boostSpeedMultiplier = 2.0f;
     motion_idle_Ghost = loadMotionFile(L"data/model/Ghost/motion/ghost_idle.mot");
     motion_run_Ghost = loadMotionFile(L"data/model/Ghost/motion/ghost_run.mot");
     
@@ -58,6 +58,7 @@ void EnemyGhost::OnIdel(float deltaTime, float distance, const XMVECTOR& toPlaye
             {
 
                 SetState(eState::Run);
+                m_runMessage.SetState(eShowUISelect::Text1);
                 m_patrolWaitTimer = 0.5f;
                 return;
             }
@@ -313,6 +314,8 @@ void EnemyGhost::OnPanic(float deltaTime)
 
     if (m_panicDirTimer <= 0.0f)
     {
+        m_panicMessage.SetState(eShowUISelect::Text1);
+
         //移動する方向をランダムで取る
         m_panicDir = GetRandomDirection();
 
@@ -326,7 +329,9 @@ void EnemyGhost::OnPanic(float deltaTime)
     //見つかったらついて行く
     if (m_panicRecoveryTime <= 0)
     {
+        m_panicMessage.SetState(eShowUISelect::Text2);
         LeaderSet(m_panicSearchRadius);
+        
     }
     
     
@@ -351,6 +356,8 @@ void EnemyGhost::OnPatrol(float deltaTime, float distance)
 {
     GetModel()->setMotion(motion_run_Ghost);
     GetModel()->execute(motionSpeed, false, false);
+    //メッセージ表示
+    m_patrolMessage.SetState(eShowUISelect::Text1);
     
     //メインの移動
     MoveAlongPath(deltaTime, distance);
@@ -519,11 +526,11 @@ void EnemyGhost::MoveAlongPath(float deltaTime, float distance)
 //範囲攻撃可能かの判定
 void EnemyGhost::CheckSurroundings(float distance)
 {
-    bool canE = GetPlayer()->IsAreaAttack();
+    bool canE = GetPlayer()->CanAreaAttack();
     if (canE)
     {
         float dist = distance;
-        float limit = m_leaderEscapeRadius + (1.0f + GetGroupData()->rangeFear);
+        float limit = m_leaderEscapeRadius + (5.0f + GetGroupData()->rangeFear);
         if (dist < limit)
         {
             StartEscapeTransition(true);
@@ -546,7 +553,12 @@ void EnemyGhost::CheckSurroundings(float distance)
 void EnemyGhost::StartEscapeTransition(bool can)
 {
     GetGroupData()->isLeaderEscaping = can;
+    if(GetGroupData()->isLeaderEscaping == false)
+    {
+        m_runMessage.SetState(eShowUISelect::Text1);
+    }
     SetState(eState::Run);
+
     m_isReachingTarget = true;
 }
 
@@ -610,6 +622,7 @@ void EnemyGhost::LeaderSet(float searchRadius)
             //自分に色を適用
             GetModel()->SetAllPartsDiffuse(followerColor, 1.0f);
             SetState(eState::Follow);
+            m_panicMessage.SetState(eShowUISelect::Text3);
         }
     }
     //すでにリーダーを知ってる場合はそのリーダーについていく

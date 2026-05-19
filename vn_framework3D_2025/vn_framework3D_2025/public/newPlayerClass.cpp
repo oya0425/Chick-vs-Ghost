@@ -11,7 +11,7 @@ namespace
 	constexpr float downKaraNormalRotSpeed_motion = 0.1f;
 	constexpr float downKaraBoostRotSpeed_motion = 0.5f;
 
-	constexpr float boxColSize = 3.0f;
+	constexpr float boxColSize = 2.4f;
 
 	constexpr float underRespawnPos = -10.0f;
 
@@ -243,8 +243,8 @@ void NewPlayerClass::UpdateSkills(float deltaTime)
 	UpdateAreaAttackSkill(deltaTime);
 
 	//弾攻撃
-	UpdateBulletAttack(deltaTime);
-	m_bullet->Update(deltaTime);
+	//UpdateBulletAttack(deltaTime);
+	//m_bullet->Update(deltaTime);
 
 	//引き寄せ攻撃
 	UpdatePullSkill(deltaTime);
@@ -353,7 +353,8 @@ void NewPlayerClass::UpdateAreaAttackSkill(float deltaTime)
 
 	// スキルを持っていないなら、これ以降の処理（switch文など）を一切やらない
 	if (!m_isHaveAreaAtkSkill) return;
-	switch (m_AreaAttackState)
+	if (m_pullState == eSkillState::ACTIVE)return;
+	switch (m_areaAttackState)
 	{
 	case eSkillState::READY:
 	{
@@ -365,7 +366,7 @@ void NewPlayerClass::UpdateAreaAttackSkill(float deltaTime)
 			m_isExpanding = true;
 			m_expandTimer = 0.0f;
 			m_currentRadius = m_defaultRadius;
-			m_AreaAttackState = eSkillState::ACTIVE;
+			m_areaAttackState = eSkillState::ACTIVE;
 		}
 
 	}
@@ -397,7 +398,7 @@ void NewPlayerClass::UpdateAreaAttackSkill(float deltaTime)
 				m_currentRadius = m_defaultRadius; // 元に戻す
 				m_expandTimer = 0.0f;
 				m_areaAtkCoolTimer = m_areaAtkCoolTimeMax;
-				m_AreaAttackState = eSkillState::COOLDOWN;
+				m_areaAttackState = eSkillState::COOLDOWN;
 			}
 		}
 
@@ -406,18 +407,12 @@ void NewPlayerClass::UpdateAreaAttackSkill(float deltaTime)
 		m_areaAtkCoolTimer -= deltaTime;
 		if (m_areaAtkCoolTimer <= 0)
 		{
-			m_AreaAttackState = eSkillState::READY;
+			m_areaAttackState = eSkillState::READY;
 
 		}
 
 		break;
 	}
-
-
-
-
-
-
 }
 
 
@@ -426,6 +421,8 @@ void NewPlayerClass::UpdatePullSkill(float deltaTime)
 {
 	// スキルを持っていないなら、これ以降の処理（switch文など）を一切やらない
 	if (!m_isHavePullSkill) return;
+	if (m_areaAttackState == eSkillState::ACTIVE)return;
+
 	switch (m_pullState)
 	{
 	case eSkillState::READY:

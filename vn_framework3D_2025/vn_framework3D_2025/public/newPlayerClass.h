@@ -75,6 +75,17 @@ public:
 	// --- スキルの解放 ---
 	void UnlockAreaAttackSkill(bool unlock) { m_isHaveAreaAtkSkill = unlock; }
 	void UnlockPullAttackSkill(bool unlock) { m_isHavePullSkill = unlock; }
+	
+	// --- スキル持ってるかのGet ---
+	bool GetIsHaveAreaAtkSkill()const { return m_isHaveAreaAtkSkill; }
+	bool GetIsHavePullSkill()const { return m_isHavePullSkill; }
+
+	//---スキルのクールタイムのGet
+	float GetAreaAttackCoolTime()const { return m_areaAtkCoolTimer; }
+	float GetAreaAttackMaxCoolTime()const { return m_areaAtkCoolTimeMax; }
+
+	float GetPullAttackCoolTime()const { return m_pullCooldownTimer; }
+	float GetPullAttackMaxCoolTime()const { return m_pullCooldownMax; }
 
 	//レベルアップ時にジャンプ
 	bool GetIsJump()const { return m_isJump; }
@@ -100,7 +111,8 @@ public:
 
 	//--スキルの発動中か
 	// --- 範囲攻撃 ---
-	bool IsAreaAttack()const override{ return (m_isHaveAreaAtkSkill&&(m_AreaAttackState == eSkillState::READY)); }//範囲攻撃を撃てるか(スキルを持っているか)
+	bool CanAreaAttack()const override{return (m_isHaveAreaAtkSkill && (m_areaAttackState == eSkillState::READY));}
+	bool IsAreaAttack()const override { return m_areaAttackState == eSkillState::ACTIVE; }//範囲攻撃を撃てるか(スキルを持っているか)
 	float GetAreaAttackRadius()const override { return m_maxAttackRadius; }				//範囲攻撃の大きさ
 
 	// --- 引き寄せ攻撃 ---
@@ -184,7 +196,7 @@ private:
 	bool m_isDownKara = false; // 落下
 
 	// --- 範囲攻撃用 ---
-	eSkillState m_AreaAttackState = eSkillState::READY;
+	eSkillState m_areaAttackState = eSkillState::READY;
 	bool  m_isHaveAreaAtkSkill		  = false;			//スキル獲得済みか？
 	bool  m_isExpanding				  = false;			// 半径拡大中か？
 	float m_currentRadius			  = 1.0f;			// 現在の半径

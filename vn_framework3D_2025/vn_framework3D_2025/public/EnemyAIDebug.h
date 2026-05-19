@@ -32,6 +32,9 @@ public:
 	//éûä‘êßå¿ïtÇ´Ç≈ï\é¶Ç∑ÇÈ
 	static void ShowStateOnce(const XMVECTOR& worldPos, DebugTextState& state, float deltaTime, const WCHAR* text, DWORD color);
 
+	//å≈íËÇ≈ï\é¶Ç∑ÇÈ
+	static void ShowStateArrow(const XMVECTOR& worldPos, const WCHAR* text, DWORD color);
+
 private:
 
 

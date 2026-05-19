@@ -64,7 +64,7 @@ NewEnemyClass::~NewEnemyClass()
 
 // static変数の実体化
 const NewEnemyClass::EnemyData NewEnemyClass::MasterTable[] = {
-    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    200/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
+    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    100/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
     { EnemyType::MUSHROOM, L"data/model/MushroomMon/", L"MushroomMon.bone", 0 , 1.5f, {1.0f, 1.0f,1.0f}},
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMonster/", L"MushroomMonster.bone", 150 , 5.0f, {1.0f, 1.0f, 1.0f}},
 };
@@ -158,7 +158,9 @@ void NewEnemyClass::Spawn(const XMVECTOR& pos)
         GroupData* data = GetGroupData();
         //範囲に入って逃げるを解除
         data->isLeaderEscaping = false;
+        data->isLeaderAlive = true;
         m_onceStartUI = false;
+        CheckEvolutionOnSpawn();
     }
     else
     {
@@ -182,6 +184,17 @@ void NewEnemyClass::DeSpawn()
     m_panicDirTimer = 0;
     m_panicRecoveryTime = 0;
 
+    if (GetIsLeader())
+    {
+        GroupData* data = GetGroupData();
+        data->isLeaderAlive = false;
+    }
+
+}
+
+void NewEnemyClass::ReStartEnemy()
+{
+    m_pGroupData = nullptr;
 }
 
 
@@ -196,44 +209,6 @@ void NewEnemyClass::Update(float deltaTime)
     float distance = XMVectorGetX(XMVector3Length(toPlayer));
 
     EnemyPool::GetInstance().GetGroupData(GetGroupID());
-
-    //敵のコード内
-    if (m_isSpwanStart)
-    {
-        m_upgradeTimer -= deltaTime*2;
-        float floatUp = (0.8f - m_upgradeTimer) * 2.0f; // 1秒かけて 1.0m 上に上がる
-
-        // 表示位置に floatUp を足す
-        XMVECTOR displayPos = *GetModel()->getPosition();
-        displayPos = XMVectorSetY(displayPos, XMVectorGetY(displayPos) + 1.0f + floatUp);
-
-        // ステップに応じて出す文字を変える
-        if (m_upgradeStep == 0)
-        {
-            EnemyAIDebug::ShowUpgrade(displayPos, L"近接回避UP！");
-        }
-        else if (m_upgradeStep == 1)
-        {
-            EnemyAIDebug::ShowUpgrade(displayPos, L"移動速度UP！");
-        }
-
-        // 1つ目の文字が上がりきったら（タイマーが0になったら）
-        if (m_upgradeTimer <= 0.0f)
-        {
-            m_upgradeStep++;    // 次のステップへ
-            m_upgradeTimer = 3.0f; // タイマーリセット
-
-            // 全てのステップが終わったら終了
-            if (m_upgradeStep >= 2) // 2個出し終わったら
-            {
-                m_isSpwanStart = false;
-                m_upgradeStep = 0;
-                m_onceStartUI = true;
-                // 次回のためにタイマーなどは戻さない（またはリセット）
-            }
-        }
-
-    }
 
     // --- 状態(子クラスに任せる) ---
     switch (m_state)
@@ -355,7 +330,10 @@ void NewEnemyClass::UpdateAttracted(float deltaTime, XMVECTOR toPlayer, float di
     }
 
 }
-//引き寄せ状態に入ったかどうか
+// ---------------------------------------------------------------------------------
+//   引き寄せ状態に入ったかどうか
+// ---------------------------------------------------------------------------------
+
 void NewEnemyClass::CheckPullTrigger(bool isPlayerPulling, float pullRadius, float distance)
 {
     // 状態チェック：死亡、ノックバック、または既に引き寄せ中なら早期リターン
@@ -388,7 +366,7 @@ void NewEnemyClass::CheckPullTrigger(bool isPlayerPulling, float pullRadius, flo
     // 2. データの存在チェックと確率判定
     if (pData)
     {
-        float resistance = pData->pullResistance + 1.0f;    //テスト用で0.8低いとほぼ誤差
+        float resistance = pData->pullResistance;    //テスト用で0.8低いとほぼ誤差
         if (resistance > 0)
         {
             resistance += m_individualPullResist;
@@ -424,6 +402,8 @@ void NewEnemyClass::CheckPullTrigger(bool isPlayerPulling, float pullRadius, flo
 
     // 3. 判定失敗、またはデータなしの場合は引き寄せ状態へ
     m_state = Attracted;
+    m_pullAtkMessage.SetState(eShowUISelect::Text3);
+
 }
 
 // ---------------------------------------------------------------
@@ -620,7 +600,7 @@ void NewEnemyClass::ApplyMovement(float deltaTime, const XMVECTOR moveDir)
         if (data->isLeaderEscaping)
         {
             // リーダー逃走中かつ範囲攻撃中なら大幅加速
-            situationBoost = GetIsLeader() ? 3.0f : (2.0f + rangeFear);
+            situationBoost = GetIsLeader() ? 3.0f : 3.0f;
         }
         else if (GetIsLeader())
         {
@@ -817,6 +797,34 @@ void NewEnemyClass::SettingOther()
     m_defalutOtherSpeedMultiplier = m_otherSpeedMultiplier;
 }
 
+// ======================================================================
+//  死因を取る
+// ======================================================================
+void NewEnemyClass::OnDie(DamageSource source)
+{
+    if (!GetGroupData()&&!GetIsLeader())return;
+
+    GroupData* data = GetGroupData();
+
+    switch (source)
+    {
+    case DamageSource::Melee:   //近接で死亡
+        data->meleeFear += 1.5f;
+        break;
+    case DamageSource::AreaAttack://範囲攻撃で
+        data->rangeFear += 1.0f;
+        break;
+    case DamageSource::PullAttack://引き寄せ攻撃
+        data->pullResistance += 0.2f;
+        break;
+
+    }
+}
+
+
+
+
+
 
 
 // -----------------------------------------------------------------------
@@ -824,6 +832,10 @@ void NewEnemyClass::SettingOther()
 // -----------------------------------------------------------------------
 void NewEnemyClass::UpdateEnemyMessage(float deltaTime)
 { 
+    //フォントの設定
+    vnFont::setFontSize(31, 22);
+
+
 #pragma region その他の敵の範囲攻撃から逃げるメッセージ
     {
         if (!GetIsLeader() && m_pMyLeader)
@@ -859,12 +871,87 @@ void NewEnemyClass::UpdateEnemyMessage(float deltaTime)
 
 #pragma endregion
 
+    //敵のコード内
+    if (m_isSpwanStart)
+    {
+        m_upgradeTimer -= deltaTime ;
+        float floatUp = (0.8f - m_upgradeTimer) * 2.0f; // 1秒かけて 1.0m 上に上がる
+        // 表示位置に floatUp を足す
+        XMVECTOR displayPos = *GetModel()->getPosition();
+        displayPos = XMVectorSetY(displayPos, XMVectorGetY(displayPos) + 1.0f + floatUp);
+        // ステップに応じて出す文字を変える
+        if (m_upgradeStep < m_upgradeTexts.size())
+        {
+            EnemyAIDebug::ShowUpgrade(displayPos, m_upgradeTexts[m_upgradeStep].c_str());
+        }
+
+
+        // 1つ目の文字が上がりきったら（タイマーが0になったら）
+        if (m_upgradeTimer <= 0.0f)
+        {
+            m_upgradeStep++;    // 次のステップへ
+
+            // 全てのステップが終わったら終了
+            if (m_upgradeStep<m_upgradeTexts.size()) // 2個出し終わったら
+            {
+                m_upgradeTimer = 3.0f;
+            }
+            else
+            {
+                m_isSpwanStart = false;
+                m_upgradeStep = 0;
+                m_onceStartUI = true;
+                // 次回のためにタイマーなどは戻さない（またはリセット）
+            }
+        }
+
+    }
     m_areaAtkMessage.Update(deltaTime);
     m_pullAtkMessage.Update(deltaTime);
-
+    m_panicMessage.Update(deltaTime);
+    m_chargeMessage.Update(deltaTime);
+    m_patrolMessage.Update(deltaTime);
+    m_followMessage.Update(deltaTime);
+    m_runMessage.Update(deltaTime);
 
     ShowMessage();
 }
+//スポーン時の最初に何が強化されたか出す
+void NewEnemyClass::CheckEvolutionOnSpawn()
+{
+    if (!GetGroupData())return;
+    GroupData* data = GetGroupData();
+    m_upgradeTexts.clear(); //リストをきれいにする
+
+    //1.近接耐性が上がっていたらリストに追加
+    if (data->meleeFear > data->oldMeleeFear)
+    {
+        m_upgradeTexts.push_back(L"「近接耐性アップ」");
+        data->oldMeleeFear = data->meleeFear;   //データを更新
+    }
+    //2.範囲攻撃耐性
+    if (data->rangeFear > data->oldRangeFear)
+    {
+        m_upgradeTexts.push_back(L"「範囲攻撃耐性アップ」");
+        data->oldRangeFear = data->rangeFear;
+    }
+    //3.引き寄せ耐性
+    if (data->pullResistance > data->oldPullResistance)
+    {
+        m_upgradeTexts.push_back(L"「引き寄せ耐性アップ」");
+        data->oldPullResistance = data->pullResistance;
+    }
+
+    //進化した項目が１つでもあれば、表示する
+    if (!m_upgradeTexts.empty())
+    {
+        m_isSpwanStart = true;
+        m_upgradeStep = 0;
+        m_upgradeTimer = 3.0f;
+    }
+
+}
+
 void NewEnemyClass::ShowMessage()
 {
     //全体のモードを確認し、出すべきでないなら終了
@@ -875,7 +962,7 @@ void NewEnemyClass::ShowMessage()
     auto currentMode = EnemyPool::GetInstance().GetDisplayMode();
 
     bool shouldShow = false;
-    vnFont::setFontSize(38, 20);
+    vnFont::setFontSize(31, 22);
 
     switch (currentMode)
     {
@@ -888,13 +975,20 @@ void NewEnemyClass::ShowMessage()
     if (!shouldShow)return;
     // 1. 表示すべきメッセージ情報を保持する構造体
     struct MsgInfo { std::wstring text; unsigned int color; };
-    MsgInfo areaMsg = { L"", 0 };
-    MsgInfo pullMsg = { L"", 0 };
+    MsgInfo areaMsg = { L"", 0 };       //範囲攻撃に関するメッセージ
+    MsgInfo pullMsg = { L"", 0 };       //引き寄せ攻撃
+    MsgInfo panicMsg = { L"", 0 };      //パニック状態
+    MsgInfo chargeMsg = { L"", 0 };     //特攻状態
+    MsgInfo patrolMsg = { L"", 0 };     //パトロール中
+    MsgInfo followMsg = { L"", 0 };     //リーダー追跡中
+    MsgInfo runMsg = { L"", 0 };        //リーダー逃走中
+
+
 
     // 2. 範囲攻撃メッセージのテキスト決定
     switch (m_areaAtkMessage.uiState) {
     case eShowUISelect::Text1:
-        areaMsg = { isLeader ? L"範囲攻撃内に入ったぞ" : L"逃", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        areaMsg = { isLeader ? L"範囲攻撃内に入ったぞ\n　逃走中" : L"逃", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
         break;
     case eShowUISelect::Text2:
         areaMsg = { L"範囲攻撃外に出た", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
@@ -911,9 +1005,75 @@ void NewEnemyClass::ShowMessage()
         break;
     case eShowUISelect::Text3:
         pullMsg = { L"引き寄せ成功！",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
     }
 
-    // 4. 最後にまとめて表示（Noneじゃなければ出す）
+    // 4.パニック状態
+    switch (m_panicMessage.uiState)
+    {
+    case eShowUISelect::Text1:
+        panicMsg = { L"リーダー！", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
+    case eShowUISelect::Text2:
+        panicMsg = { L"リーダー探し中",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
+    case eShowUISelect::Text3:
+        panicMsg = { L"リーダー発見！",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+    }
+
+
+    // 5.特攻状態
+    switch (m_chargeMessage.uiState)
+    {
+    case eShowUISelect::Text1:
+        chargeMsg = { L"特攻", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
+    case eShowUISelect::Text2:
+        chargeMsg = { L"",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
+    case eShowUISelect::Text3:
+        chargeMsg = { L"",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+    }
+
+    // 6.
+    switch (m_patrolMessage.uiState)
+    {
+    case eShowUISelect::Text1:
+        patrolMsg = { L"パトロール中～", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
+    case eShowUISelect::Text2:
+        patrolMsg = { L"",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
+    case eShowUISelect::Text3:
+        patrolMsg = { L"",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+    }
+
+    // 7.
+    switch (m_followMessage.uiState)
+    {
+    case eShowUISelect::Text1:
+        followMsg = { L"追跡中", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
+    case eShowUISelect::Text2:
+        followMsg = { L"",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
+    case eShowUISelect::Text3:
+        followMsg = { L"",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+    }
+
+    switch (m_runMessage.uiState)
+    {
+    case eShowUISelect::Text1:
+        runMsg = { L"プレイヤーから\n　逃走中", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
+    case eShowUISelect::Text2:
+        runMsg = { L"",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        break;
+    case eShowUISelect::Text3:
+        runMsg = { L"",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+    }
+
+    //最後にまとめて表示（Noneじゃなければ出す）
     if (!areaMsg.text.empty())
     {
         EnemyAIDebug::ShowStateOnce(*GetModel()->getPosition(), m_aiDebugText, m_areaAtkMessage.remainingTime, areaMsg.text.c_str(), areaMsg.color);
@@ -923,7 +1083,28 @@ void NewEnemyClass::ShowMessage()
         EnemyAIDebug::ShowStateOnce(*GetModel()->getPosition(), m_aiDebugText, m_pullAtkMessage.remainingTime, pullMsg.text.c_str(), pullMsg.color);
     }
 
+    if (!panicMsg.text.empty())
+    {
+        EnemyAIDebug::ShowStateOnce(*GetModel()->getPosition(), m_aiDebugText, m_panicMessage.remainingTime, panicMsg.text.c_str(), panicMsg.color);
+    }
+    if (!chargeMsg.text.empty())
+    {
+        EnemyAIDebug::ShowStateOnce(*GetModel()->getPosition(), m_aiDebugText, m_chargeMessage.remainingTime, chargeMsg.text.c_str(), chargeMsg.color);
+    }
+    if (!patrolMsg.text.empty())
+    {
+        EnemyAIDebug::ShowStateOnce(*GetModel()->getPosition(), m_aiDebugText, m_patrolMessage.remainingTime, patrolMsg.text.c_str(), patrolMsg.color);
+    }
+    if (!followMsg.text.empty())
+    {
+        EnemyAIDebug::ShowStateOnce(*GetModel()->getPosition(), m_aiDebugText, m_followMessage.remainingTime, followMsg.text.c_str(), followMsg.color);
+    }
+    if (!runMsg.text.empty())
+    {
+        EnemyAIDebug::ShowStateOnce(*GetModel()->getPosition(), m_aiDebugText, m_runMessage.remainingTime, runMsg.text.c_str(), runMsg.color);
+    }
 
+        
 }
 
 

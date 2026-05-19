@@ -137,7 +137,7 @@ void WaveManager::SetupWave()
         m_spawnLimit = 5;
 
     //ŠÔ§ŒÀ‚ÅWAVEƒNƒŠƒA‚É‚·‚é
-    m_waveTimeLimit = m_waveTimeBase + (m_currentWave - 1) * m_addTime;
+    m_waveTimeLimit = m_waveTimeBase/* + (m_currentWave - 1) * m_addTime*/;
 
 
     if (m_currentWave != 1)

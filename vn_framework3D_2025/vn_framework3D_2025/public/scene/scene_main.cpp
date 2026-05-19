@@ -32,6 +32,8 @@ extern vnMotionData* motion_BoxUnity_RunF;
 
 // --- メンバ変数 ---
 namespace {
+	constexpr float playerModelScale = 1.2f;
+
 	constexpr float underRespawnPos=-5.0f;
 	constexpr float enemyMax = 1;
 	FXMVECTOR enemyGhostModelSize = XMVectorSet(2, 2, 2, 0);
@@ -72,9 +74,46 @@ namespace {
 	constexpr float maxWExp = 300.0f;        // HPバーより少し短く（HPが450なら300くらい）
 	constexpr float barThick = 12.0f;        // 少し細く（18.0fから12.0fへ）
 
+	// =================================================================
+	// --- スキルのクールタイムバー（UI配置の設計図） ---
+	// 
+	// [画面イメージ]
+	//  X座標: 90px (barLeftEdge...) が全員の左端スタートライン
+	//  
+	//  (Y=40)  [====== HPバー (幅450) ======]
+	//  (Y=70)  [==== Expバー (幅300) ====]
+	//  (Y=200) [== 範囲攻撃スキルバー (幅200) ==]  ←★ここ
+	//  (Y=240) [== 引き寄せスキルバー (幅200) ==]  ←★ここ
+	// =================================================================
+
+	// --- スキルのクールタイムバー ---
+	// --- 1. 範囲攻撃スキル（Area Attack）用バー ---
+	// バーの「左端」のX座標（HPやExpと縦一列に揃えるために 90.0f）
+	constexpr float skillBarThick = 30.0f; // しっかり太めの 30px に変更！
+
+
+	constexpr float barLeftEdgeAreaSkill = 55.0f;
+
+	// バーの「縦の位置（高さ）」を表すY座標（Expバーよりさらに下）
+	constexpr float heightYAreaSkill = 330.0f;
+	
+	// クールタイムが最大のとき（使える状態）のバーの「最大横幅」
+	constexpr float maxWAreaSkill = 250.0f;
+
+
+	// --- 2. 引き寄せスキル（Pull）用バー ---
+	// バーの「左端」のX座標（他のバーと綺麗に揃えるために 90.0f）
+	constexpr float barLeftEdgePullSkill = 55.0f;
+	
+	// バーの「縦の位置（高さ）」を表すY座標（範囲攻撃バーの40px下に配置）
+	constexpr float heightYPullSkill = 410.0f;
+	
+	// クールタイムが最大のとき（使える状態）のバーの「最大横幅」
+	constexpr float maxWPullSkill = 250.0f;
+
 
 	// --- カメラ関係 ---
-	constexpr float defualtRadius = 40.0f;
+	constexpr float defualtRadius = 30.0f;
 	constexpr float defualtTheta  = 92.688f;
 	constexpr float defualtPhi	  = 0.7f;
 
@@ -234,10 +273,10 @@ bool SceneMain::initialize()
 	for (int i = 0; i < m_pNewPlayer->GetModel()->getPartsNum(); i++) {
 		registerObject(m_pNewPlayer->GetModel()->getParts(i));
 	}
-	m_pNewPlayer->GetModel()->setScale(1.5f, 1.5f, 1.5f);
+	m_pNewPlayer->GetModel()->setScale(playerModelScale, playerModelScale, playerModelScale);
 	registerObject(m_pNewPlayer->GetMeteorModel());
 	registerObject(m_pNewPlayer->GetUpKaraModel());
-
+	
 	m_pBullet = new Bullet();
 	m_pBullet->SetModel(new vnCharacter(L"data/model/Brid/KaraUp/", L"KaraUp.bone"));
 	m_pBullet->GetModel()->SetAllPartsDiffuse(V_GAME_COLOR_YELLOW, 1);
@@ -257,64 +296,6 @@ bool SceneMain::initialize()
 
 	//enemyPool = new EnemyPool();
 	enemyPool = &EnemyPool::GetInstance();
-
-	//一回に出現する敵を生成	5まで普通に通った
-	//for (int i = 0; i < enemyMax; i++)
-	//{
-	//	EnemyClass* enemy = new EnemyClass();
-
-	//	vnCharacter* model =
-	//		//new vnCharacter(L"data/model/BoxUnityChan/", L"BoxUnityChan.bone");
-	//		new vnCharacter(L"data/model/Ghost/", L"Ghost.bone");
-	//	enemy->SetModel(model);
-
-	//	registerObject(enemy->GetModel());
-
-	//	for (int j = 0; j < enemy->GetModel()->getPartsNum(); j++)
-	//	{
-	//		registerObject(enemy->GetModel()->getParts(j));
-	//	}
-
-	//	enemy->GetModel()->setRenderEnable(false);
-
-	//	for (int j = 0; j < enemy->GetModel()->getPartsNum(); j++)
-	//	{
-	//		enemy->GetModel()->getParts(j)->setRenderEnable(false);
-	//	}
-	//	enemyPool->AddEnemy(enemy);
-	//}
-
-	// --- ゴースト敵生成 ---
-	//一回に出現する敵を生成	5まで普通に通った
-	//for (int i = 0; i < enemyMax; i++)
-	//{
-	//	NewEnemyClass* enemy = new EnemyGhost();
-
-	//	vnCharacter* model =
-	//		//new vnCharacter(L"data/model/BoxUnityChan/", L"BoxUnityChan.bone");
-	//		new vnCharacter(L"data/model/Ghost/", L"Ghost.bone");
-	//		//new vnCharacter(L"data/model/MushroomMon/", L"MushroomMon.bone");
-	//	
-	//	enemy->SetModel(model);
-	//	//enemy->GetModel()->SetAllPartsDiffuse(255, 40, 23, 1);
-	//	//enemy->GetModel()->SetPartDiffuse("MushroomMon", V_GAME_COLOR_SILVER,1.0f);
-	//	//enemy->GetModel()->setScale(2.0f, 2.0f, 2.0f);
-	//	
-	//	registerObject(enemy->GetModel());
-
-	//	for (int j = 0; j < enemy->GetModel()->getPartsNum(); j++)
-	//	{
-	//		registerObject(enemy->GetModel()->getParts(j));
-	//	}
-
-	//	enemy->GetModel()->setRenderEnable(false);
-
-	//	for (int j = 0; j < enemy->GetModel()->getPartsNum(); j++)
-	//	{
-	//		enemy->GetModel()->getParts(j)->setRenderEnable(false);
-	//	}
-	//	enemyPool->AddEnemy(enemy);
-	//}
 
 	//--1.敵の種類の数ループ
 	int totalEnemyCount = 0;
@@ -350,10 +331,6 @@ bool SceneMain::initialize()
 	enemyPool->UnlockEnemyType(NewEnemyClass::EnemyType::MUSHROOM);
 
 	// --- 地形 ---
-
-	//pGround = new vnModel(L"data/model/overpass/", L"overpass.vnm");
-	//pGround = new vnModel(L"data/model/", L"ground.vnm");
-	//pGround = new vnModel(L"data/model/Block/", L"Block.vnm");
 	pGround = new vnModel(L"data/model/Ground/", L"Ground.vnm");
 	pGround->setScale(50.0f, 0.5f, 50);
 
@@ -563,18 +540,91 @@ bool SceneMain::initialize()
 	pImageD = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_d_outline.png");
 	registerObject(pImageD);
 
+	pImageE = new vnSprite(-100, 200, 64 * 0.7f, 64 * 0.7f, L"data/image/keyboard_e_outline.png");
+	registerObject(pImageE);
+	pImageQ = new vnSprite(-100, 200, 64 * 0.7f, 64 * 0.7f, L"data/image/keyboard_q_outline.png");
+	registerObject(pImageQ);
 
 
-	// --- スキルアイコン ---
-	m_pImgSkillIcon_PullAtk = new vnSprite(6400, 400, 64, 64, L"data/image/enemy(仮).png");
-	registerObject(m_pImgSkillIcon_PullAtk);
 
-	m_SkillIcon_PullAtk = new SkillButtonUI(m_pImgSkillIcon_PullAtk, m_pImgSkillIcon_PullAtk,m_pNewPlayer->GetPullRadius());
+	// --- スキルのボタン設定 ---
+	// 範囲攻撃
+	// --- 1. 背景黒枠（少し大きく：幅+10, 縦+6） ---
+	// 中心座標を正しく計算 (90 + 100 = 190)
+	float centerX = barLeftEdgeAreaSkill + (maxWAreaSkill * 0.5f);
 
+	pAreaAtkBtnBackBlack = new vnSprite(centerX, heightYAreaSkill, maxWAreaSkill + 10.0f, skillBarThick + 6.0f, NULL);
+	pAreaAtkBtnBackBlack->setColor(V_GAME_COLOR_BLACK);
+	registerObject(pAreaAtkBtnBackBlack);
+
+
+	// --- 2. バーの背景（中身の土台：グレーなど暗い色にするのがおすすめ） ---
+	pAreaAtkBtnBack = new vnSprite(centerX, heightYAreaSkill, maxWAreaSkill, skillBarThick, NULL);
+	// クールダウン中（スキルが溜まっていない状態）の土台なので、暗いグレーなどにすると見やすいです
+	pAreaAtkBtnBack->setColor(V_GAME_COLOR_BLUEBLACK);
+	registerObject(pAreaAtkBtnBack);
+
+
+	// --- 3. 前景（実際に伸縮するシアンのバー） ---
+	// ★ここも最初は「背景と全く同じ中心座標とサイズ」で生成します！
+	pAreaAtkBtnFront = new vnSprite(centerX, heightYAreaSkill, maxWAreaSkill, skillBarThick, NULL);
+	pAreaAtkBtnFront->setColor(V_GAME_COLOR_CYAN);
+	registerObject(pAreaAtkBtnFront);
+
+	// --- 4.アイコン --- 
+	pAreaSkillIcon = new vnSprite(centerX - 130, heightYAreaSkill - 15, 64*1.2f, 64*1.2f, L"data/image/areaAttackIconImg2.png");
+	pAreaSkillIcon->setColor(V_GAME_COLOR_WHITE);
+	pAreaSkillIcon->setAlpha(1.0f);
+	registerObject(pAreaSkillIcon);
+
+	m_areaAtkUIColor.colorBackBlack = V_GAME_COLOR_BLACK;
+	m_areaAtkUIColor.colorBack		= V_GAME_COLOR_BLUEBLACK;
+	m_areaAtkUIColor.colorFront		= V_GAME_COLOR_CYAN;
+	m_areaAtkUIColor.colorIcon		= V_GAME_COLOR_WHITE;
+
+
+	
+
+	// 引き寄せ攻撃
+	pPullBtnBackBlack = new vnSprite(centerX, heightYPullSkill, maxWAreaSkill + 10.0f, skillBarThick + 6.0f, NULL);
+	pPullBtnBackBlack->setColor(V_GAME_COLOR_BLACK);
+	registerObject(pPullBtnBackBlack);
+
+
+	// --- 2. バーの背景（中身の土台：グレーなど暗い色にするのがおすすめ） ---
+	pPullBtnBack = new vnSprite(centerX, heightYPullSkill, maxWAreaSkill, skillBarThick, NULL);
+	// クールダウン中（スキルが溜まっていない状態）の土台なので、暗いグレーなどにすると見やすいです
+	pPullBtnBack->setColor(V_GAME_COLOR_BLUEBLACK);
+	registerObject(pPullBtnBack);
+
+
+	// --- 3. 前景（実際に伸縮するシアンのバー） ---
+	// ★ここも最初は「背景と全く同じ中心座標とサイズ」で生成します！
+	pPullBtnFront = new vnSprite(centerX, heightYPullSkill, maxWAreaSkill, skillBarThick, NULL);
+	pPullBtnFront->setColor(V_GAME_COLOR_CYAN);
+	registerObject(pPullBtnFront);
+
+	// --- 4.アイコン --- 
+	pPullSkillIcon = new vnSprite(centerX - 130, heightYPullSkill-15, 64 * 1.2f, 64 * 1.2f, L"data/image/pullAttackIconImg2.png");
+	pPullSkillIcon->setColor(V_GAME_COLOR_WHITE);
+	pPullSkillIcon->setAlpha(1.0f);
+	registerObject(pPullSkillIcon);
+
+	m_pullUIColor.colorBackBlack = V_GAME_COLOR_BLACK;
+	m_pullUIColor.colorBack = V_GAME_COLOR_BLUEBLACK;
+	m_pullUIColor.colorFront = V_GAME_COLOR_CYAN;
+	m_pullUIColor.colorIcon = V_GAME_COLOR_WHITE;
+
+
+	SetSkillUIRender(false);
 
 
 	//-------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------
+
+
+
+
 
 	// --- 黒い幕 ---
 	pBackGroundBlack = new vnSprite(1280/2, 720/2, 1280, 720, L"BackGroundBlack.png");
@@ -786,12 +836,26 @@ void SceneMain::terminate()
 	deleteObject(pIconPlayer);
 	pIconPlayer = nullptr;
 
+	//経験値バー
 	deleteObject(pExpBarBackBlack);
 	pExpBarBackBlack = nullptr;
 	deleteObject(pExpBarBack);
 	pExpBarBack = nullptr;
 	deleteObject(pExpBarFront);
 	pExpBarFront = nullptr;
+
+	//範囲攻撃バー
+	deleteObject(pAreaAtkBtnBackBlack);
+	deleteObject(pAreaAtkBtnBack);
+	deleteObject(pAreaAtkBtnFront);
+	deleteObject(pAreaSkillIcon);
+
+	//引き寄せ攻撃バー
+	deleteObject(pPullBtnBackBlack);
+	deleteObject(pPullBtnBack);
+	deleteObject(pPullBtnFront);
+	deleteObject(pPullSkillIcon);
+
 
 
 	//for (int i = 0; i < 3; i++) {
@@ -809,11 +873,15 @@ void SceneMain::terminate()
 	deleteObject(pImageA);
 	deleteObject(pImageS);
 	deleteObject(pImageD);
+	deleteObject(pImageE);
+	deleteObject(pImageQ);
 
 	pImageW = nullptr;
 	pImageA = nullptr;
 	pImageS = nullptr;
 	pImageD = nullptr;
+	pImageE = nullptr;
+	pImageQ = nullptr;
 
 	deleteObject(m_pUIBackGroundBlack);
 	m_pUIBackGroundBlack = nullptr;
@@ -825,11 +893,7 @@ void SceneMain::terminate()
 	deleteObject(pBackGroundBlack);
 	pBackGroundBlack = nullptr;
 
-	deleteObject(m_pImgSkillIcon_PullAtk);
-	m_pImgSkillIcon_PullAtk = nullptr;
 
-	delete m_SkillIcon_PullAtk;
-	m_SkillIcon_PullAtk = nullptr;
 
 
 	for (int i = 0; i < 3; i++)
@@ -918,6 +982,8 @@ void SceneMain::execute()
 		UpdateGameClear();
 		
 		break;
+	case TimeStop:
+		break;
 	}
 
 	//左側の表示
@@ -931,6 +997,9 @@ void SceneMain::execute()
 		pImageA->setRenderEnable(true);
 		pImageS->setRenderEnable(true);
 		pImageD->setRenderEnable(true);
+		pImageE->setRenderEnable(true);
+		pImageQ->setRenderEnable(true);
+		
 
 	}
 	else
@@ -939,6 +1008,9 @@ void SceneMain::execute()
 		pImageA->setRenderEnable(false);
 		pImageS->setRenderEnable(false);
 		pImageD->setRenderEnable(false);
+		pImageE->setRenderEnable(false);
+		pImageQ->setRenderEnable(false);
+		SetSkillUIRender(false);
 	}
 
 	// --- ポーズ中に黒い画面にする ---
@@ -1142,6 +1214,9 @@ void SceneMain::render()
 			bool dPressed = vnKeyboard::on(DIK_D);
 			bool wPressed = vnKeyboard::on(DIK_W);
 			bool sPressed = vnKeyboard::on(DIK_S);
+			bool ePressed = vnKeyboard::on(DIK_E);
+			bool qPressed = vnKeyboard::on(DIK_Q);
+
 			bool spacePressed = vnKeyboard::on(DIK_SPACE);
 			bool mousePressed = vnMouse::onL(); // 0 = 左クリック
 
@@ -1177,6 +1252,12 @@ void SceneMain::render()
 			pImageD->setPos(baseX + 135, baseY + 100);
 			pImageD->setColor(dPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
+			pImageE->setPos(baseX + 55.5f, baseY + 162.5f);
+			pImageE->setColor(ePressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
+			
+			pImageQ->setPos(baseX + 55.5f, baseY + 242.5f);
+			pImageQ->setColor(qPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
+
 		}
 
 		{
@@ -1211,6 +1292,99 @@ void SceneMain::render()
 			float currentPosX = barLeftEdgeExp + (maxWExp * expRatio * 0.5f);
 
 			pExpBarFront->setPos(currentPosX, heightYExp); // Y座標も初期化時に合わせた位置に
+
+		}
+
+		{
+			// --- スキルバーの表示更新 ---
+			SetSkillUIRender(true);
+			float currentCoolTime = (float)m_pNewPlayer->GetAreaAttackCoolTime();
+			float maxCoolTime = (float)m_pNewPlayer->GetAreaAttackMaxCoolTime();
+
+			// 安全に割り算を行うためのチェック
+			float areaRatio = 0.0f;
+			if (maxCoolTime > 0.0f)
+			{
+				// 例：残り10秒/最大10秒 = 1.0  → 1.0 - 1.0 = 0.0 (空っぽ)
+				// 例：残り 3秒/最大10秒 = 0.3  → 1.0 - 0.3 = 0.7 (7割溜まった)
+				// 例：残り 0秒/最大10秒 = 0.0  → 1.0 - 0.0 = 1.0 (満タン！)
+				areaRatio = 1.0f - (currentCoolTime / maxCoolTime);
+			}
+			if (areaRatio > 1.0f)
+			{
+				areaRatio = 1.0f;
+			}
+			if (areaRatio >= 1.0f)
+			{
+				pAreaSkillIcon->setAlpha(1.0f);
+				if (!m_bIsAreaSkillMaxPrev)
+				{
+					m_bIsAreaSkillMaxPrev = true;
+
+					//アイコンを拡大する
+					m_areaSkillIconScale = 1.5f;
+					m_areaSkillIargetScale = 1.0f;
+				}
+				m_areaSkillIconScale += (m_areaSkillIargetScale - m_areaSkillIconScale) * 0.05f;
+			}
+			else
+			{
+				pAreaSkillIcon->setAlpha(0.7f);
+				m_bIsAreaSkillMaxPrev = false;
+				m_areaSkillIconScale = 1.0f;
+				m_areaSkillIargetScale = 1.0f;
+			}
+			pAreaSkillIcon->setScale(m_areaSkillIconScale);
+			pAreaAtkBtnFront->setScaleX(areaRatio);
+			float currentPosX = barLeftEdgeAreaSkill + (maxWAreaSkill * areaRatio * 0.5f);
+			pAreaAtkBtnFront->setPos(currentPosX, heightYAreaSkill);
+
+
+		}
+		{
+			// --- スキルバーの表示更新 ---
+			SetSkillUIRender(true);
+			float currentCoolTime = (float)m_pNewPlayer->GetPullAttackCoolTime();
+			float maxCoolTime = (float)m_pNewPlayer->GetPullAttackMaxCoolTime();
+
+			// 安全に割り算を行うためのチェック
+			float pullRatio = 0.0f;
+			if (maxCoolTime > 0.0f)
+			{
+				// 例：残り10秒/最大10秒 = 1.0  → 1.0 - 1.0 = 0.0 (空っぽ)
+				// 例：残り 3秒/最大10秒 = 0.3  → 1.0 - 0.3 = 0.7 (7割溜まった)
+				// 例：残り 0秒/最大10秒 = 0.0  → 1.0 - 0.0 = 1.0 (満タン！)
+				pullRatio = 1.0f - (currentCoolTime / maxCoolTime);
+			}
+			if (pullRatio > 1.0f)
+			{
+				pullRatio = 1.0f;
+			}
+			if (pullRatio >= 1.0f)
+			{
+				pPullSkillIcon->setAlpha(1.0f);
+				if (!m_bIsPullSkillMaxPrev)
+				{
+					m_bIsPullSkillMaxPrev = true;
+
+					//アイコンを拡大する
+					m_pullSkillIconScale = 1.5f;
+					m_pullSkillIargetScale = 1.0f;
+				}
+				m_pullSkillIconScale += (m_pullSkillIargetScale - m_pullSkillIconScale) * 0.05f;
+			}
+			else
+			{
+				pPullSkillIcon->setAlpha(0.7f);
+				m_bIsPullSkillMaxPrev = false;
+				m_pullSkillIconScale = 1.0f;
+				m_pullSkillIconScale = 1.0f;
+			}
+			pPullSkillIcon->setScale(m_pullSkillIconScale);
+			pPullBtnFront->setScaleX(pullRatio);
+			float currentPosX = barLeftEdgeAreaSkill + (maxWAreaSkill * pullRatio * 0.5f);
+			pPullBtnFront->setPos(currentPosX, heightYPullSkill);
+
 
 		}
 
@@ -1303,6 +1477,11 @@ void SceneMain::render()
 			pBackGroundBlack->setScale(backGroundBlackScale);
 			if (backGroundBlackScale >= 1)
 			{
+				for (auto& enemy : enemyPool->GetEnemies())
+				{
+					enemy->ReStartEnemy();
+				}
+				enemyPool->ReStartEnemyGroupData();
 				switchScene(TITEL);
 			}
 		 }
@@ -1605,6 +1784,49 @@ void SceneMain::SetExpbarRender(bool on)
 
 }
 
+//スキルボタンのUIの表示・非表示
+void SceneMain::SetSkillUIRender(bool on)
+{
+	pAreaAtkBtnBackBlack ->setRenderEnable(on);
+	pAreaAtkBtnBack		 ->setRenderEnable(on);
+	pAreaAtkBtnFront	 ->setRenderEnable(on);
+	pAreaSkillIcon		 ->setRenderEnable(on);
+	pPullBtnBackBlack	 ->setRenderEnable(on);
+	pPullBtnBack		 ->setRenderEnable(on);
+	pPullBtnFront		 ->setRenderEnable(on);
+	pPullSkillIcon		 ->setRenderEnable(on);
+
+	if (!m_pNewPlayer->GetIsHaveAreaAtkSkill())
+	{
+		pAreaAtkBtnBackBlack->setColor(V_GAME_COLOR_BLACK);
+		pAreaAtkBtnBack		->setColor(V_GAME_COLOR_BLACK);
+		pAreaAtkBtnFront	->setColor(V_GAME_COLOR_BLACK);
+		pAreaSkillIcon		->setColor(V_GAME_COLOR_BLACK);
+	}
+	else
+	{
+		pAreaAtkBtnBackBlack->setColor(m_areaAtkUIColor.colorBackBlack);
+		pAreaAtkBtnBack		->setColor(m_areaAtkUIColor.colorBack);
+		pAreaAtkBtnFront	->setColor(m_areaAtkUIColor.colorFront);
+		pAreaSkillIcon		->setColor(m_areaAtkUIColor.colorIcon);
+	}
+
+	if (!m_pNewPlayer->GetIsHavePullSkill())
+	{
+		pPullBtnBackBlack->setColor(V_GAME_COLOR_BLACK);
+		pPullBtnBack	 ->setColor(V_GAME_COLOR_BLACK);
+		pPullBtnFront	 ->setColor(V_GAME_COLOR_BLACK);
+		pPullSkillIcon	 ->setColor(V_GAME_COLOR_BLACK);
+	}
+	else
+	{
+		pPullBtnBackBlack->setColor(m_pullUIColor.colorBackBlack);
+		pPullBtnBack	 ->setColor(m_pullUIColor.colorBack);
+		pPullBtnFront	 ->setColor(m_pullUIColor.colorFront);
+		pPullSkillIcon	 ->setColor(m_pullUIColor.colorIcon);
+	}
+
+}
 
 //----------------------------------------
 
@@ -1653,8 +1875,7 @@ void SceneMain::UpdatePause()
 	}
 
 	//基本の役割：群の情報を出す
-	enemyPool->DrawGroupDebugInfo();
-
+	enemyPool->DebugPause();
 }
 
 
@@ -1958,6 +2179,7 @@ void SceneMain::UpdateEnemies(float deltaTime)
 		if (enemy->GetState() != NewEnemyClass::eState::KnockBack)
 		{
 			auto dir = colliderStoS(enemy, m_pNewPlayer);
+			NewEnemyClass::DamageSource source = NewEnemyClass::DamageSource::Melee;
 
 			if (dir != None)
 			{
@@ -1978,6 +2200,19 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				pEmitter->setEmit(true, 0.3f);
 				AddCombo();
 				
+				//死因を記録
+				if (m_pNewPlayer->IsAreaAttack())
+				{
+					source = NewEnemyClass::DamageSource::AreaAttack;
+				}
+				if (m_pNewPlayer->IsPulling())
+				{
+					source = NewEnemyClass::DamageSource::PullAttack;
+				}
+				if (enemy->GetIsLeader())
+				{
+					enemy->OnDie(source);
+				}
 				enemy->SetIsHitPlayer(true);
 				waveManager->OnEnemyKilled();
 			}

@@ -70,6 +70,12 @@ public:
 
 	eDisplayMode GetDisplayMode()const { return m_displayMode; }
 	void DrawGroupDebugInfo();
+	void DrawGroupDebugArrow();
+	void ChangeDebugGroupIndex(int direction);	//ï\é¶Ç∑ÇÈåQÇÍÇïœçX
+	void DebugPause();
+
+	void ReStartEnemyGroupData();
+
 private:
 	EnemyPool();
 	std::vector<NewEnemyClass*> _enemies;
@@ -77,9 +83,9 @@ private:
 	std::vector<std::unique_ptr<NewEnemyClass::GroupData>> m_groupDatas;
 
 	float m_spawnTimer = 0.0f;
-	const float SPAWN_INTERVAL = 10.0f; // 0.1ïbë“ã@
+	const float SPAWN_INTERVAL = 0.1f; // 0.1ïbë“ã@
 
-	eDisplayMode m_displayMode = eDisplayMode::OthersOnly;
+	eDisplayMode m_displayMode = eDisplayMode::LeaderOnly;
 
 	void DebugSetting();
 	void ChangeDisplayMode(eDisplayMode nextMode);

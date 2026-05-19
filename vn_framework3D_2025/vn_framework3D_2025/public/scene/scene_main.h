@@ -46,7 +46,17 @@ private:
 		Pause,
 		GameOver,
 		GameClear,
-		GameFinish 
+		GameFinish,
+		TimeStop,
+	};
+
+	struct UIColor
+	{
+		XMVECTOR colorBackBlack;
+		XMVECTOR colorBack;
+		XMVECTOR colorFront;
+		XMVECTOR colorIcon;
+
 	};
 
 	// --- 定数 (constexpr) ---
@@ -122,6 +132,29 @@ private:
 	vnSprite* pExpBarFront;
 
 
+	// --- スキルUI用スプライト ---
+	// 範囲攻撃（Area Attack）用UI
+	vnSprite* pAreaAtkBtnBackBlack; // 一番下の黒い座布団（または外枠）
+	vnSprite* pAreaAtkBtnBack;      // スキルアイコン画像本体
+	vnSprite* pAreaAtkBtnFront;     // 上から重ねるクールダウン用の影（時計回りに減る）
+	vnSprite* pAreaSkillIcon;		//範囲攻撃のアイコン
+	bool m_bIsAreaSkillMaxPrev = true; // 前回MAXだったか
+	float m_areaSkillIconScale = 1.0f;           // 現在のアイコンのスケール（初期値 1.0）
+	float m_areaSkillIargetScale = 1.0f;         // 目標のスケール（初期値 1.0）
+	UIColor m_areaAtkUIColor;			//色を保存しておくよう
+
+
+	// 引き寄せ攻撃（Pull）用UI
+	vnSprite* pPullBtnBackBlack;
+	vnSprite* pPullBtnBack;
+	vnSprite* pPullBtnFront;
+	vnSprite* pPullSkillIcon;
+	bool m_bIsPullSkillMaxPrev = true; // 前回MAXだったか
+	float m_pullSkillIargetScale = 1.0f;         // 目標のスケール（初期値 1.0）
+	float m_pullSkillIconScale = 1.0f;           // 現在のアイコンのスケール（初期値 1.0）
+	UIColor m_pullUIColor;
+
+
 	// --- UI: スプライト (コンボ・操作説明) ---
 	vnSprite* pComboSprites[3][10];
 	vnSprite* pComboWord;
@@ -129,14 +162,14 @@ private:
 	vnSprite* pImageA;
 	vnSprite* pImageS;
 	vnSprite* pImageD;
+	
+	vnSprite* pImageE;	//スキルボタン範囲攻撃
+	vnSprite* pImageQ;	//引き寄せ攻撃
 
 	//--説明を見やすくする為の黒い背景
 	vnSprite* m_pUIBackGroundBlack;
 	vnSprite* m_pUIBackGroundBlackPause;
 
-	//スキルアイコン
-	SkillButtonUI* m_SkillIcon_PullAtk;
-	vnSprite* m_pImgSkillIcon_PullAtk;
 
 
 	UpgradeSelectionUI *m_pUpgradeUI;
@@ -181,6 +214,8 @@ private:
 	void setHPbarRender(bool on);
 
 	void SetExpbarRender(bool on);
+
+	void SetSkillUIRender(bool on); 
 
 	// --- 衝突判定・計算系 ---
 	eDirection colliderCtoC(CharacterBase* p1, CharacterBase* p2);

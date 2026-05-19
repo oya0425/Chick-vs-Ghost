@@ -32,8 +32,8 @@ public:
     }
 
     virtual float GetAreaAttackRadius()const { return 0.0f; }
-    virtual bool IsAreaAttack()const { return false; }
-
+    virtual bool IsAreaAttack()const { return false; }  //”ÍˆÍUŒ‚’†‚©
+    virtual bool CanAreaAttack()const { return false; }  //”ÍˆÍUŒ‚‚ğŒ‚‚Ä‚é‚©
     // --- HP ---
     void SetMaxHp(int maxHp);
     int GetCurrentHp() const;

@@ -13,6 +13,11 @@ EnemyPool::~EnemyPool()
     //_enemies.clear();
 }
 
+void EnemyPool::ReStartEnemyGroupData()
+{
+    m_groupDatas.clear();
+}
+
 // --- 敵を追加 ---
 void EnemyPool::AddEnemy(NewEnemyClass* enemy)
 {
@@ -284,6 +289,20 @@ void EnemyPool::ChangeDisplayMode(eDisplayMode nextMode) {
         break;
     }
 }
+void EnemyPool::DebugPause()
+{
+    // ポーズ中の更新処理内
+    if (vnKeyboard::trg(DIK_LEFT)) {
+        ChangeDebugGroupIndex(-1);
+    }
+    if (vnKeyboard::trg(DIK_RIGHT)) {
+        ChangeDebugGroupIndex(1);
+    }
+
+    DrawGroupDebugInfo();
+    DrawGroupDebugArrow();
+
+}
 
 void EnemyPool::DrawGroupDebugInfo()
 {
@@ -299,10 +318,12 @@ void EnemyPool::DrawGroupDebugInfo()
 
     vnFont::setFontSize(38, 25);
 
+    vnFont::print(x-50, y - linePitch * 1, GAME_COLOR_YELLOW, L" Tab．戻る:　左右Key. 番号切り替え");
+
     // タイトルの表示
     vnFont::print(x, y, GAME_COLOR_CYAN, L"～敵の群れ情報表示～");
 
-    vnFont::print(x, y + linePitch * 1, GAME_COLOR_WHITE, L"番号　%d", m_debugGroupIndex);
+    vnFont::print(x, y + linePitch * 1, GAME_COLOR_WHITE, L"番号：%d番", m_debugGroupIndex);
 
     //vnFont::print(x, y + linePitch * 2, GAME_COLOR_WHITE, L"番号：%d", data->id);
     //色
@@ -310,9 +331,70 @@ void EnemyPool::DrawGroupDebugInfo()
     
     //学習状況
     vnFont::print(x, y + linePitch * 3, GAME_COLOR_CYAN, L"～成長値～");
-    vnFont::print(x, y + linePitch * 4, GAME_COLOR_WHITE, L"近接耐性（基礎速度アップ）：%.2f", data->meleeFear);
-    vnFont::print(x, y + linePitch * 5, GAME_COLOR_WHITE, L"範囲攻撃耐性（逃げはじめる範囲強化）：%.2f", data->rangeFear);
-    vnFont::print(x, y + linePitch * 6, GAME_COLOR_WHITE, L"引き寄せ攻撃耐性（無効確率）：%.1f%%", data->pullResistance);
+    vnFont::print(x, y + linePitch * 4, GAME_COLOR_WHITE, L"近接耐性　　　　：%.2f", data->meleeFear);
+    vnFont::print(x, y + linePitch * 5, GAME_COLOR_WHITE, L"範囲攻撃耐性　　：%.2f", data->rangeFear);
+    vnFont::print(x, y + linePitch * 6, GAME_COLOR_WHITE, L"引き寄せ攻撃耐性：%.0f%%", data->pullResistance*100);
 
+    vnFont::print(x, y + linePitch * 8, GAME_COLOR_CYAN, L"～説明～");
+    vnFont::print(x, y + linePitch * 9, GAME_COLOR_WHITE, L"近接耐性　　　　：基本速度に加算");
+    vnFont::print(x, y + linePitch * 10, GAME_COLOR_WHITE, L"範囲攻撃耐性　　：逃げ始める基本範囲に加算(範囲攻撃可能時のみ)");
+    vnFont::print(x, y + linePitch * 11, GAME_COLOR_WHITE, L"引き寄せ攻撃耐性：無効確率に加算");
+
+}
+void EnemyPool::DrawGroupDebugArrow() {
+    if (m_groupDatas.empty()) return;
+
+    // 現在選択中のグループデータ
+    auto& targetGroup = m_groupDatas[m_debugGroupIndex];
+
+    // リーダーが生きているかチェック
+    if (targetGroup->isLeaderAlive) {
+        // 全敵リストの中から、このグループIDを持っていて、かつリーダーである敵を探す
+        for (auto& enemy : _enemies) {
+            if (enemy->GetGroupID() == targetGroup->id && enemy->GetIsLeader()) {
+
+                // リーダーの座標を取得
+                XMVECTOR pos = *enemy->GetModel()->getPosition();
+
+                // 少し高い位置に表示するために座標を調整（例：Yを+2.0f）
+                pos.m128_f32[1] += 3.0f;
+                pos.m128_f32[0] -= 0.4f;
+
+                // 矢印を表示
+                EnemyAIDebug::ShowStateArrow(
+                    pos,
+                    L"▼",      // 下向き矢印
+                    GAME_COLOR_YELLOW
+                );
+
+                break; // 見つかったらループ終了
+            }
+        }
+    }
+}
+
+void EnemyPool::ChangeDebugGroupIndex(int direction)
+{
+    //1.データがないなら何もしない
+    if (m_groupDatas.empty())
+    {
+        m_debugGroupIndex = -1;
+        return;
+    }
+
+    //2.インデックスを増減する
+    m_debugGroupIndex += direction;
+
+    //3.ループ処理（端に行ったら反対側へ）
+    if (m_debugGroupIndex < 0)
+    {
+        //左へ行きすぎたら一番最後へ
+        m_debugGroupIndex = (int)m_groupDatas.size() - 1;
+
+    }
+    else if(m_debugGroupIndex>=(int)m_groupDatas.size())
+    {
+        m_debugGroupIndex = 0;
+    }
 
 }
