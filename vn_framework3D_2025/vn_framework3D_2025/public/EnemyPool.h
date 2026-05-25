@@ -43,9 +43,11 @@ public:
 
 	// --- スポーン命令 ---
 	void Spawn(const XMVECTOR& position/*,int globalLimit*/);
+	void Spawn(const XMVECTOR& position,int currentWave,int maxWave);
 
 	// --- 非アクティブ敵取得 ---
 	NewEnemyClass* GetInactiveEnemy();
+	NewEnemyClass* GetInactiveBoss();	//ボスだけ取ってくる
 
 	// --- アクティブ数取得 ---
 	int GetActiveCount()const;
@@ -64,6 +66,8 @@ public:
 	void ShowAllEnemies();
 
 	std::vector<std::unique_ptr<NewEnemyClass::GroupData>>& GetLatestGroupData() { return m_groupDatas; }
+	std::unique_ptr<NewEnemyClass::GroupData>& GetBossGroupData() { return m_bossGroupData; }
+
 
 	//自身のグループIDをもとに学習データを持ってくる　
 	NewEnemyClass::GroupData* GetGroupData(int id);
@@ -76,11 +80,19 @@ public:
 
 	void ReStartEnemyGroupData();
 
+	// --- ボスの学習データを入れる ---
+	void SetBossData();
+	void DrawBossDebugInfo();
+	void DebugBossPause();
+
+
 private:
 	EnemyPool();
 	std::vector<NewEnemyClass*> _enemies;
 
 	std::vector<std::unique_ptr<NewEnemyClass::GroupData>> m_groupDatas;
+
+	std::unique_ptr<NewEnemyClass::GroupData>m_bossGroupData;
 
 	float m_spawnTimer = 0.0f;
 	const float SPAWN_INTERVAL = 0.1f; // 0.1秒待機

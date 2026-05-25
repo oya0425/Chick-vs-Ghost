@@ -203,6 +203,10 @@ public:
 	}
 	eState GetState() const{ return m_state; }
 
+	// --- 特攻状態かどうか（引き寄せ攻撃用）---
+	bool GetIsCharge()const { return m_isCharge; }
+
+
 	// --- アクティブ状態か ---
 	bool GetActive() { return m_isActive; }
 	void SetActive(bool active) { m_isActive = active; }
@@ -217,12 +221,17 @@ public:
 	// --- リーダー関連 ---
 	bool GetIsLeader()const { return m_isLeader; }
 	void SetIsLeader(bool isLeader) { m_isLeader = isLeader; }
+
 	void SettingLeader(GroupData* groupData);
 
 	XMVECTOR GetColor()const { return GetModel()->GetAllPartsDiffuse(); }
 	bool IsLeaderPanic() const { return m_leaderInTrouble; }
 	// --- リーダー以外の敵 ---
 	void SettingOther();
+
+	// --- ボスのセッティング（初期化）（学習データを最初は入れておく、最後まで行ったときにデータを全部足す）---
+	void SettingBoss(GroupData* groupData);
+	bool GetIsBoss()const { return m_isBoss; }
 
 	// ---	群れ ---
 	eGroupMode GetGroupMode()const { return m_currentGroupMode; }
@@ -312,6 +321,7 @@ protected:
 	// ----------------------------
 	NewEnemyClass* m_pMyLeader = nullptr;	//追いかけるリーダー個体
 	bool		   m_isLeader  = false;		//リーダーかどうか
+	bool		   m_isBoss = false;		//ボスかどうか
 	int m_gruoupID = 0;						//群れの番号
 
 
@@ -329,6 +339,8 @@ protected:
 
 	// --- 特攻 ---
 	float m_chargeSpeedMultiplier = 1.2f;			//特攻時の速度倍率
+	bool m_isCharge = false;						//引き寄せ攻撃時に特攻状態が消えるので記録しておく
+
 
 	// --- リーダー ---
 	float m_leaderSeparateRadius	= 1.0f;			//リーダー同氏の反発距離

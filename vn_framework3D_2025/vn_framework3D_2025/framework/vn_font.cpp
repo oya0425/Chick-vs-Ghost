@@ -244,7 +244,7 @@ DWORD vnFont::getColor()
 
 void vnFont::setFontSize(int index, int size) {
 	// すでにそのサイズのフォントを作ったことがあるか確認
-	if (fontCache.find(size) == fontCache.end()) {
+	if (fontCache.find(index) == fontCache.end()) {
 		// なければ作成（フォント名は固定か、今の38番などを使う）
 		fontCache[size] = vnFont::create(vnFont::getFontName(index), size);
 	}

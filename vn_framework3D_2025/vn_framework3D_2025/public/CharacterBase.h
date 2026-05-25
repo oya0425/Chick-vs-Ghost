@@ -35,11 +35,12 @@ public:
     virtual bool IsAreaAttack()const { return false; }  //”ÍˆÍUŒ‚’†‚©
     virtual bool CanAreaAttack()const { return false; }  //”ÍˆÍUŒ‚‚ğŒ‚‚Ä‚é‚©
     // --- HP ---
-    void SetMaxHp(int maxHp);
-    int GetCurrentHp() const;
-    int GetMaxHp() const;
-    void AddHP(int addhp);
-    void Damage(int value);
+    void SetMaxHp(float maxHp);
+    void SetCurrentHP(float currentHP);
+    float GetCurrentHp() const;
+    float GetMaxHp() const;
+    void AddHP(float addhp);
+    void Damage(float value);
 
     // --- ¶€ ---
     bool IsDead()const;
@@ -64,8 +65,8 @@ private:
 
 
     // HP
-    int m_currentHP = 100;
-    int m_maxHP = 100;
+    float m_currentHP = 100;
+    float m_maxHP = 100;
 
 protected:
     CollisionComponent m_collision;

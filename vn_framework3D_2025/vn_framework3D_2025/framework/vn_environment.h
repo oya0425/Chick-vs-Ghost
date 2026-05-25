@@ -161,6 +161,30 @@ using namespace DirectX;
 #define GAME_COLOR_CURSOR      0xFFFFFF80  // カーソル色
 #define GAME_COLOR_GOLD        0xFFFFD700  // ゴールド（金色、アイテム用）
 
+#define GAME_COLOR_AMBER         0xFFFF9F00  // アンバー（深みのある琥珀色・近接耐性の輝きに）
+#define GAME_COLOR_ELECTRIC_PURPLE 0xFFDF00FF // エレクトリックパープル（極彩色な紫・範囲耐性に）
+#define GAME_COLOR_VIOLET        0xFFB026FF  // バイオレット（魔力的な青紫・範囲耐性別案に）
+#define GAME_COLOR_ELECTRIC_CYAN 0xFF00E5FF  // エレクトリックシアン（強く光る水色・引き寄せ耐性に）
+
+// --- UI調整・グラデーション用（組み合わせると映える中間色） ---
+#define GAME_COLOR_NEON_YELLOW   0xFFEAFF00  // ネオンイエロー（非常に明るい蛍光黄、ゴールドと白の間）
+#define GAME_COLOR_PASTEL_PINK   0xFFFFB3D9  // パステルピンク（フレームのハイライト用）
+#define GAME_COLOR_ICE_BLUE      0xFFD0FAFF  // アイスブルー（白に近い水色、シアンのハイライト・完了表現用）
+
+// 近接系（アンバー・ゴールド系）のバリエーション
+#define GAME_COLOR_BRIGHT_ORANGE 0xFFFF6C00  // ブライトオレンジ（アンバーより少し赤みがあり、夕日のように強く輝く）
+#define GAME_COLOR_SUNGLOW       0xFFFFCC33  // サングロウ（ひときわ明るい黄金色。最大強化や完了時の演出に）
+
+// 範囲系（パープル・マゼンタ系）のバリエーション
+#define GAME_COLOR_NEON_MAGENTA  0xFFFF0099  // ネオンマゼンタ（ピンク寄りの鮮烈な紫。エレクトリックパープルよりさらに派手）
+#define GAME_COLOR_HOT_PINK      0xFFFF69B4  // ホットピンク（ポップで非常によく目立つ蛍光ピンク）
+
+// 引き寄せ系（シアン・水色系）のバリエーション
+#define GAME_COLOR_AQUA_GREEN    0xFF00FFCC  // アクアグリーン（シアンより少し緑に寄せた、南国のアパタイト宝石のような輝き）
+#define GAME_COLOR_SKY_NEON      0xFF33CCFF  // スカイネオン（澄み切った青空のような、爽快で明るいネオンブルー）
+#define GAME_COLOR_OLIVE        0xFF808000  // オリーブ（赤50%, 緑50% の落ち着いた深みのある黄緑）
+
+
 // --- 赤系 ---
 #define V_GAME_COLOR_RED        XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f)
 #define V_GAME_COLOR_ORANGE     XMVectorSet(1.0f, 0.5f, 0.0f, 1.0f)

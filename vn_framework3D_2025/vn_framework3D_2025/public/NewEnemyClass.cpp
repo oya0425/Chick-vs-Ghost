@@ -8,7 +8,7 @@ namespace
     constexpr float ghostSize = 2.5f;
 
     // --- 状態遷移の確率 (0.0f ~ 1.0f) ---
-    constexpr float chargeProbability = 0.2f; // 特攻になる確率
+    constexpr float chargeProbability = 0.3f; // 特攻になる確率
     constexpr float wallJumpChance = 0.3f; // 壁でジャンプする確率
 
     // --- ノックバック演出 (回転分岐) ---
@@ -43,6 +43,10 @@ namespace
     constexpr float followerSearchRadius    = 100.0f;  // リーダーを探し出す索敵範囲
     constexpr int   stopDistRandomRange     = 50;      // 停止距離にバラつきを出すための乱数範囲（0～4.9f）
 
+    // --- ボス設定（基本大きさのみ(その他はリーダーと同じ)）---
+    constexpr float bossScaleMultiplier     = 4.0f;
+
+
     // --- 速度調整 ---
     constexpr float speedAdjustmentRate     = 0.5f;    // 外部（WaveManager等）から指定される速度に対する補正係数
 }
@@ -64,8 +68,8 @@ NewEnemyClass::~NewEnemyClass()
 
 // static変数の実体化
 const NewEnemyClass::EnemyData NewEnemyClass::MasterTable[] = {
-    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    100/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
-    { EnemyType::MUSHROOM, L"data/model/MushroomMon/", L"MushroomMon.bone", 0 , 1.5f, {1.0f, 1.0f,1.0f}},
+    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    150/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
+    //{ EnemyType::MUSHROOM, L"data/model/MushroomMon/", L"MushroomMon.bone", 0 , 1.5f, {1.0f, 1.0f,1.0f}},
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMonster/", L"MushroomMonster.bone", 150 , 5.0f, {1.0f, 1.0f, 1.0f}},
 };
 
@@ -74,7 +78,7 @@ std::vector<NewEnemyClass::GroupColorData> NewEnemyClass::m_availableColors;
 //色の配列の初期化
 std::vector<NewEnemyClass::GroupColorData> NewEnemyClass::g_LeaderColorPalette =
 {
-{ 1,  V_GAME_COLOR_RED,           L"赤" },
+    { 1,  V_GAME_COLOR_RED,       L"赤" },
     { 2,  V_GAME_COLOR_GREEN,     L"緑" },
     { 3,  V_GAME_COLOR_BLUE,      L"青" },
     { 4,  V_GAME_COLOR_YELLOW,    L"黄" },
@@ -149,6 +153,8 @@ void NewEnemyClass::Spawn(const XMVECTOR& pos)
     rb.SetIsUseGravity(true);
     m_state = eState::Idel; // 待機状態に戻す
     m_currentGroupMode = eGroupMode::Normal;
+    m_isCharge = false;
+
 
     // --- 調整用変数初期化(不具合防止用) ---
     m_isPullChecked = false;    //引き寄せで全員が同じ判定にならないようにする
@@ -797,12 +803,62 @@ void NewEnemyClass::SettingOther()
     m_defalutOtherSpeedMultiplier = m_otherSpeedMultiplier;
 }
 
+// --- ボスのセッティング ---
+void NewEnemyClass::SettingBoss(GroupData* groupData)
+{
+    m_pGroupData = groupData;
+    m_isLeader = true;
+    m_isBoss = true;
+    //最初の色を保存しておく
+    m_defaultLeaderColor = GetModel()->GetAllPartsDiffuse();
+
+    // 10.0f 〜 11.0f の間で、0.01刻みの細かい個体差を出す場合
+    m_animSpeed = 10.0f + (rand() % 101) / 100.0f;
+
+    //リーダー同士の距離設定
+    m_leaderSeparateRadius = leaderRepelRadius;
+
+    //プレイヤーを感知する距離
+    m_leaderEscapeRadius = leaderSenseRadius;
+
+    //プレイヤーからの止まる距離
+    m_leaderRetreatStopRadius = leaderStopRetreatRadius;
+
+    //少し速度をあげる
+    m_leaderSpeedMultiplier = 0.1f;
+    m_defalutLeaderSpeedMultiplier = m_leaderSpeedMultiplier;
+
+    //少しモデルのサイズと当たり判定を大きくする
+    XMVECTOR leaderSize = *GetModel()->getScale();
+    leaderSize = leaderSize * bossScaleMultiplier;
+    GetModel()->setScale(&leaderSize);
+
+    XMVECTOR leaderSizeCol = GetCollision().GetSize();
+    leaderSizeCol = leaderSizeCol * bossScaleMultiplier;
+    GetCollision().SetSize(leaderSizeCol);
+
+    //最初の大きさを保存しておく
+    m_defaultScale = *GetModel()->getScale();
+
+    // 中心点は高さ(Y)の半分に設定
+    float centerY = XMVectorGetY(GetCollision().GetSize()) / 2.0f;
+    GetCollision().SetCenter(XMVectorSet(0, centerY, 0, 0));
+
+
+    //色を変える
+    //GetModel()->SetAllPartsDiffuse(V_GAME_COLOR_RED, 1.0f);
+    GetModel()->SetAllPartsDiffuse(groupData->color, 1.0f);
+    SetGroupID(groupData->id);
+
+}
+
+
 // ======================================================================
 //  死因を取る
 // ======================================================================
 void NewEnemyClass::OnDie(DamageSource source)
 {
-    if (!GetGroupData()&&!GetIsLeader())return;
+    if (!GetGroupData() && !GetIsLeader() || !GetGroupData() && GetIsBoss())return;
 
     GroupData* data = GetGroupData();
 
@@ -833,7 +889,7 @@ void NewEnemyClass::OnDie(DamageSource source)
 void NewEnemyClass::UpdateEnemyMessage(float deltaTime)
 { 
     //フォントの設定
-    vnFont::setFontSize(31, 22);
+    vnFont::setFontSize(31, 25);
 
 
 #pragma region その他の敵の範囲攻撃から逃げるメッセージ

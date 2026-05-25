@@ -44,6 +44,7 @@ private:
 		Play,
 		LevelUp,
 		Pause,
+		BossPause,	//ボス戦のボス情報
 		GameOver,
 		GameClear,
 		GameFinish,
@@ -70,6 +71,8 @@ private:
 	bool      isTimerActive;
 	bool      isWaveClear;
 	bool      isGameFinish;
+	bool	  m_isBossStage = false;
+
 
 	// --- プレイヤー関連 ---
 	NewPlayerClass* m_pNewPlayer;
@@ -166,6 +169,10 @@ private:
 	vnSprite* pImageE;	//スキルボタン範囲攻撃
 	vnSprite* pImageQ;	//引き寄せ攻撃
 
+	// --- ポーズ中画面に出すもの ---
+	vnSprite* m_pPauseFrame;		//ポーズ中に出るフレーム
+	vnSprite* m_pPauseFrame2;		//ポーズ中に出るフレーム
+
 	//--説明を見やすくする為の黒い背景
 	vnSprite* m_pUIBackGroundBlack;
 	vnSprite* m_pUIBackGroundBlackPause;
@@ -182,19 +189,26 @@ private:
 	vnSound** pSound;
 	int                 blinkCounter;
 
+
+	// デバッグ
+	int m_leaderCount = 0;
+	int m_activeCount = 0;
+	int m_spawnNum = 0;
+
 private:
 	// --- 内部処理関数 (executeの分割) ---
 	void UpdateIdel();
 	void UpdatePlay(float deltaTime);
 	void UpdateLevelUp();
 	void UpdatePause();
+	void UpdateBossPause();
 
 	// --- Play中のサブシステム ---
 	void UpdatePlayer(float deltaTime);			//プレイヤー挙動・衝突判定
 	void SpawnEnemies(float deltaTime);			//敵の出現管理
 	void UpdateEnemies(float deltaTime);		//敵の移動・衝突・プレイヤーとの判定
 	void UpdateCombo(float deltaTime);			//コンボ計算・回復
-	void AddCombo();							//コンボ加算
+	void AddCombo(NewEnemyClass* enemy);							//コンボ加算
 	void UpdateGlobalSystems(float deltaTime);	// フェンス・タイマー・カメラ
 
 
@@ -207,6 +221,8 @@ private:
 	// --- その他 ---
 	void UpdateWaveTransition();	//Waveクリア待ち・次Waveへの遷移
 	void UpdateBlocksCollision();	//ブロックとの当たり判定（プレイヤー、敵）
+
+	void DebugDraw();				//デバッグ表示
 
 	// --- カメラ・演出 ---
 	void StartCameraRote();
@@ -225,7 +241,7 @@ private:
 	void InFence(vnCharacter* pObject);
 	bool CheckFenceReflection(vnCharacter* pObject);//弾の反射用
 
-	void SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData& data,bool isLeader);
+	void SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData& data,bool isLeader, bool isBoss);
 
 public:
 	bool initialize();

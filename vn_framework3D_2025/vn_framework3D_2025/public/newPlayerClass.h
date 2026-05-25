@@ -206,7 +206,7 @@ private:
 	const float m_defaultAttackRadius = 10.0f;			//攻撃範囲のデフォルトのサイズ
 	const float m_defaultRadius		  = 1.0f;			// 通常時の半径（size.x/2の値に合わせて調整）普通の当たり判定
 	float m_areaAtkCoolTimer		  = 0.0f;			//現在のクールタイム
-	const float m_areaAtkCoolTimeMax  = 10.0f;			//最大のクールタイム
+	const float m_areaAtkCoolTimeMax  = 5.0;			//最大のクールタイム
 	const float m_attackTime		  = 0.5f;			//範囲攻撃の最大まで行く時間
 
 	void UpdateAreaAttackSkill(float deltaTime);

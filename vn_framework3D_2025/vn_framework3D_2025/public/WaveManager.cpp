@@ -45,6 +45,8 @@ void WaveManager::Init()
 //--------------------------------------------------------------
 void WaveManager::Update(float deltaTime)
 {
+    vnFont::print(400, 50, L"maxWave %d currentWave %d State: %s", m_maxWave, m_currentWave, GetStateString());
+
     if (m_state == WaveState::InProgress)
     {
         m_waveTimer += deltaTime;
@@ -102,7 +104,16 @@ void WaveManager::OnEnemySpawned()
 bool WaveManager::IsWaveClear() const
 {
     //return m_killedCount >= m_killTarget;
-    return m_waveTimer >= m_waveTimeLimit;
+    //最終WAVEのみボスを５体倒したらクリア
+    if (m_currentWave == m_maxWave)
+    {
+        return m_killedCount >= 5;
+    }
+    else
+    {
+        return m_waveTimer >= m_waveTimeLimit;
+
+    }
 }
 
 //--------------------------------------------------------------
@@ -171,6 +182,9 @@ bool WaveManager::CanSpawn() const
     // ▼時間制に合わせる
     if (m_waveTimer >= m_waveTimeLimit)
         return false;
+
+    //if (m_currentWave == m_maxWave && m_waveTimer >= m_waveTimeLimit)
+    //    return false;
 
     return true;
 

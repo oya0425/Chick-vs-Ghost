@@ -154,7 +154,7 @@ namespace {
 	};
 }
 
-void SceneMain::SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData& data,bool isLeader)
+void SceneMain::SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData& data,bool isLeader,bool isBoss)
 {
 	// 1. データテーブルからパスを取得してモデルを生成
 	vnCharacter* model = new vnCharacter(data.folder, data.file);
@@ -180,37 +180,56 @@ void SceneMain::SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData&
 	// 中心点は高さ(Y)の半分に設定
 	float centerY = XMVectorGetY(colSizeVec) / 2.0f;
 	enemy->GetCollision().SetCenter(XMVectorSet(0, centerY, 0, 0));
-	
-	if (isLeader)
+	if (isLeader && isBoss)
 	{
-		EnemyPool::GetInstance().GetLatestGroupData().push_back(
-			std::make_unique<NewEnemyClass::GroupData>());
+		EnemyPool::GetInstance().GetBossGroupData() = std::make_unique<NewEnemyClass::GroupData>();
+		
+		NewEnemyClass::GroupData* group = EnemyPool::GetInstance().GetBossGroupData().get();
 
-
-		//今追加した群れ取得
-		NewEnemyClass::GroupData* group =
-			EnemyPool::GetInstance().GetLatestGroupData().back().get();
-
-		// --- 群のデータ設定 ---
-		// 一時的なデータを受け取る
 		NewEnemyClass::GroupColorData colorData = enemy->GetRandomGroupData();
 
 		group->id = colorData.id;
 		group->color = colorData.color;
 
-		// colorData.colorName は一時的な変数の中にあるので指してはいけない。
-		// 代わりに、静的なパレット(g_LeaderColorPalette)から直接ポインタを持ってくる。
-		// IDが1から始まるなら、インデックスは [id - 1]
 		int paletteIndex = colorData.id - 1;
 		group->colorName = NewEnemyClass::g_LeaderColorPalette[paletteIndex].colorName;
-
-		enemy->SettingLeader(group);
+		enemy->SettingBoss(group);
 		enemy->SetFenceRadius(FenceRadius);
 	}
 	else
 	{
-		enemy->SettingOther();
+		if (isLeader)
+		{
+			EnemyPool::GetInstance().GetLatestGroupData().push_back(
+				std::make_unique<NewEnemyClass::GroupData>());
+
+
+			//今追加した群れ取得
+			NewEnemyClass::GroupData* group =
+				EnemyPool::GetInstance().GetLatestGroupData().back().get();
+
+			// --- 群のデータ設定 ---
+			// 一時的なデータを受け取る
+			NewEnemyClass::GroupColorData colorData = enemy->GetRandomGroupData();
+
+			group->id = colorData.id;
+			group->color = colorData.color;
+
+			// colorData.colorName は一時的な変数の中にあるので指してはいけない。
+			// 代わりに、静的なパレット(g_LeaderColorPalette)から直接ポインタを持ってくる。
+			// IDが1から始まるなら、インデックスは [id - 1]
+			int paletteIndex = colorData.id - 1;
+			group->colorName = NewEnemyClass::g_LeaderColorPalette[paletteIndex].colorName;
+
+			enemy->SettingLeader(group);
+			enemy->SetFenceRadius(FenceRadius);
+		}
+		else
+		{
+			enemy->SettingOther();
+		}
 	}
+
 }
 
 
@@ -305,23 +324,40 @@ bool SceneMain::initialize()
 		const auto& data = NewEnemyClass::MasterTable[i];
 
 		//--2.その種類の最大数（maxCount）だけループして生成
-		for (int j = 0; j < data.maxCount; j++)
+		for (int j = 0; j < data.maxCount+1; j++)
 		{
 			//型に合わせたクラスをnew する
 			NewEnemyClass* enemy = NewEnemyClass::CreateEnemyByType(data.type);
 
 			if (enemy)
 			{
-				//10体おきにリーダーにする
-				bool isLeader = (totalEnemyCount % leaderCount == 0);
-				//セットアップ関数を呼ぶ
-				SetupEnemy(enemy, data,isLeader);
+				if (j < data.maxCount)
+				{
+					//10体おきにリーダーにする
+					bool isLeader = (totalEnemyCount % leaderCount == 0);
+					if (isLeader)
+					{
+						m_leaderCount++;
+					}
+					//セットアップ関数を呼ぶ
+					SetupEnemy(enemy, data, isLeader,false);
 
-				//プールに追加
-				enemyPool->AddEnemy(enemy);
+					//プールに追加
+					enemyPool->AddEnemy(enemy);
 
-				//生成した累計をインクリメント
-				totalEnemyCount++;
+					//生成した累計をインクリメント
+					totalEnemyCount++;
+				}
+				else
+				{
+					//ボスの設定
+					bool isLeader = true;
+					bool isBoss = true;
+					SetupEnemy(enemy, data, isLeader, isBoss);
+					//
+					enemyPool->AddEnemy(enemy);
+
+				}
 			}
 		}
 	}
@@ -521,13 +557,24 @@ bool SceneMain::initialize()
 	registerObject(m_pUIBackGroundBlack);
 	m_pUIBackGroundBlack->setRenderEnable(true);
 
-	//ポーズ中に出る背景
+	//--ポーズ中に出る背景
 	m_pUIBackGroundBlackPause = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"BackGroundBlack.png");
 	m_pUIBackGroundBlackPause->setColor(V_GAME_COLOR_BLACK);
 	m_pUIBackGroundBlackPause->setAlpha(0.6f);
 	registerObject(m_pUIBackGroundBlackPause);
 	m_pUIBackGroundBlackPause->setRenderEnable(false);
 
+	//フレーム
+	m_pPauseFrame = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"data/image/Pauseframe.png");
+	registerObject(m_pPauseFrame);
+	//m_pPauseFrame->setColor(V_GAME_COLOR_CYAN);
+	m_pPauseFrame->setRenderEnable(false);
+
+	//フレーム
+	m_pPauseFrame2 = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"data/image/Pauseframe2.png");
+	registerObject(m_pPauseFrame2);
+	//m_pPauseFrame->setColor(V_GAME_COLOR_CYAN);
+	m_pPauseFrame2->setRenderEnable(false);
 
 
 	// --- WASDのキーボードの画像 ---
@@ -886,9 +933,13 @@ void SceneMain::terminate()
 	deleteObject(m_pUIBackGroundBlack);
 	m_pUIBackGroundBlack = nullptr;
 
+	// --- ポーズ中に出る奴 ---
 	deleteObject(m_pUIBackGroundBlackPause);
 	m_pUIBackGroundBlackPause = nullptr;
-
+	deleteObject(m_pPauseFrame);
+	m_pPauseFrame = nullptr;
+	deleteObject(m_pPauseFrame2);
+	m_pPauseFrame2 = nullptr;
 
 	deleteObject(pBackGroundBlack);
 	pBackGroundBlack = nullptr;
@@ -971,7 +1022,9 @@ void SceneMain::execute()
 	case Pause:
 		UpdatePause();
 		break;
-
+	case BossPause:
+		UpdateBossPause();
+		break;
 	case GameOver:
 		UpdateGameOver();
 
@@ -1017,10 +1070,14 @@ void SceneMain::execute()
 	if (m_gameState == GameState::Pause)
 	{
 		m_pUIBackGroundBlackPause->setRenderEnable(true);
+		m_pPauseFrame->setRenderEnable(true);
+		m_pPauseFrame2->setRenderEnable(true);
 	}
 	else
 	{
 		m_pUIBackGroundBlackPause->setRenderEnable(false);
+		m_pPauseFrame->setRenderEnable(false);
+		m_pPauseFrame2->setRenderEnable(false);
 	}
 
 	// --- WAVEの状態の切り替え(WAVEクリア→次のWAVEとか) ---
@@ -1177,7 +1234,7 @@ void SceneMain::render()
 
 
 		// --- 待機中のテキスト ---
-		if (waveManager->IsWaitingForNext() && (waveManager->GetCurrentWave() < 5))
+		if (waveManager->IsWaitingForNext() && (waveManager->GetCurrentWave() < waveManager->GetMaxWave()))
 		{
 			//vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 80));
 			vnFont::setFontSize(38, 80);
@@ -1869,15 +1926,33 @@ void SceneMain::StartCameraRote()
 // ---------------------------------------
 void SceneMain::UpdatePause()
 {
+
 	if (vnKeyboard::trg(DIK_TAB))
 	{
 		m_gameState = GameState::Play;
 	}
 
 	//基本の役割：群の情報を出す
-	enemyPool->DebugPause();
+	//if (vnKeyboard::trg(DIK_TAB))
+	//{
+	//	m_gameState = GameState::Play;
+	//}
+	if (waveManager->GetFinalWave())
+	{
+		enemyPool->DebugBossPause();
+	}
+	else 
+	{
+		enemyPool->DebugPause();
+	}
+
+
+
 }
 
+void SceneMain::UpdateBossPause()
+{
+}
 
 
 
@@ -1939,7 +2014,7 @@ void SceneMain::UpdatePlay(float deltaTime)
 
 
 }
-// --- プレイヤー挙動・衝突判定 ---
+// --- プレイヤー挙動・衝突判定・回復処理 ---
 void SceneMain::UpdatePlayer(float deltaTime)
 {
 	m_pNewPlayer->Update(deltaTime);
@@ -1972,7 +2047,7 @@ void SceneMain::UpdatePlayer(float deltaTime)
 	if (waveManager->GetState() == WaveManager::WaveState::InProgress)
 	{
 		//pPlayerTest->applyDamage(0.05f * (waveManager->GetCurrentWave() * 0.8));
-		m_pNewPlayer->Damage(0.05f * (waveManager->GetCurrentWave() * 0.8));
+		m_pNewPlayer->Damage((1.0f * (waveManager->GetCurrentWave() * 0.8)*deltaTime));
 		// --- HPが０になったらGameOver ---
 		//if (pPlayerTest->getCurrentHp() <= 0)
 		//{
@@ -2011,7 +2086,7 @@ void SceneMain::UpdatePlayer(float deltaTime)
 			}
 
 			//pPlayerTest->addHP(totalRecovery);
-			m_pNewPlayer->AddHP(totalRecovery);
+			m_pNewPlayer->AddHP(totalRecovery/2);
 			m_killCounter = 0;
 		}
 	}
@@ -2026,13 +2101,12 @@ void SceneMain::SpawnEnemies(float deltaTime)
 	// === 出現 ===
 	waveManager->Update(deltaTime);
 	//int totalCount = (int)enemyPool->GetEnemies().size();
-	int activeCount = enemyPool->GetActiveCount();
-	if (activeCount < waveManager->GetMaxSpawnLimit() && waveManager->GetState() == WaveManager::WaveState::InProgress)
+	m_activeCount = enemyPool->GetActiveCount();
+	if (m_activeCount < waveManager->GetMaxSpawnLimit() && waveManager->GetState() == WaveManager::WaveState::InProgress)
 	{
-		int spawnNum = waveManager->GetMaxSpawnLimit() - activeCount;
-		//vnFont::print(30, 400, L"spawnNum %d", spawnNum);
+		m_spawnNum = waveManager->GetMaxSpawnLimit() - m_activeCount;
 
-		for (int i = 0; i < spawnNum; i++)
+		for (int i = 0; i < m_spawnNum; i++)
 		{
 			// ウェーブの残り出現枠がある時だけスポーン
 			if (waveManager->CanSpawn())
@@ -2051,16 +2125,14 @@ void SceneMain::SpawnEnemies(float deltaTime)
 				float y = spawnHeight;
 				float z = sinf(angle) * dist;
 				XMVECTOR pos = XMVectorSet(x, y, z, 0.0f);
-				enemyPool->Spawn(pos);
+				enemyPool->Spawn(pos, waveManager->GetCurrentWave(), waveManager->GetMaxWave());
+				//enemyPool->Spawn(pos);
 				waveManager->OnEnemySpawned(); // カウントを増やす
 
 
 			}
 		}
 	}
-
-	//vnFont::print(30, 450, L"activeCount %d", activeCount);
-
 }
 
 // --- 敵の移動・衝突・プレイヤーとの判定 ---
@@ -2097,7 +2169,6 @@ void SceneMain::UpdateEnemies(float deltaTime)
 		// ------------------------------------
 		// --- ここで引き寄せ判定を流し込む ---
 		// ------------------------------------
-
 		XMVECTOR enemyPos = *enemy->GetModel()->getPosition();
 		XMVECTOR toPlayerVec = *m_pNewPlayer->GetModel()->getPosition() - enemyPos;
 		float dist = XMVectorGetX(XMVector3Length(toPlayerVec));
@@ -2198,8 +2269,22 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				int index = rand() % (sizeof(vnEmitter::colors) / sizeof(vnEmitter::colors[0]));
 				pEmitter->SetColor(vnEmitter::colors[index]);
 				pEmitter->setEmit(true, 0.3f);
-				AddCombo();
+				AddCombo(enemy);
 				
+				// 敵が特攻状態の時に範囲攻撃以外で倒すとダメージを受けるようにする
+				if (enemy->GetState() == NewEnemyClass::eState::Charge/*|| enemy->GetIsCharge()*/)
+				{
+					if (!m_pNewPlayer->IsAreaAttack())
+					{
+						m_pNewPlayer->Damage(3.0f);
+					}
+					//if (m_pNewPlayer->IsPulling())
+					//{
+					//	m_pNewPlayer->Damage(10.0f);
+					//}
+
+				}
+
 				//死因を記録
 				if (m_pNewPlayer->IsAreaAttack())
 				{
@@ -2243,7 +2328,7 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				int index = rand() % (sizeof(vnEmitter::colors) / sizeof(vnEmitter::colors[0]));
 				pEmitter->SetColor(vnEmitter::colors[index]);
 				pEmitter->setEmit(true, 0.3f);
-				AddCombo();
+				AddCombo(enemy);
 
 				enemy->SetIsHitPlayer(true);
 				waveManager->OnEnemyKilled();
@@ -2258,33 +2343,9 @@ void SceneMain::UpdateEnemies(float deltaTime)
 
 		}
 	}
-	//// enemyPoolの全個体を監視（!enemy->GetActive() の continue を外す）
-	//for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
-	//{
-	//	NewEnemyClass* enemy = enemyPool->GetEnemies()[i];
-
-	//	// 1. アクティブ状態を文字列にする
-	//	const wchar_t* activeStr = enemy->GetActive() ? L"ALIVE" : L"DEAD ";
-
-	//	// 2. ステートに応じた文字列の判定
-	//	const wchar_t* stateStr = L"UNKNOWN";
-	//	switch (enemy->GetState())
-	//	{
-	//	case NewEnemyClass::eState::Idel:      stateStr = L"IDLE";      break;
-	//	case NewEnemyClass::eState::Panic:     stateStr = L"PANIC";     break;
-	//	case NewEnemyClass::eState::Charge:    stateStr = L"CHARGE";    break;
-	//	case NewEnemyClass::eState::KnockBack: stateStr = L"KNOCKBACK"; break;
-	//	}
-
-	//	// 3. 画面に表示
-	//	// 生死状態(activeStr)も一緒に出すことで、
-	//	// 「DEADなのにPANICになっている個体」がいないかチェック
-	//	vnFont::print(20, 100 + (static_cast<int>(i) * 25), L"[%s] Enemy[%d] State: %s",
-	//		activeStr, i, stateStr);
-	//}
 }
 
-// --- コンボ計算・回復 ---
+// --- コンボ計算(UI) ---
 void SceneMain::UpdateCombo(float deltaTime)
 {
 #pragma region コンボ処理（数の増加のみ敵の処理にある）
@@ -2384,7 +2445,7 @@ void SceneMain::UpdateCombo(float deltaTime)
 #pragma endregion
 }
 // --- コンボ加算 ---
-void SceneMain::AddCombo()
+void SceneMain::AddCombo(NewEnemyClass* enemy)
 {
 	// コンボ加算！
 	m_comboCount++;
@@ -2401,6 +2462,16 @@ void SceneMain::AddCombo()
 	if (m_pExpManager)
 	{
 		float expAmount = 1.0f * (1.0f + (waveManager->GetCurrentWave() * 0.2f));
+		//リーダーの時と、その他がパニック状態の時にもらえる経験値が増える
+		if (enemy->GetIsLeader())
+		{
+			expAmount *= 1.5f;
+		}
+		else if (!enemy->GetIsLeader() && enemy->GetState() == NewEnemyClass::eState::Panic)
+		{
+			expAmount *= 1.2f;
+
+		}
 
 		m_pExpManager->GainExp(expAmount);
 	}
@@ -2596,7 +2667,7 @@ void SceneMain::CleanUpScene()
 void SceneMain::UpdateWaveTransition()
 {
 	// --- WAVEの状態の切り替え(WAVEクリア→次のWAVEとか) ---
-	if ((waveManager->GetState() == WaveManager::WaveState::ClearWait) && waveManager->GetCurrentWave() < 5)
+	if ((waveManager->GetState() == WaveManager::WaveState::ClearWait) && waveManager->GetCurrentWave() < waveManager->GetMaxWave())
 	{
 		if (isWaveClear == false) // まだ「乗っている状態」に切り替わる前なら
 		{
@@ -2611,9 +2682,14 @@ void SceneMain::UpdateWaveTransition()
 			waveManager->GoNextWave();
 			isWaveClear = false;
 			m_pBlockManager->RespawnBlocks(waveManager->GetCurrentWave(), FenceRadius);
+			if (waveManager->GetFinalWave())
+			{
+				enemyPool->SetBossData();
+			}
+
 		}
 	}
-	if (waveManager->GetState() == WaveManager::WaveState::ClearWait && waveManager->GetCurrentWave() == 5)
+	if (waveManager->GetState() == WaveManager::WaveState::ClearWait && waveManager->GetCurrentWave() == waveManager->GetMaxWave())
 	{
 		if (!isGameFinish)
 			m_gameState = GameClear;
@@ -2667,32 +2743,109 @@ void SceneMain::UpdateBlocksCollision()
 			m_pBullet->SetIsHitWall(true);
 		}
 	}
+
+	DebugDraw();
+}
+
+void SceneMain::DebugDraw() 
+{
+	//vnFont::print(200, 400, L"spawnNum %d", m_spawnNum);
+
+	//vnFont::print(200, 450, L"activeCount %d", m_activeCount);
+
+	//vnFont::print(200, 500, L"m_leaderCount %d", m_leaderCount);
+
+	//// enemyPoolの全個体を監視（!enemy->GetActive() の continue を外す）
+	//for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
+	//{
+	//	NewEnemyClass* enemy = enemyPool->GetEnemies()[i];
+	//
+	//	// 1. アクティブ状態を文字列にする
+	//	const wchar_t* activeStr = enemy->GetActive() ? L"ALIVE" : L"DEAD ";
+	//
+	//	// 2. ステートに応じた文字列の判定
+	//	const wchar_t* stateStr = L"UNKNOWN";
+	//	switch (enemy->GetState())
+	//	{
+	//	case NewEnemyClass::eState::Idel:      stateStr = L"IDLE";      break;
+	//	case NewEnemyClass::eState::Panic:     stateStr = L"PANIC";     break;
+	//	case NewEnemyClass::eState::Charge:    stateStr = L"CHARGE";    break;
+	//	case NewEnemyClass::eState::KnockBack: stateStr = L"KNOCKBACK"; break;
+	//	}
+	//
+	//	// 3. 画面に表示
+	//	// 生死状態(activeStr)も一緒に出すことで、
+	//	// 「DEADなのにPANICになっている個体」がいないかチェック
+	//	vnFont::print(20, 100 + (static_cast<int>(i) * 25), L"[%s] Enemy[%d] State: %s",
+	//		activeStr, i, stateStr);
+	//}
+	//for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
+	//{
+	//	NewEnemyClass* enemy = enemyPool->GetEnemies()[i];
+
+	//	// 1. そもそもここに登録されている敵は、自分がリーダーだと認識できているか？
+	//	if (enemy->GetIsLeader())
+	//	{
+	//		// 2. 核心：モデルのポインタが空（nullptr）になっていないか？
+	//		if (enemy->GetModel() == nullptr)
+	//		{
+	//			// もし画面にこれが表示されたら「データはあるが、3Dモデルのインスタンス自体が作られていない」のが原因です！
+	//			vnFont::print(300, 100 + (static_cast<int>(i) * 25), L"Enemy[%d]: Model is NULL!", i);
+	//		}
+	//		else
+	//		{
+	//			// モデルはあるなら座標を表示
+	//			vnFont::print(300, 100 + (static_cast<int>(i) * 25), L"X %.f,Y%.f,Z%.f",
+	//				enemy->GetModel()->getPositionX(),
+	//				enemy->GetModel()->getPositionY(),
+	//				enemy->GetModel()->getPositionZ());
+	//		}
+	//	}
+	//}
+	
+	//for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
+	//{
+	//	NewEnemyClass* enemy = enemyPool->GetEnemies()[i];
+	
+	//	// 1. アクティブ状態（生存か死んでいるか）
+	//	const wchar_t* activeStr = enemy->GetActive() ? L"ALIVE" : L"DEAD ";
+	
+	//	// 2. ボスかザコかの文字列判定
+	//	const wchar_t* typeStr = enemy->GetIsBoss() ? L"★BOSS★" : L"Zako   ";
+	
+	//	// 3. 画面に表示
+	//	vnFont::print(400, 100 + (static_cast<int>(i) * 25), L"[%s] Enemy[%03d] : %s",
+	//		activeStr, i, typeStr);
+	//}
+
+	
 	//vnFont::print(10.0f, 500, L"X %.f,Y%.f,Z%.f",
 	//	m_pBullet->GetModel()->getPositionX(),
 	//	m_pBullet->GetModel()->getPositionY(),
 	//	m_pBullet->GetModel()->getPositionZ());
-
-
+	
+	
 	//vnFont::print(10, 600, L"HitWall: %s", m_pBullet->GetIsHitWall() ? L"true" : L"false");
-
-
+	
+	
 	//vnFont::print(10.0f, 500, GAME_COLOR_YELLOW,L"X %.f,Y%.f,Z%.f",
 	//	vnCamera::getPositionX(),
 	//	vnCamera::getPositionY(),
 	//	vnCamera::getPositionZ());
-
+	
 	//vnFont::print(10.0f, 600, L"radius %.f,phi%.f,theta%.f",
 	//	vnCamera::get(),
 	//	vnCamera::getPositionY(),
 	//	vnCamera::getPositionZ());
-
-
-
+	
+	
+	
 	//// ループが終わった後に、フラグを更新する
 	//// 前のフレームで当たっていなくて、今当たった場合だけ反射させる、といった制御ができる
 	//if (isHittingAnyBlock && !m_pBullet->GetIsHitWall()) {
 	//	//m_pBullet->Reflect(); // 反射関数を呼ぶ
 	//}
 	//m_pBullet->SetIsHitWall(isHittingAnyBlock);
+
 
 }

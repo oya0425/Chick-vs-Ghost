@@ -31,6 +31,7 @@ NewPlayerClass::NewPlayerClass()
 	m_isCanMeteor = false;
 
 	SetMaxHp(100);
+	//SetCurrentHP(50);
 
 	GetCollision().SetSize(XMVectorSet(1.0f, 1.0f, 1.0f, 0.0f)*boxColSize);
 	GetCollision().SetCenter(XMVectorSet(0, boxColSize / 2, 0, 0));

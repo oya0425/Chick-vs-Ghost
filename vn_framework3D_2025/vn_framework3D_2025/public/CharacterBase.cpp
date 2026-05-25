@@ -40,23 +40,27 @@ const CollisionComponent& CharacterBase::GetCollision() const
 }
 
 // --- HP ---
-void CharacterBase::SetMaxHp(int maxHP)
+void CharacterBase::SetMaxHp(float maxHP)
 {
     m_maxHP = maxHP;
     m_currentHP = m_maxHP;
 }
+void CharacterBase::SetCurrentHP(float currentHP)
+{
+    m_currentHP = currentHP;
+}
 
-int CharacterBase::GetMaxHp() const
+float CharacterBase::GetMaxHp() const
 {
     return m_maxHP;
 }
 
-int CharacterBase::GetCurrentHp() const
+float CharacterBase::GetCurrentHp() const
 {
     return m_currentHP;
 }
 
-void CharacterBase::AddHP(int value)
+void CharacterBase::AddHP(float value)
 {
     m_currentHP += value;
 
@@ -66,9 +70,9 @@ void CharacterBase::AddHP(int value)
         m_currentHP = 0;
 }
 
-void CharacterBase::Damage(int value)
+void CharacterBase::Damage(float value)
 {
-    if (value > 0)
+    //if (value > 0)
         AddHP(-value);
 }
 

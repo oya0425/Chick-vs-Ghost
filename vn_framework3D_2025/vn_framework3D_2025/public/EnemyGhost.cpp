@@ -262,6 +262,8 @@ void EnemyGhost::OnFollow(float deltaTime)
         //特攻状態では色はそのまま残しておく
         //１割の確率で特攻（10%以下）
         SetState(eState::Charge);
+        GetModel()->SetAllPartsDiffuse(V_GAME_COLOR_WHITE, 0.1f);
+        m_isCharge = true;
         m_pMyLeader = nullptr;
         return;
 

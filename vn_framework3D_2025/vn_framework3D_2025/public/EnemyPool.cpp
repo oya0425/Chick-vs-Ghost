@@ -4,7 +4,9 @@
 
 EnemyPool::EnemyPool()
 {
+    m_groupDatas.clear();
     m_groupDatas.reserve(100);
+
     //_enemies.reserve(30);
 }
 
@@ -52,6 +54,7 @@ void EnemyPool::Spawn(const XMVECTOR& position/*,int globalLimit*/)
     }
 
     NewEnemyClass* enemy = GetInactiveEnemy();
+
     if (enemy)
     {
         enemy->Spawn(position);
@@ -74,12 +77,89 @@ void EnemyPool::Spawn(const XMVECTOR& position/*,int globalLimit*/)
     }
 }
 
+void EnemyPool::Spawn(const XMVECTOR& position, int currentWave, int maxWave)
+{
+    // タイマーを減らす
+    m_spawnTimer -= vnScene::getDeltaTime();
+
+    // まだ0.1秒経っていないなら、何もせず帰る
+    if (m_spawnTimer > 0.0f)
+    {
+        return;
+    }
+
+    if (currentWave < maxWave)
+    {
+        NewEnemyClass* enemy = GetInactiveEnemy();
+
+        if (enemy&&!enemy->GetIsBoss())
+        {
+            enemy->Spawn(position);
+            m_spawnTimer = SPAWN_INTERVAL;
+            // SetActiveはSpwan内でやるなら不要
+        }
+        else {
+            // 念のため描画を消す
+            for (auto e : GetEnemies())
+            {
+                if (!e->GetActive())
+                {
+                    e->GetModel()->setRenderEnable(false);
+                    for (int i = 0; i < e->GetModel()->getPartsNum(); i++)
+                    {
+                        e->GetModel()->getParts(i)->setRenderEnable(false);
+                    }
+                }
+            }
+        }
+    }
+    else if (currentWave == maxWave)
+    {
+        NewEnemyClass* enemy = GetInactiveBoss();
+        if (enemy)
+        {
+            enemy->Spawn(position);
+            m_spawnTimer = SPAWN_INTERVAL;
+
+        }
+        else {
+            // 念のため描画を消す
+            for (auto e : GetEnemies())
+            {
+                if (!e->GetActive())
+                {
+                    e->GetModel()->setRenderEnable(false);
+                    for (int i = 0; i < e->GetModel()->getPartsNum(); i++)
+                    {
+                        e->GetModel()->getParts(i)->setRenderEnable(false);
+                    }
+                }
+            }
+        }
+    }
+}
+
 // --- 非アクティブ取得 ---
 NewEnemyClass* EnemyPool::GetInactiveEnemy()
 {
     for (auto e : _enemies)
     {
         if ((!e->GetActive()&&e->IsUnlocked())&&e->GetState()==NewEnemyClass::eState::Idel)
+        {
+            return e;
+        }
+    }
+    return nullptr;
+}
+// --- ボス専用の非アクティブ取得 ---
+NewEnemyClass* EnemyPool::GetInactiveBoss()
+{
+    for (auto e : _enemies)
+    {
+        // 通常の条件に「かつ、ボスであること」をプラスする
+        if ((!e->GetActive() && e->IsUnlocked()) &&
+            e->GetState() == NewEnemyClass::eState::Idel &&
+            e->GetIsBoss()) // ★ここ！
         {
             return e;
         }
@@ -227,6 +307,36 @@ NewEnemyClass::GroupData* EnemyPool::GetGroupData(int id)
 
 }
 
+// --- ボスの学習データを入れる ---
+void EnemyPool::SetBossData()
+{
+    if (m_groupDatas.empty())return;
+    //最初に０にしておく
+    m_bossGroupData->meleeFear = 0.0f;
+    m_bossGroupData->rangeFear = 0.0f;
+
+    float pullData = 0;
+    for (auto& data : m_groupDatas)
+    {
+        m_bossGroupData->meleeFear += data->meleeFear / 2;
+        m_bossGroupData->rangeFear += data->rangeFear / 2;
+        if (pullData <= data->pullResistance)
+        {
+            pullData = data->pullResistance;
+        }
+    }
+    if (m_bossGroupData->meleeFear < 5.0f)
+    {
+        m_bossGroupData->meleeFear *= 1.2f;
+    }
+    m_bossGroupData->pullResistance = pullData;
+
+}
+
+
+// ------------------------------------------------------------------------
+// --- 画面表示用 ---
+//------++-----------------------------------------------------------------
 
 void EnemyPool::DebugSetting()
 {
@@ -309,36 +419,85 @@ void EnemyPool::DrawGroupDebugInfo()
     if (m_groupDatas.empty())return;
     auto& data = m_groupDatas[m_debugGroupIndex];
 
+    //群の色を取ってくる
+    // --- 1. data->id から描画用の unsigned int カラーマクロを特定する ---
+    unsigned int displayGroupColor = GAME_COLOR_WHITE; // 見つからなかった時のデフォルトは白
+
+    // パレットから一致するIDのカラーマクロ（GAME_COLOR_xxx）を割り当てる
+    switch (data->id) {
+    case 1:  displayGroupColor = GAME_COLOR_RED;         break;
+    case 2:  displayGroupColor = GAME_COLOR_GREEN;       break;
+    case 3:  displayGroupColor = GAME_COLOR_BLUE;        break;
+    case 4:  displayGroupColor = GAME_COLOR_YELLOW;      break;
+    case 5:  displayGroupColor = GAME_COLOR_OLIVE;       break; 
+    case 6:  displayGroupColor = GAME_COLOR_CYAN;        break;
+    case 7:  displayGroupColor = GAME_COLOR_ORANGE;      break;
+    case 8:  displayGroupColor = GAME_COLOR_PURPLE;      break;
+    case 9:  displayGroupColor = GAME_COLOR_BROWN;       break;
+    case 10: displayGroupColor = GAME_COLOR_PINK;        break;
+    case 11: displayGroupColor = GAME_COLOR_LIME;        break;
+    case 12: displayGroupColor = GAME_COLOR_DARK_BLUE;   break; 
+    case 13: displayGroupColor = GAME_COLOR_TEAL;        break;
+    case 14: displayGroupColor = GAME_COLOR_GOLD;        break;
+    case 15: displayGroupColor = GAME_COLOR_NEON_GREEN;  break; 
+    case 16: displayGroupColor = GAME_COLOR_DARK_GRAY;   break;
+    case 17: displayGroupColor = GAME_COLOR_BLACK;       break;
+    case 18: displayGroupColor = GAME_COLOR_GREEN;       break; 
+    case 19: displayGroupColor = GAME_COLOR_PINK;        break; 
+    case 20: displayGroupColor = GAME_COLOR_RED;         break; 
+    default: displayGroupColor = GAME_COLOR_WHITE;       break;
+    }
+
+
     //表示ロジック
     //タイトル
     // 2. 画面右下の表示位置を計算
     float x = (float)vnMainFrame::screenWidth - 1080;
-    float y = (float)vnMainFrame::screenHeight - 512;
-    float linePitch = 30.0f; // 行間
+    float y = (float)vnMainFrame::screenHeight - 512*1.1f;
+    float lineYPitch = 35.0f; // 行間
+    float lineXPitch = 210.0f;
+    vnFont::setFontSize(31, 25);
 
-    vnFont::setFontSize(38, 25);
-
-    vnFont::print(x-50, y - linePitch * 1, GAME_COLOR_YELLOW, L" Tab．戻る:　左右Key. 番号切り替え");
 
     // タイトルの表示
-    vnFont::print(x, y, GAME_COLOR_CYAN, L"～敵の群れ情報表示～");
+    vnFont::print(x, y, GAME_COLOR_ICE_BLUE, L"～敵の群れ情報表示～");
 
-    vnFont::print(x, y + linePitch * 1, GAME_COLOR_WHITE, L"番号：%d番", m_debugGroupIndex);
+    vnFont::print(x, y + lineYPitch * 1, GAME_COLOR_WHITE, L"番号");
+    vnFont::print(x + lineXPitch, y + lineYPitch * 1, GAME_COLOR_WHITE, L"：%d番", m_debugGroupIndex);
 
-    //vnFont::print(x, y + linePitch * 2, GAME_COLOR_WHITE, L"番号：%d", data->id);
+    //vnFont::print(x, y + lineYPitch * 2, GAME_COLOR_WHITE, L"番号：%d", data->id);
     //色
-    vnFont::print(x, y + linePitch * 2, GAME_COLOR_WHITE, L"色： %s", data->colorName);
+    vnFont::print(x, y + lineYPitch * 2, GAME_COLOR_WHITE, L"色");
+    vnFont::print(x + lineXPitch, y + lineYPitch * 2, displayGroupColor, L"： %s", data->colorName);
     
     //学習状況
-    vnFont::print(x, y + linePitch * 3, GAME_COLOR_CYAN, L"～成長値～");
-    vnFont::print(x, y + linePitch * 4, GAME_COLOR_WHITE, L"近接耐性　　　　：%.2f", data->meleeFear);
-    vnFont::print(x, y + linePitch * 5, GAME_COLOR_WHITE, L"範囲攻撃耐性　　：%.2f", data->rangeFear);
-    vnFont::print(x, y + linePitch * 6, GAME_COLOR_WHITE, L"引き寄せ攻撃耐性：%.0f%%", data->pullResistance*100);
+    //項目
+    vnFont::print(x, y + lineYPitch * 3, GAME_COLOR_ICE_BLUE, L"～成長値～");
+    vnFont::print(x, y + lineYPitch * 4, GAME_COLOR_AMBER, L"近接耐性");
+    vnFont::print(x, y + lineYPitch * 5, GAME_COLOR_ELECTRIC_PURPLE, L"範囲攻撃耐性");
+    vnFont::print(x, y + lineYPitch * 6, GAME_COLOR_ELECTRIC_CYAN, L"引き寄せ攻撃耐性");
+  
+    //数値
+    vnFont::print(x+ lineXPitch, y + lineYPitch * 4, GAME_COLOR_SUNGLOW, L"：% .2f", data->meleeFear);
+    vnFont::print(x+ lineXPitch, y + lineYPitch * 5, GAME_COLOR_NEON_MAGENTA, L"：%.2f", data->rangeFear);
+    vnFont::print(x+ lineXPitch, y + lineYPitch * 6, GAME_COLOR_AQUA_GREEN, L"：%.0f%%", data->pullResistance * 100);
 
-    vnFont::print(x, y + linePitch * 8, GAME_COLOR_CYAN, L"～説明～");
-    vnFont::print(x, y + linePitch * 9, GAME_COLOR_WHITE, L"近接耐性　　　　：基本速度に加算");
-    vnFont::print(x, y + linePitch * 10, GAME_COLOR_WHITE, L"範囲攻撃耐性　　：逃げ始める基本範囲に加算(範囲攻撃可能時のみ)");
-    vnFont::print(x, y + linePitch * 11, GAME_COLOR_WHITE, L"引き寄せ攻撃耐性：無効確率に加算");
+
+    vnFont::print(x, y + lineYPitch * 8, GAME_COLOR_ICE_BLUE, L"～説明～");
+    //強化の項目
+    vnFont::print(x, y + lineYPitch * 9, GAME_COLOR_AMBER,             L"近接耐性");
+    vnFont::print(x, y + lineYPitch * 10, GAME_COLOR_ELECTRIC_PURPLE,         L"範囲攻撃耐性");
+    vnFont::print(x, y + lineYPitch * 11, GAME_COLOR_ELECTRIC_CYAN,     L"引き寄せ攻撃耐性");
+
+    //項目の説明
+    vnFont::print(x + lineXPitch, y + lineYPitch * 9, GAME_COLOR_SUNGLOW,         L"：基本速度に加算");
+    vnFont::print(x + lineXPitch, y + lineYPitch * 10, GAME_COLOR_NEON_MAGENTA, L"：逃げ始める基本範囲に加算(範囲攻撃可能時のみ)");
+    vnFont::print(x + lineXPitch, y + lineYPitch * 11, GAME_COLOR_AQUA_GREEN, L"：無効確率に加算");
+
+    vnFont::print(x + lineXPitch * 3.0f, y, GAME_COLOR_YELLOW, L"Tab    ：戻る");
+    vnFont::print(x + lineXPitch * 3.0f, y + lineYPitch, GAME_COLOR_YELLOW, L"← / →：群番号切り替え");
+
+
 
 }
 void EnemyPool::DrawGroupDebugArrow() {
@@ -364,7 +523,7 @@ void EnemyPool::DrawGroupDebugArrow() {
                 EnemyAIDebug::ShowStateArrow(
                     pos,
                     L"▼",      // 下向き矢印
-                    GAME_COLOR_YELLOW
+                    GAME_COLOR_RED
                 );
 
                 break; // 見つかったらループ終了
@@ -396,5 +555,53 @@ void EnemyPool::ChangeDebugGroupIndex(int direction)
     {
         m_debugGroupIndex = 0;
     }
+
+}
+
+
+void EnemyPool::DebugBossPause()
+{
+    // ポーズ中の更新処理内
+    DrawBossDebugInfo();
+
+}
+
+void EnemyPool::DrawBossDebugInfo()
+{
+    if (!m_bossGroupData)return;
+    auto& data = m_bossGroupData;
+
+    //表示ロジック
+    //タイトル
+    // 2. 画面右下の表示位置を計算
+    float x = (float)vnMainFrame::screenWidth - 1080;
+    float y = (float)vnMainFrame::screenHeight - 512;
+    float linePitch = 30.0f; // 行間
+
+    vnFont::setFontSize(38, 25);
+
+    //vnFont::print(x - 50, y - linePitch * 1, GAME_COLOR_YELLOW, L" Tab．戻る:　左右Key. 番号切り替え");
+
+    // タイトルの表示
+    vnFont::print(x, y, GAME_COLOR_CYAN, L"～ボス情報表示～");
+
+    vnFont::print(x, y + linePitch * 1, GAME_COLOR_WHITE, L"番号：%d番", m_debugGroupIndex);
+
+    //vnFont::print(x, y + linePitch * 2, GAME_COLOR_WHITE, L"番号：%d", data->id);
+    //色
+    vnFont::print(x, y + linePitch * 2, GAME_COLOR_WHITE, L"色： %s", data->colorName);
+
+    //学習状況
+    vnFont::print(x, y + linePitch * 3, GAME_COLOR_CYAN, L"～成長値～");
+    vnFont::print(x, y + linePitch * 4, GAME_COLOR_WHITE, L"近接耐性　　　　：%.2f", data->meleeFear);
+    vnFont::print(x, y + linePitch * 5, GAME_COLOR_WHITE, L"範囲攻撃耐性　　：%.2f", data->rangeFear);
+    vnFont::print(x, y + linePitch * 6, GAME_COLOR_WHITE, L"引き寄せ攻撃耐性：%.0f%%", data->pullResistance * 100);
+
+    vnFont::print(x, y + linePitch * 8, GAME_COLOR_CYAN, L"～説明～");
+    vnFont::print(x, y + linePitch * 9, GAME_COLOR_WHITE, L"近接耐性　　　　：基本速度に加算");
+    vnFont::print(x, y + linePitch * 10, GAME_COLOR_WHITE, L"範囲攻撃耐性　　：逃げ始める基本範囲に加算(範囲攻撃可能時のみ)");
+    vnFont::print(x, y + linePitch * 11, GAME_COLOR_WHITE, L"引き寄せ攻撃耐性：無効確率に加算");
+
+
 
 }

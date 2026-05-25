@@ -53,6 +53,11 @@ public:
     }
 
     int GetMaxWave() { return m_maxWave; }
+    bool GetFinalWave() { return m_currentWave == m_maxWave; }
+
+    //ボスWAVEゲームオーバー
+    bool GetIsBossWAVEGAMEOver() { return (m_currentWave == m_maxWave && m_waveTimer >= m_waveTimeLimit); }
+    
 
     const wchar_t* GetStateString() const
     {
@@ -105,7 +110,7 @@ private:
 
     int m_spawnLimit;        // 同時出現上限
     int m_aliveCount;        // 現在生存数
-    int m_configMaxSimultaneous = 1000;   //最初の敵の最大数
+    int m_configMaxSimultaneous = 200;   //最初の敵の最大数
 
     float m_respawnInterval; // 湧き間隔
     float m_respawnTimer;    // 湧きタイマー
