@@ -45,11 +45,14 @@ void WaveManager::Init()
 //--------------------------------------------------------------
 void WaveManager::Update(float deltaTime)
 {
-    vnFont::print(400, 50, L"maxWave %d currentWave %d State: %s", m_maxWave, m_currentWave, GetStateString());
+    //vnFont::print(400, 50, L"maxWave %d currentWave %d State: %s", m_maxWave, m_currentWave, GetStateString());
 
     if (m_state == WaveState::InProgress)
     {
-        m_waveTimer += deltaTime;
+        if (!GetFinalWave())
+        {
+            m_waveTimer += deltaTime;
+        }
         if (IsWaveClear())
         {
             m_state = WaveState::ClearWait;

@@ -15,9 +15,9 @@ static const ExperienceManager::UpgradeUIData MASTER_DATA[] =
 	//スキルのレベル
 	//スキルの最大レベル(一応保険としての最大)
 
-	{ L"移動速度",     L"%アップ",    { 10.0f, 15.0f, 10.0f, 15.0f, 10.0f },   0,  1,  10 },
-	{ L"攻撃範囲",     L"%アップ",    { 10.0f, 15.0f, 20.0f, 10.0f, 15.0f },   1,  0,  50 },
-	{ L"引き寄せ範囲", L"%アップ",    { 10.0f, 15.0f, 20.0f, 10.0f, 15.0f },   2,  0,  50 },
+    { L"移動速度",     L"%アップ", { 10.0f, 15.0f, 10.0f, 15.0f, 10.0f }, 0, 1, 10 },
+	{ L"攻撃範囲",     L"%アップ", { 10.0f, 15.0f, 20.0f, 10.0f, 15.0f }, 1, 0, 50 },
+	{ L"引き寄せ範囲", L"%アップ", { 10.0f, 15.0f, 20.0f, 10.0f, 15.0f }, 2, 0, 50 },
 	//{ L"反射回数",     L"回増加",     {  1.0f,  2.0f,  3.0f,  1.0f,  2.0f },   3,  1,  50 },
 	//{ L"弾の速度",     L"%アップ",    { 10.0f, 15.0f, 10.0f, 15.0f, 10.0f },   4,  1,  50 },
 
@@ -166,14 +166,14 @@ void ExperienceManager::ApplyUpgrade(int choiceIndex)
 			m_player->UnlockPullAttackSkill(true);
 		}
 		break;
-	case ExperienceManager::UpgradeType::ReflectCount:
-		m_reflectCount += (int)boost;
-		m_player->SetBounceMultiplier(m_reflectCount);
-		break;
-	case ExperienceManager::UpgradeType::BulletSpeed:
-		m_bulletSpeedBoost += boost;
-		m_player->SetBulletSpeedMultiplier(1.0f+(m_bulletSpeedBoost/100.0f));
-		break;
+	//case ExperienceManager::UpgradeType::ReflectCount:
+	//	m_reflectCount += (int)boost;
+	//	m_player->SetBounceMultiplier(m_reflectCount);
+	//	break;
+	//case ExperienceManager::UpgradeType::BulletSpeed:
+	//	m_bulletSpeedBoost += boost;
+	//	m_player->SetBulletSpeedMultiplier(1.0f+(m_bulletSpeedBoost/100.0f));
+	//	break;
 	}
 
 

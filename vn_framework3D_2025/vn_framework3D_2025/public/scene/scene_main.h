@@ -4,6 +4,8 @@
 #define AABB_MAX (64)
 //
 #define FENCE_NUM_MAIN (40)			//フェンスモデルの数
+#define TREE_NUM (10)
+
 //#define FENCE_RADIUS (40)	//フェンスを配置する円周の半径
 // --- UI用アセットパスの定義リスト（外に出す） ---
 namespace {
@@ -93,6 +95,7 @@ private:
 	vnModel* pGround;
 	vnModel* pSky;
 	vnModel* pFence[FENCE_NUM_MAIN];
+	vnModel* pTree[TREE_NUM*2];
 	float         FenceRadius;//敵の移動のためにstatic
 	BlockManager* m_pBlockManager;
 
@@ -169,12 +172,20 @@ private:
 	vnSprite* pImageE;	//スキルボタン範囲攻撃
 	vnSprite* pImageQ;	//引き寄せ攻撃
 
+
+	// --- ボス登場時に出す文字 ---
+	bool m_isBossAppearanceTriggered = false; // ボス演出が既にトリガーされたか
+	bool m_showBossText = false;              // 現在ボス文字を表示中か
+	float m_bossTextTimer = 0.0f;             // 表示時間をカウントするタイマー
+
+
+
 	// --- ポーズ中画面に出すもの ---
 	vnSprite* m_pPauseFrame;		//ポーズ中に出るフレーム
 	vnSprite* m_pPauseFrame2;		//ポーズ中に出るフレーム
 
 	//--説明を見やすくする為の黒い背景
-	vnSprite* m_pUIBackGroundBlack;
+	vnSprite* m_pUIBackGroundBlack[2];
 	vnSprite* m_pUIBackGroundBlackPause;
 
 
@@ -240,6 +251,7 @@ private:
 	void OnCollider(vnCharacter* pCharacter, vnModel* pGround, float footOffset, RigidbodyComponent& rigidBody);
 	void InFence(vnCharacter* pObject);
 	bool CheckFenceReflection(vnCharacter* pObject);//弾の反射用
+	void SetWAVETree();
 
 	void SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData& data,bool isLeader, bool isBoss);
 

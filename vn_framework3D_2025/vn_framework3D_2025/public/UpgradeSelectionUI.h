@@ -60,7 +60,7 @@ private:
 	//vnSprite* m_freamImg;
 	//vnSprite* m_mainImg;
 	static constexpr int MAX_SKILL_NUM = 5;
-	std::array<SlotUI,5> m_slots;
+	std::array<SlotUI,3> m_slots;
 	std::array<SlotUI, 3> m_displaySlots;	//画面に表示する用
 
 	bool m_isAnimation    = false;				//アニメーション中かどうか

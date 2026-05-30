@@ -5,6 +5,8 @@
 #include <cmath>
 
 #include"../RigidbodyComponent.h"
+#define ENABLE_TREE_DELETE (1)  // 1: 解放する、0: 解放しない
+
 
 // --- BGM ---
 #define FILE_PATH_MAX	(256)
@@ -44,7 +46,10 @@ namespace {
 	
 	constexpr int leaderCount = 30;	//リーダーを生成する幅（leaderCountごとにリーダーを作る）
 
+	//半径設定（Fenceと木）
 	constexpr float defalutFenceRadius = 35.0f;
+	constexpr float treeRadius = 6.0f;
+
 
 	// --- UI ---
 	constexpr float uiHidePosX = -5000.0f;
@@ -180,6 +185,11 @@ void SceneMain::SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData&
 	// 中心点は高さ(Y)の半分に設定
 	float centerY = XMVectorGetY(colSizeVec) / 2.0f;
 	enemy->GetCollision().SetCenter(XMVectorSet(0, centerY, 0, 0));
+
+	// ビルボードを生成
+	//registerObject(enemy->GetChargeMark());
+	//registerObject(enemy->GetPanicMark());
+
 	if (isLeader && isBoss)
 	{
 		EnemyPool::GetInstance().GetBossGroupData() = std::make_unique<NewEnemyClass::GroupData>();
@@ -308,6 +318,7 @@ bool SceneMain::initialize()
 	//for (int i = 0; i < m_pBullet->GetModel()->getPartsNum(); i++) {
 	//	m_pBullet->GetModel()->getParts(i)->setRenderEnable(false);
 	//}
+
 	m_pBullet->GetModel()->setPositionY(-10.0f);
 	m_pBullet->GetModel()->setScale(2, 2, 2);
 
@@ -367,17 +378,6 @@ bool SceneMain::initialize()
 	enemyPool->UnlockEnemyType(NewEnemyClass::EnemyType::MUSHROOM);
 
 	// --- 地形 ---
-	pGround = new vnModel(L"data/model/Ground/", L"Ground.vnm");
-	pGround->setScale(50.0f, 0.5f, 50);
-
-
-	//pGround->setAmbient(0.2f, 0.2f, 0.2f, 0);
-	//pGround->setDiffuse(0.4f, 0.4f, 0.4f, 0);
-// 影の部分（Ambient）：少し青みのある深い緑にすると綺麗
-	pGround->setAmbient(0.5f, 0.7f, 0.5f, 0);
-
-	// 光の当たる部分（Diffuse）：ここがメインの緑！
-	pGround->setDiffuse(0.5f, 0.5f, 0.5f, 0);
 
 	pSky = new vnModel(L"data/model/", L"skydome.vnm");
 
@@ -408,8 +408,92 @@ bool SceneMain::initialize()
 
 		registerObject(pFence[i]);
 	}
+	//木の生成（１で２０本手前奥で）（０で１０本手前のみ）
+#if ENABLE_TREE_DELETE
+	for (int line = 0; line < 2; line++)
+	{
+		for (int i = 0; i < TREE_NUM; i++)
+		{
+			int index = line * TREE_NUM + i;
+
+			// モデルの生成
+			pTree[index] = new vnModel(L"data/model/ST_Tree_01_LOD0/", L"ST_Tree_01_LOD0.vnm");
+
+			// 1. 正しい等間隔のラジアンを計算 (i番目の角度)
+			float radian = (2.0f * 3.14159f / (float)TREE_NUM) * (float)i;
+
+			// 2本目のライン（外側）は角度を半分ずらして互い違いにする
+			if (line == 1)
+			{
+				float halfGap = (2.0f * 3.14159f / (float)TREE_NUM / 2.0f);
+				radian += halfGap;
+			}
+
+			// 2. 半径の決定
+			float lineOffset = (line == 0) ? 0.0f : 7.0f; // 内側(0.0f)と外側(4.0f)で半径を変える
+			float totalRadius = FenceRadius + treeRadius + lineOffset;
+
+			// 3. 円周上の座標を計算
+			float x = sinf(radian) * totalRadius;
+			float z = cosf(radian) * totalRadius;
+
+			//  pTree[i] になっていた部分をすべて  pTree[index] に修正
+			pTree[index]->setPosition(x, 0.0f, z);
+
+			// 4. 木を円の中心（または外側）に向ける回転
+			pTree[index]->setRotationY(radian);
+
+			float treeSize = 4.0f;
+			pTree[index]->setScale(treeSize, treeSize, treeSize);
+
+			// オブジェクトの登録
+			registerObject(pTree[index]);
+		}
+	}
+#else
+	// 宣言の直後、または初期化関数の先頭で
+	for (int i = 0; i < TREE_NUM; i++)
+	{
+		pTree[i] = nullptr; // 一度すべて安全な「空っぽ」状態にする
+	}
+	for (int i = 0; i < TREE_NUM; i++)
+	{
+		int index =  i;
+
+		// モデルの生成
+		pTree[index] = new vnModel(L"data/model/ST_Tree_01_LOD0/", L"ST_Tree_01_LOD0.vnm");
+
+		// 1. 正しい等間隔のラジアンを計算 (i番目の角度)
+		float radian = (2.0f * 3.14159f / (float)TREE_NUM) * (float)i;
+
+		// 2. 半径の決定
+		float totalRadius = FenceRadius + treeRadius;
+
+		// 3. 円周上の座標を計算
+		float x = sinf(radian) * totalRadius;
+		float z = cosf(radian) * totalRadius;
+
+		// ❌ pTree[i] になっていた部分をすべて ⭕ pTree[index] に修正
+		pTree[index]->setPosition(x, 0.0f, z);
+
+		// 4. 木を円の中心（または外側）に向ける回転
+		pTree[index]->setRotationY(radian);
+
+		float treeSize = 4.0f;
+		pTree[index]->setScale(treeSize, treeSize, treeSize);
+
+		// オブジェクトの登録
+		registerObject(pTree[index]);
+	}
+#endif
+
 	//地形
     //半透明のオブジェクトは不透明オブジェクトの後に描画
+	pGround = new vnModel(L"data/model/Ground/", L"Ground.vnm");
+	//pGround = new vnModel(L"data/model/", L"ground.vnm");
+	pGround->setScale(30.0f, 0.5f, 30.0f);
+
+
 	registerObject(pGround);
 
 	m_pBlockManager = new BlockManager();
@@ -551,11 +635,18 @@ bool SceneMain::initialize()
 	registerObject(pComboWord);
 
 	// --- 文字を見やすくするための背景 ---
-	m_pUIBackGroundBlack = new vnSprite(1280 -1120, 720.0f - 320.0f, 256 * 1.2f, 512 * 1.2f, L"BackGroundBlack.png");
-	m_pUIBackGroundBlack->setColor(V_GAME_COLOR_BLACK);
-	m_pUIBackGroundBlack->setAlpha(0.6f);
-	registerObject(m_pUIBackGroundBlack);
-	m_pUIBackGroundBlack->setRenderEnable(true);
+	m_pUIBackGroundBlack[0] = new vnSprite(1280 - 1120, 720.0f - 450.0f, 256 * 1.2f, 512 * 0.7, L"BackGroundBlack.png");
+	m_pUIBackGroundBlack[0]->setColor(V_GAME_COLOR_BLACK);
+	m_pUIBackGroundBlack[0]->setAlpha(0.6f);
+	registerObject(m_pUIBackGroundBlack[0]);
+	m_pUIBackGroundBlack[0]->setRenderEnable(true);
+
+	m_pUIBackGroundBlack[1] = new vnSprite(1280 - 170, 720.0f - 140.0f, 256 * 1.2f, 512 * 0.4, L"BackGroundBlack.png");
+	m_pUIBackGroundBlack[1]->setColor(V_GAME_COLOR_BLACK);
+	m_pUIBackGroundBlack[1]->setAlpha(0.6f);
+	registerObject(m_pUIBackGroundBlack[1]);
+	m_pUIBackGroundBlack[1]->setRenderEnable(true);
+
 
 	//--ポーズ中に出る背景
 	m_pUIBackGroundBlackPause = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"BackGroundBlack.png");
@@ -687,7 +778,7 @@ bool SceneMain::initialize()
 
 
 	m_pUpgradeUI = new UpgradeSelectionUI;
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 3; i++)
 	{
 		const auto& resource = upgradeUIResources[i];
 
@@ -834,6 +925,19 @@ void SceneMain::terminate()
 		deleteObject(pFence[i]);
 		pFence[i] = nullptr;
 	}
+
+#if ENABLE_TREE_DELETE
+	for (int i = 0; i < TREE_NUM*2; i++) {
+		deleteObject(pTree[i]);
+		pTree[i] = nullptr;
+	}
+#else
+	for (int i = 0; i < TREE_NUM; i++) {
+		deleteObject(pTree[i]);
+		pTree[i] = nullptr;
+	}
+#endif
+
 	deleteObject(pGround); pGround = nullptr;
 	deleteObject(pSky);    pSky = nullptr;
 
@@ -930,8 +1034,11 @@ void SceneMain::terminate()
 	pImageE = nullptr;
 	pImageQ = nullptr;
 
-	deleteObject(m_pUIBackGroundBlack);
-	m_pUIBackGroundBlack = nullptr;
+	for (int i = 0; i < 2; i++)
+	{
+		deleteObject(m_pUIBackGroundBlack[i]);
+		m_pUIBackGroundBlack[i] = nullptr;
+	}
 
 	// --- ポーズ中に出る奴 ---
 	deleteObject(m_pUIBackGroundBlackPause);
@@ -1040,9 +1147,16 @@ void SceneMain::execute()
 	}
 
 	//左側の表示
-	if(m_gameState==GameState::Play)m_pUIBackGroundBlack->setRenderEnable(true);
-	else m_pUIBackGroundBlack->setRenderEnable(false);
-
+	if (m_gameState == GameState::Play)
+	{
+		m_pUIBackGroundBlack[0]->setRenderEnable(true);
+		m_pUIBackGroundBlack[1]->setRenderEnable(true);
+	}
+	else
+	{
+		m_pUIBackGroundBlack[0]->setRenderEnable(false);
+		m_pUIBackGroundBlack[1]->setRenderEnable(false);
+	}
 	
 	if (m_gameState == GameState::Play)
 	{
@@ -1442,6 +1556,72 @@ void SceneMain::render()
 			float currentPosX = barLeftEdgeAreaSkill + (maxWAreaSkill * pullRatio * 0.5f);
 			pPullBtnFront->setPos(currentPosX, heightYPullSkill);
 
+
+		}
+		// ボス登場の文字表示
+		{
+			// 1. FinalWave になった「最初の1回」だけトリガーを引く
+			if (waveManager->GetFinalWave() && !m_isBossAppearanceTriggered)
+			{
+				m_isBossAppearanceTriggered = true; // 二度とこのif文に入らないようにする
+				m_showBossText = true;              // 表示フラグをON
+				m_bossTextTimer = 2.0f;             // 表示したい時間（秒）
+			}
+
+			// 2. 表示フラグがONの間だけ、更新と描画を行う
+			if (m_showBossText)
+			{
+				float dt = vnScene::getDeltaTime(); // 60FPS固定の場合の例（実際のデルタタイムがあればそれに差し替えてください）
+				m_bossTextTimer -= dt;
+
+				if (m_bossTextTimer <= 0.0f)
+				{
+					m_showBossText = false; // 時間切れで非表示
+				}
+
+				// --- 【ここから追加・変更】スケール（大きさ）の動的計算 ---
+				// 最初（残り3.0秒）から、2.5秒になるまでの「0.5秒間」で拡大させる例
+				float bossButtonScale = 1.5f; // 最終的な大きさの目標値
+
+				// 演出開始直後の0.5秒間だけ処理する
+				if (m_bossTextTimer > 1.5f)
+				{
+					// 経過時間を 0.0 ～ 0.5 の範囲で計算
+					float progressTime = 2.0f - m_bossTextTimer;
+
+					// 0.0 ～ 1.0 の割合（線形補間用）に変換
+					float rate = progressTime / 0.5f;
+
+					// 小さい状態(0.2倍) から 目標の大きさ(1.5倍) までスムーズに大きくする
+					bossButtonScale = 0.2f + (1.5f - 0.2f) * rate;
+				}
+				// --------------------------------------------------------
+
+				// 現在のフォントサイズを計算（ここからは共通）
+				float currentFontSize = 50.0f * bossButtonScale;
+				vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), (int)currentFontSize));
+
+				// 「～ボス出現～」の文字数（6文字）に合わせて位置調整の係数を変更
+				// (6文字 * 0.5) / 2 = 1.5f
+				float textWidth = currentFontSize * 1.5f;
+				float textHeight = currentFontSize * 0.5f;
+
+				// 画面中央（650, 350）に配置
+				//float tx = (vnMainFrame::screenWidth/2)-100 - textWidth;
+				//float ty = (vnMainFrame::screenHeight/2)-50 - textHeight;
+				float actualTextWidth = currentFontSize * 3.1f; // 6文字分全体の横幅の目安
+				float actualTextHeight = currentFontSize * 0.5f; // 文字の高さの目安（上下中央用）
+
+				// 2. 画面の完全な中心から、文字の「半分のサイズ」を引くことで、文字の中心を画面中心に一致させる
+				float tx = (vnMainFrame::screenWidth / 2.0f) - (actualTextWidth );
+				float ty = (vnMainFrame::screenHeight / 2.0f)-50 - (actualTextHeight);
+				// 影のずらし量
+				float off = 4.0f;
+
+				// 影と本体を描画
+				vnFont::print(tx + off, ty + off, shadowCol, L"～ボス出現～");
+				vnFont::print(tx, ty, GAME_COLOR_RED, L"～ボス出現～");
+			}
 
 		}
 
@@ -1988,7 +2168,11 @@ void SceneMain::UpdatePlay(float deltaTime)
 		{
 			// UI用データの取得（本来はGetterを作るのが理想）
 			// ここでは仮に直接参照するか、公開されたデータを使います
-			auto& data = m_pExpManager->GetUIDisplayChoices()[i];
+			const ExperienceManager::UpgradeUIData* pChoices = m_pExpManager->GetUIDisplayChoices();
+			if (!pChoices) break;
+
+			//auto& data = m_pExpManager->GetUIDisplayChoices()[i];
+			ExperienceManager::UpgradeUIData data = pChoices[i];
 			int index = m_pExpManager->GetChoiceIndex();
 			float posY = 300.0f + (i * 100.0f);
 			//UIを設定
@@ -2530,6 +2714,113 @@ void SceneMain::UpdateGlobalSystems(float deltaTime)
 
 }
 
+//WAVE更新処理
+void SceneMain::UpdateWaveTransition()
+{
+	// --- WAVEの状態の切り替え(WAVEクリア→次のWAVEとか) ---
+	if ((waveManager->GetState() == WaveManager::WaveState::ClearWait) && waveManager->GetCurrentWave() < waveManager->GetMaxWave())
+	{
+		if (isWaveClear == false) // まだ「乗っている状態」に切り替わる前なら
+		{
+			pSound[4]->play();   // 鳴らす
+		}
+		isWaveClear = true;
+
+		if (vnKeyboard::on(DIK_RETURN) || vnMouse::onR())
+		{
+
+			pSound[2]->play();
+			//WAVEを更新
+			waveManager->GoNextWave();
+			
+			//木の幅を更新
+			SetWAVETree();
+
+
+			isWaveClear = false;
+			m_pBlockManager->RespawnBlocks(waveManager->GetCurrentWave(), FenceRadius);
+			if (waveManager->GetFinalWave())
+			{
+				enemyPool->SetBossData();
+			}
+
+		}
+	}
+	if (waveManager->GetState() == WaveManager::WaveState::ClearWait && waveManager->GetCurrentWave() == waveManager->GetMaxWave())
+	{
+		if (!isGameFinish)
+			m_gameState = GameClear;
+		CleanUpScene();
+	}
+
+}
+
+void SceneMain::SetWAVETree()
+{
+#if ENABLE_TREE_DELETE
+	for (int line = 0; line < 2; line++)
+	{
+		for (int i = 0; i < TREE_NUM; i++)
+		{
+    		int index = line * TREE_NUM + i;
+
+			//木が生成されていなければスキップ
+			if (pTree[index] == nullptr)continue;
+
+			//等間隔のラジアンを計算（i番目の角度）
+			float radian = (2.0f * 3.14159f / (float)TREE_NUM) * (float)i;
+
+			if (line == 1)
+			{
+				float halfGap = (2.0f * 3.14159f / (float)TREE_NUM / 2.0f);
+				radian += halfGap;
+			}
+
+			//半径の決定（最新のFenceRadiusをもとに計算）
+			float lineOffset = (line == 0) ? 0.0f : 7.0f;
+			float totalRadius = FenceRadius + treeRadius + lineOffset;
+
+			//円周上の新しい座標を計算
+			float x = sinf(radian) * totalRadius;
+			float z = cosf(radian) * totalRadius;
+
+			//位置を更新
+			pTree[index]->setPosition(x, 0.0f, z);
+
+
+		}
+	}
+#else
+	for (int i = 0; i < TREE_NUM; i++)
+	{
+		int index = i;
+
+		//木が生成されていなければスキップ
+		if (pTree[index] == nullptr)continue;
+
+		//等間隔のラジアンを計算（i番目の角度）
+		float radian = (2.0f * 3.14159f / (float)TREE_NUM) * (float)i;
+
+
+		//半径の決定（最新のFenceRadiusをもとに計算）
+		float totalRadius = FenceRadius + treeRadius;
+
+		//円周上の新しい座標を計算
+		float x = sinf(radian) * totalRadius;
+		float z = cosf(radian) * totalRadius;
+
+		//位置を更新
+		pTree[index]->setPosition(x, 0.0f, z);
+
+
+	}
+
+#endif
+
+}
+
+
+
 // --- レベルアップ画面の更新 ---
 void SceneMain::UpdateLevelUp()
 {
@@ -2664,39 +2955,6 @@ void SceneMain::CleanUpScene()
 	}
 }
 
-void SceneMain::UpdateWaveTransition()
-{
-	// --- WAVEの状態の切り替え(WAVEクリア→次のWAVEとか) ---
-	if ((waveManager->GetState() == WaveManager::WaveState::ClearWait) && waveManager->GetCurrentWave() < waveManager->GetMaxWave())
-	{
-		if (isWaveClear == false) // まだ「乗っている状態」に切り替わる前なら
-		{
-			pSound[4]->play();   // 鳴らす
-		}
-		isWaveClear = true;
-
-		if (vnKeyboard::on(DIK_RETURN) || vnMouse::onR())
-		{
-
-			pSound[2]->play();
-			waveManager->GoNextWave();
-			isWaveClear = false;
-			m_pBlockManager->RespawnBlocks(waveManager->GetCurrentWave(), FenceRadius);
-			if (waveManager->GetFinalWave())
-			{
-				enemyPool->SetBossData();
-			}
-
-		}
-	}
-	if (waveManager->GetState() == WaveManager::WaveState::ClearWait && waveManager->GetCurrentWave() == waveManager->GetMaxWave())
-	{
-		if (!isGameFinish)
-			m_gameState = GameClear;
-		CleanUpScene();
-	}
-
-}
 void SceneMain::UpdateBlocksCollision()
 {
 	// --- 地形との当たり判定（ブロック） ---

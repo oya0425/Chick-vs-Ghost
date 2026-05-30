@@ -130,6 +130,7 @@ using namespace DirectX;
 
 // --- 赤系 ---
 #define GAME_COLOR_RED         0xFFFF0000  // 赤
+#define GAME_COLOR_DARK_RED    0xFF800000  // 暗い赤（輝度半分・ボルドー風）
 #define GAME_COLOR_ORANGE      0xFFFF8000  // オレンジ
 #define GAME_COLOR_PINK        0xFFFFA0C0  // ピンク
 #define GAME_COLOR_MAGENTA     0xFFFF00FF  // マゼンタ（ピンク紫）
@@ -160,6 +161,8 @@ using namespace DirectX;
 #define GAME_COLOR_YELLOW      0xFFFFFF00  // 黄色
 #define GAME_COLOR_CURSOR      0xFFFFFF80  // カーソル色
 #define GAME_COLOR_GOLD        0xFFFFD700  // ゴールド（金色、アイテム用）
+
+#define GAME_COLOR_DARK_YELLOW 0xFFB8860B  // ダークゴールデンロッド / 暗い黄色（パトロール用）
 
 #define GAME_COLOR_AMBER         0xFFFF9F00  // アンバー（深みのある琥珀色・近接耐性の輝きに）
 #define GAME_COLOR_ELECTRIC_PURPLE 0xFFDF00FF // エレクトリックパープル（極彩色な紫・範囲耐性に）

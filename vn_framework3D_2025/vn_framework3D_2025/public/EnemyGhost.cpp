@@ -263,6 +263,7 @@ void EnemyGhost::OnFollow(float deltaTime)
         //１割の確率で特攻（10%以下）
         SetState(eState::Charge);
         GetModel()->SetAllPartsDiffuse(V_GAME_COLOR_WHITE, 0.1f);
+        m_chargeMessage.SetState(NewEnemyClass::eShowUISelect::Text1);
         m_isCharge = true;
         m_pMyLeader = nullptr;
         return;
@@ -311,7 +312,8 @@ void EnemyGhost::OnPanic(float deltaTime)
 
     m_panicDirTimer -= deltaTime;
     m_panicRecoveryTime -= deltaTime;
-
+    //m_pPanicMark->setPosition(GetModel()->getPosition());
+    
     //EnemyAIDebug::ShowStateOnce(*GetModel()->getPosition(), m_aiDebugText, deltaTime, L"リーダー！！", GAME_COLOR_BLUE);
 
     if (m_panicDirTimer <= 0.0f)

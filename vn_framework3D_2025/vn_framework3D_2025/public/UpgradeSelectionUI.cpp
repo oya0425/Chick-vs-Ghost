@@ -22,15 +22,28 @@ void UpgradeSelectionUI::SettingUI(
 	int uiIndex,
 	int valueIndex)
 {
+	//if (uiIndex < 0 || uiIndex >= 3) return;
+	//if (data.spriteID < 0 || data.spriteID >= 5) return; // arrayのサイズ5に対応
+	//// 配列の安全チェックは残す
+	if (uiIndex < 0 || uiIndex >= 3) return;
+
+	// （これで3つ目の表示が復活するかテスト）
+	int safeSpriteID = data.spriteID;
+	if (safeSpriteID < 0 || safeSpriteID >= 5)
+	{
+		// 止まったとき「data.spriteID」がいくつになっているか確認してください。
+		safeSpriteID = 0; // 仮に 0 (移動速度のアイコン) にして強制進める
+	}
 	m_isAnimLvFinish = false;
 	m_isClosingUI = false;
 	float posY = 200.0f + (uiIndex * 170.0f);
 
-	// 保存済みUI取得
-	m_displaySlots[uiIndex] = m_slots[data.spriteID];
+	m_displaySlots.at(uiIndex) = m_slots[data.spriteID];
+
 
 	auto& slot = m_displaySlots[uiIndex];
 
+	
 	// 表示して、表示位置へ移動
 	slot.freamImg->setRenderEnable(true);
 	slot.backGroundImg->setRenderEnable(true);
@@ -60,7 +73,7 @@ void UpgradeSelectionUI::SettingUI(
 		400,
 		slot.currentY-textOffset,
 		GAME_COLOR_YELLOW,
-		L"[%d] %s + %d %s (Lv.%d / %d)",
+		L"[%d] %ls + %d %ls (Lv.%d / %d)",
 		uiIndex + 1,
 		data.label,
 		(int)data.value[valueIndex],
@@ -91,7 +104,7 @@ void UpgradeSelectionUI::UpdateUI()
 
 		// 描画（画面内にいる時だけ描画すると効率的）
 		if (slot.currentY > -100) {
-			vnFont::print(400, slot.currentY - textOffset, L"[%d] %s + %d %s (Lv.%d / %d)",
+			vnFont::print(400, slot.currentY - textOffset, L"[%d] %ls + %d %ls (Lv.%d / %d)",
 				i + 1, slot.label, (int)slot.value, slot.suffix, slot.currentLv, slot.maxLv);
 		}
 

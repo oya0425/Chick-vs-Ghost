@@ -1,5 +1,6 @@
 ﻿#include"../framework.h"
 #include"../framework/vn_environment.h"
+
 #include <random>    // random_device, mt19937 用
 #include <algorithm> // shuffle 用
 namespace
@@ -57,6 +58,9 @@ NewEnemyClass::NewEnemyClass()
       m_type(EnemyType::NONE)
 {
     m_kbData = {};
+
+    //m_pChargeMark = std::make_unique<vnBillboard>(1.0f, 1.0f, L"data/image/testPaper.png");
+    //m_pPanicMark = std::make_unique<vnBillboard>(1.0f, 1.0f, L"data/image/testPaper.png");
 
 }
 
@@ -143,6 +147,7 @@ void NewEnemyClass::Spawn(const XMVECTOR& pos)
     {
         GetModel()->getParts(i)->setRenderEnable(true);
     }
+
     GetModel()->setPosition(&pos);
     GetModel()->setRotation(0, 0, 0);
     m_kbData.active = false;
@@ -690,13 +695,36 @@ void NewEnemyClass::EscapeAreaAttack()
 void NewEnemyClass::UpdateSquashAndStretch(float deltaTime)
 {
     //時間を進める
-    m_livingTime += deltaTime;
+    //m_livingTime += deltaTime*2;
+    //if (m_state != eState::KnockBack)
+    //{
+    //    //sin(累計時間*速さ)*強さ
+    //    float wave = sinf(m_livingTime * m_animSpeed);
+
+    //    GetModel()->setScaleY(XMVectorGetY(m_defaultScale)+ (wave * m_animMagnitude));
+    //}
+
+    m_livingTime += (deltaTime*0.8f);
     if (m_state != eState::KnockBack)
     {
-        //sin(累計時間*速さ)*強さ
         float wave = sinf(m_livingTime * m_animSpeed);
 
-        GetModel()->setScaleY(XMVectorGetY(m_defaultScale) + (wave * m_animMagnitude));
+        //伸縮の強さ（ここを大きくすればするほど、極端にビヨンビヨンします）
+        float stretchAmount = m_animMagnitude * 3.0f;
+
+        // デフォルトのスケールを取得
+        float defaultX = XMVectorGetX(m_defaultScale);
+        float defaultY = XMVectorGetY(m_defaultScale);
+        float defaultZ = XMVectorGetZ(m_defaultScale);
+
+        // Yが伸びるとき（+）、XとZは縮む（-）
+        float newScaleY = defaultY + (wave * stretchAmount);
+        float newScaleX = defaultX - (wave * stretchAmount * 0.5f); // 横の縮み具合は少し抑えめに調整
+        float newScaleZ = defaultZ - (wave * stretchAmount * 0.5f);
+
+        // モデルに反映（※もし setScale(x, y, z) のような一括設定関数があればそれを使うとスマートです）
+        GetModel()->setScale(newScaleX, newScaleY, newScaleZ);
+
     }
 }
 
@@ -772,7 +800,7 @@ void NewEnemyClass::SettingOther()
     m_baseFollowDist = followerStopDistBase;
 
     // 10.0f 〜 11.0f の間で、0.01刻みの細かい個体差を出す場合
-    m_animSpeed = 10.0f + (rand() % 101) / 100.0f;
+    m_animSpeed = 20.0f + (rand() % 101) / 100.0f;
 
 
     //個体ごとのばらつき距離
@@ -938,7 +966,7 @@ void NewEnemyClass::UpdateEnemyMessage(float deltaTime)
         // ステップに応じて出す文字を変える
         if (m_upgradeStep < m_upgradeTexts.size())
         {
-            EnemyAIDebug::ShowUpgrade(displayPos, m_upgradeTexts[m_upgradeStep].c_str());
+            EnemyAIDebug::ShowUpgrade(displayPos, m_upgradeTexts[m_upgradeStep].first.c_str(),m_upgradeTexts[m_upgradeStep].second);
         }
 
 
@@ -948,7 +976,7 @@ void NewEnemyClass::UpdateEnemyMessage(float deltaTime)
             m_upgradeStep++;    // 次のステップへ
 
             // 全てのステップが終わったら終了
-            if (m_upgradeStep<m_upgradeTexts.size()) // 2個出し終わったら
+            if (m_upgradeStep<m_upgradeTexts.size()) // 全部出し終わったら
             {
                 m_upgradeTimer = 3.0f;
             }
@@ -982,19 +1010,19 @@ void NewEnemyClass::CheckEvolutionOnSpawn()
     //1.近接耐性が上がっていたらリストに追加
     if (data->meleeFear > data->oldMeleeFear)
     {
-        m_upgradeTexts.push_back(L"「近接耐性アップ」");
+        m_upgradeTexts.push_back({L"「近接耐性アップ」", GAME_COLOR_RED});
         data->oldMeleeFear = data->meleeFear;   //データを更新
     }
     //2.範囲攻撃耐性
     if (data->rangeFear > data->oldRangeFear)
     {
-        m_upgradeTexts.push_back(L"「範囲攻撃耐性アップ」");
+        m_upgradeTexts.push_back({ L"「範囲攻撃耐性アップ」", GAME_COLOR_BLUE });
         data->oldRangeFear = data->rangeFear;
     }
     //3.引き寄せ耐性
     if (data->pullResistance > data->oldPullResistance)
     {
-        m_upgradeTexts.push_back(L"「引き寄せ耐性アップ」");
+        m_upgradeTexts.push_back({ L"「引き寄せ耐性アップ」", GAME_COLOR_GREEN });
         data->oldPullResistance = data->pullResistance;
     }
 
@@ -1044,23 +1072,23 @@ void NewEnemyClass::ShowMessage()
     // 2. 範囲攻撃メッセージのテキスト決定
     switch (m_areaAtkMessage.uiState) {
     case eShowUISelect::Text1:
-        areaMsg = { isLeader ? L"範囲攻撃内に入ったぞ\n　逃走中" : L"逃", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        areaMsg = { isLeader ? L"射程範囲内" : L"逃",GAME_COLOR_NEON_MAGENTA };
         break;
     case eShowUISelect::Text2:
-        areaMsg = { L"範囲攻撃外に出た", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        areaMsg = { L"射程範囲外", GAME_COLOR_ELECTRIC_PURPLE };
         break;
     }
 
     // 3. 引き寄せ攻撃メッセージのテキスト決定
     switch (m_pullAtkMessage.uiState) {
     case eShowUISelect::Text1:
-        pullMsg = { L"引き寄せ無効化", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        pullMsg = { L"無効化",GAME_COLOR_AQUA_GREEN };
         break;
     case eShowUISelect::Text2:
-        pullMsg = { L"引き寄せ完全抵抗",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        pullMsg = { L"完全抵抗",GAME_COLOR_AQUA_GREEN };
         break;
     case eShowUISelect::Text3:
-        pullMsg = { L"引き寄せ成功！",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        pullMsg = { L"成功",GAME_COLOR_ELECTRIC_CYAN };
         break;
     }
 
@@ -1095,7 +1123,7 @@ void NewEnemyClass::ShowMessage()
     switch (m_patrolMessage.uiState)
     {
     case eShowUISelect::Text1:
-        patrolMsg = { L"パトロール中～", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        patrolMsg = { L"パトロール中～",GAME_COLOR_DARK_YELLOW };
         break;
     case eShowUISelect::Text2:
         patrolMsg = { L"",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
@@ -1108,10 +1136,10 @@ void NewEnemyClass::ShowMessage()
     switch (m_followMessage.uiState)
     {
     case eShowUISelect::Text1:
-        followMsg = { L"追跡中", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        followMsg = { L"追跡中",GAME_COLOR_ORANGE };
         break;
     case eShowUISelect::Text2:
-        followMsg = { L"",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        followMsg = { L"", GAME_COLOR_YELLOW };
         break;
     case eShowUISelect::Text3:
         followMsg = { L"",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
@@ -1120,7 +1148,7 @@ void NewEnemyClass::ShowMessage()
     switch (m_runMessage.uiState)
     {
     case eShowUISelect::Text1:
-        runMsg = { L"プレイヤーから\n　逃走中", isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
+        runMsg = { L"プレイヤーから\n　逃走中", GAME_COLOR_ORANGE };
         break;
     case eShowUISelect::Text2:
         runMsg = { L"",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };

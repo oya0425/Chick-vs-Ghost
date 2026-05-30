@@ -349,8 +349,8 @@ void EnemyPool::DebugSetting()
     if (vnKeyboard::trg(DIK_3)) ChangeDisplayMode(eDisplayMode::AllOff);
     if (vnKeyboard::trg(DIK_4)) ChangeDisplayMode(eDisplayMode::AllOn);
     // 2. 画面右下の表示位置を計算
-    float x = (float)vnMainFrame::screenWidth - 1260.0f;
-    float y = (float)vnMainFrame::screenHeight - 150.0f;
+    float x = (float)vnMainFrame::screenWidth - 300;
+    float y = (float)vnMainFrame::screenHeight - 175;
     float linePitch = 25.0f; // 行間
 
     vnFont::setFontSize(38, 25);
@@ -576,7 +576,9 @@ void EnemyPool::DrawBossDebugInfo()
     // 2. 画面右下の表示位置を計算
     float x = (float)vnMainFrame::screenWidth - 1080;
     float y = (float)vnMainFrame::screenHeight - 512;
-    float linePitch = 30.0f; // 行間
+    float lineYPitch = 35.0f; // 行間
+    float lineXPitch = 210.0f;
+
 
     vnFont::setFontSize(38, 25);
 
@@ -585,23 +587,39 @@ void EnemyPool::DrawBossDebugInfo()
     // タイトルの表示
     vnFont::print(x, y, GAME_COLOR_CYAN, L"～ボス情報表示～");
 
-    vnFont::print(x, y + linePitch * 1, GAME_COLOR_WHITE, L"番号：%d番", m_debugGroupIndex);
+    //vnFont::print(x, y + lineYPitch * 1, GAME_COLOR_WHITE, L"番号：%d番", m_debugGroupIndex);
 
-    //vnFont::print(x, y + linePitch * 2, GAME_COLOR_WHITE, L"番号：%d", data->id);
-    //色
-    vnFont::print(x, y + linePitch * 2, GAME_COLOR_WHITE, L"色： %s", data->colorName);
-
+    ////vnFont::print(x, y + lineYPitch * 2, GAME_COLOR_WHITE, L"番号：%d", data->id);
+    ////色
+    //vnFont::print(x, y + lineYPitch * 2, GAME_COLOR_WHITE, L"色");
+    //vnFont::print(x + lineXPitch, y + lineYPitch * 2, displayGroupColor, L"： %s", data->colorName);
+    
     //学習状況
-    vnFont::print(x, y + linePitch * 3, GAME_COLOR_CYAN, L"～成長値～");
-    vnFont::print(x, y + linePitch * 4, GAME_COLOR_WHITE, L"近接耐性　　　　：%.2f", data->meleeFear);
-    vnFont::print(x, y + linePitch * 5, GAME_COLOR_WHITE, L"範囲攻撃耐性　　：%.2f", data->rangeFear);
-    vnFont::print(x, y + linePitch * 6, GAME_COLOR_WHITE, L"引き寄せ攻撃耐性：%.0f%%", data->pullResistance * 100);
+    //項目
+    vnFont::print(x, y + lineYPitch * 1, GAME_COLOR_ICE_BLUE, L"～成長値～");
+    vnFont::print(x, y + lineYPitch * 2, GAME_COLOR_AMBER, L"近接耐性");
+    vnFont::print(x, y + lineYPitch * 3, GAME_COLOR_ELECTRIC_PURPLE, L"範囲攻撃耐性");
+    vnFont::print(x, y + lineYPitch * 4, GAME_COLOR_ELECTRIC_CYAN, L"引き寄せ攻撃耐性");
+  
+    //数値
+    vnFont::print(x+ lineXPitch, y + lineYPitch * 5, GAME_COLOR_SUNGLOW, L"：% .2f", data->meleeFear);
+    vnFont::print(x+ lineXPitch, y + lineYPitch * 6, GAME_COLOR_NEON_MAGENTA, L"：%.2f", data->rangeFear);
+    vnFont::print(x+ lineXPitch, y + lineYPitch * 7, GAME_COLOR_AQUA_GREEN, L"：%.0f%%", data->pullResistance * 100);
 
-    vnFont::print(x, y + linePitch * 8, GAME_COLOR_CYAN, L"～説明～");
-    vnFont::print(x, y + linePitch * 9, GAME_COLOR_WHITE, L"近接耐性　　　　：基本速度に加算");
-    vnFont::print(x, y + linePitch * 10, GAME_COLOR_WHITE, L"範囲攻撃耐性　　：逃げ始める基本範囲に加算(範囲攻撃可能時のみ)");
-    vnFont::print(x, y + linePitch * 11, GAME_COLOR_WHITE, L"引き寄せ攻撃耐性：無効確率に加算");
 
+    vnFont::print(x, y + lineYPitch * 8, GAME_COLOR_ICE_BLUE, L"～説明～");
+    //強化の項目
+    vnFont::print(x, y + lineYPitch * 9, GAME_COLOR_AMBER,             L"近接耐性");
+    vnFont::print(x, y + lineYPitch * 10, GAME_COLOR_ELECTRIC_PURPLE,         L"範囲攻撃耐性");
+    vnFont::print(x, y + lineYPitch * 11, GAME_COLOR_ELECTRIC_CYAN,     L"引き寄せ攻撃耐性");
+
+    //項目の説明
+    vnFont::print(x + lineXPitch, y + lineYPitch * 9, GAME_COLOR_SUNGLOW,         L"：基本速度に加算");
+    vnFont::print(x + lineXPitch, y + lineYPitch * 10, GAME_COLOR_NEON_MAGENTA, L"：逃げ始める基本範囲に加算(範囲攻撃可能時のみ)");
+    vnFont::print(x + lineXPitch, y + lineYPitch * 11, GAME_COLOR_AQUA_GREEN, L"：無効確率に加算");
+
+    vnFont::print(x + lineXPitch * 3.0f, y, GAME_COLOR_YELLOW, L"Tab    ：戻る");
+    vnFont::print(x + lineXPitch * 3.0f, y + lineYPitch, GAME_COLOR_YELLOW, L"← / →：群番号切り替え");
 
 
 }

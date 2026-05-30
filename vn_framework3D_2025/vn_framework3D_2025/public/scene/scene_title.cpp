@@ -165,7 +165,7 @@ void SceneTitle::terminate()
 //描画
 void SceneTitle::render()
 {
-    float off = 3.0f; // 影のズレ幅
+    float off = 5.0f; // 影のズレ幅
     unsigned int shadowCol = 0xFF000000;
 
     blinkCounter++;
@@ -174,8 +174,8 @@ void SceneTitle::render()
     if (!isStarting)
     {
         vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 90));
-        vnFont::print(100 + off, 200 + offsetY + off, shadowCol, L"『ひよこ無双：BOX壊滅』");
-        vnFont::print(100, 200 + offsetY, GAME_COLOR_GOLD, L"『ひよこ無双：BOX壊滅』");
+        vnFont::print(150 + off, 200 + offsetY + off, shadowCol, L"『ミネートクレーター』");
+        vnFont::print(150, 200 + offsetY, GAME_COLOR_GOLD, L"『ミネートクレーター』");
 
     }
     // 現在のフォントサイズ

@@ -27,7 +27,7 @@ public:
 
 
 	// 学習・強化の表示（一定時間だけ呼ぶ想定）
-	static void ShowUpgrade(const XMVECTOR& worldPos, const WCHAR* text);
+	static void ShowUpgrade(const XMVECTOR& worldPos, const WCHAR* text, DWORD color);
 
 	//時間制限付きで表示する
 	static void ShowStateOnce(const XMVECTOR& worldPos, DebugTextState& state, float deltaTime, const WCHAR* text, DWORD color);

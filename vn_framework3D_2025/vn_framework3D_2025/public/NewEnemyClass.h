@@ -280,6 +280,10 @@ public:
 	// --- リスタートしたときに所持していた学習データを削除する ---
 	void ReStartEnemy();
 
+	// ゲッター（ビルボード）
+	vnBillboard* GetChargeMark()const { return m_pChargeMark.get(); }
+	vnBillboard* GetPanicMark()const { return m_pPanicMark.get(); }
+
 
 protected:
 	virtual void OnIdel(float deltaTime, float distance, const XMVECTOR& toPlayer) = 0;
@@ -391,6 +395,11 @@ protected:
 
 
 
+	// --- 頭に出すマーク（ビルボード）---
+	std::unique_ptr<vnBillboard> m_pChargeMark;	//特攻状態の怒りマーク
+	std::unique_ptr<vnBillboard> m_pPanicMark;  //焦りマーク
+
+
 private:
 	// --- 基本ステータス・設定 ---
 	CharacterBase* m_pPlayer	= nullptr;  // プレイヤーへのポインタ
@@ -452,7 +461,8 @@ private:
 	bool m_isSpwanStart = false;
 	float m_upgradeTimer = 3.0f;
 	int m_upgradeStep = 0;			//強化された項目の数、表示するごとに増える
-	std::vector<std::wstring>m_upgradeTexts;	//進化した項目の文字リスト(強化した項目)
+	//std::vector<std::wstring>m_upgradeTexts;	//進化した項目の文字リスト(強化した項目)
+	std::vector<std::pair<std::wstring,unsigned int>>m_upgradeTexts;	//進化した項目の文字リスト(強化した項目)
 
 	void CheckEvolutionOnSpawn();	//スポーン時に何が強化されたか出す
 

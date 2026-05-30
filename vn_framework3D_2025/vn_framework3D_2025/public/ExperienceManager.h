@@ -67,8 +67,8 @@ private:
 		MoveSpeed,		//ˆÚ“®‘¬“x
 		AttackRange,	//UŒ‚”ÍˆÍ
 		MagnetRange,	//ˆø‚«Šñ‚¹
-		ReflectCount,	//”½Ë‰ñ”
-		BulletSpeed,	//’e‚Ì‘¬“x
+		//ReflectCount,	//”½Ë‰ñ”
+		//BulletSpeed,	//’e‚Ì‘¬“x
 		MaxCount,		//€–Ú‚Ì‘”
 	};
 

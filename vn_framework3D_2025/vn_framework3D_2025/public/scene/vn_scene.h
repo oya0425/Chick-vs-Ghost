@@ -6,7 +6,7 @@
 //--------------------------------------------------------------//
 #pragma once
 
-#define vnOBJECT2D_MAX (512)	//2Dオブジェクトを登録できる最大数
+#define vnOBJECT2D_MAX (1024)	//2Dオブジェクトを登録できる最大数
 //#define vnOBJECT3D_MAX (512)	//3Dオブジェクトを登録できる最大数
 //#define vnOBJECT3D_MAX (4096)	//3Dオブジェクトを登録できる最大数
 #define vnOBJECT3D_MAX (163840)	//3Dオブジェクトを登録できる最大数

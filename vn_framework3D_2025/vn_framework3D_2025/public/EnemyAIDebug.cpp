@@ -53,13 +53,13 @@ void EnemyAIDebug::ShowSearching(const XMVECTOR& worldPos)
 
 
 // 学習・強化の表示（一定時間だけ呼ぶ想定）
-void EnemyAIDebug::ShowUpgrade(const XMVECTOR& worldPos, const WCHAR* text) {
+void EnemyAIDebug::ShowUpgrade(const XMVECTOR& worldPos, const WCHAR* text,DWORD color) {
 	float sx, sy;
 	XMVECTOR pos = XMVectorSetY(worldPos, XMVectorGetY(worldPos)); // 状態より少し上
 	pos = XMVectorSetX(pos, XMVectorGetX(pos) - 3.0f);
 
 	if (vnFont::CalculateScreenPosition(pos, &sx, &sy)) {
-		vnFont::print(sx, sy, GAME_COLOR_YELLOW, text);
+		vnFont::print(sx, sy, color, text);
 	}
 }
 
