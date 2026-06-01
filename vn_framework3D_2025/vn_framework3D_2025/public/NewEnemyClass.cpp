@@ -59,8 +59,6 @@ NewEnemyClass::NewEnemyClass()
 {
     m_kbData = {};
 
-    //m_pChargeMark = std::make_unique<vnBillboard>(1.0f, 1.0f, L"data/image/testPaper.png");
-    //m_pPanicMark = std::make_unique<vnBillboard>(1.0f, 1.0f, L"data/image/testPaper.png");
 
 }
 
@@ -72,7 +70,7 @@ NewEnemyClass::~NewEnemyClass()
 
 // static変数の実体化
 const NewEnemyClass::EnemyData NewEnemyClass::MasterTable[] = {
-    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    150/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
+    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    150/*150/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMon/", L"MushroomMon.bone", 0 , 1.5f, {1.0f, 1.0f,1.0f}},
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMonster/", L"MushroomMonster.bone", 150 , 5.0f, {1.0f, 1.0f, 1.0f}},
 };
@@ -178,6 +176,11 @@ void NewEnemyClass::Spawn(const XMVECTOR& pos)
         m_panicRecoveryStartTime = 0.5f;
     }
 
+    SetMark(m_pChargeMark, false);
+    SetMark(m_pPanicMark, false);
+
+
+
 }
 
 void NewEnemyClass::DeSpawn()
@@ -200,7 +203,33 @@ void NewEnemyClass::DeSpawn()
         GroupData* data = GetGroupData();
         data->isLeaderAlive = false;
     }
+    //m_pPanicMark->setPosition(0,-500,0);
+    //m_pChargeMark->setPosition(0,-500,0);
 
+    SetMark(m_pChargeMark, false);
+    SetMark(m_pPanicMark, false);
+
+
+
+
+}
+
+//頭の上にマークを表示する
+void NewEnemyClass::SetMark(vnSprite* sprite, bool isVisible)
+{
+    float x, y;
+    XMVECTOR pos = XMVectorSet(
+        GetModel()->getPositionX() + 0.5f,
+        GetModel()->getPositionY() + 2.0f * (GetModel()->getScaleY() / 2),
+        GetModel()->getPositionZ(),
+        1.0f
+    );
+
+    if (vnFont::CalculateScreenPosition(pos, &x, &y))
+    {
+        sprite->setPos(x, y);
+    }
+    sprite->setRenderEnable(isVisible);
 }
 
 void NewEnemyClass::ReStartEnemy()
@@ -221,33 +250,81 @@ void NewEnemyClass::Update(float deltaTime)
 
     EnemyPool::GetInstance().GetGroupData(GetGroupID());
 
+    // マーク更新
+    UpdateMark();
+
     // --- 状態(子クラスに任せる) ---
+    UpdateState(deltaTime, distance, toPlayer);
+
+    //プレイヤーと当たったらノックバック状態
+    UpdateHitPlayer();
+
+    //XMVECTOR ropecenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
+    //vnDebugDraw::Sphere(ropecenter, GetEffectiveRadius(), GAME_COLOR_LIME);
+    // --- 学習行動 ---
+    UpdateEnemyMessage(deltaTime);
+
+    //物理更新
+    UpdatePhysics(deltaTime);
+
+
+    //待機状態以外で出てくるのを防ぐ用
+    m_panicRecoveryStartTime -= deltaTime;
+}
+void NewEnemyClass::UpdateMark()
+{
+    switch (m_state)
+    {
+    case Run:
+    case Panic:
+        SetMark(m_pPanicMark, true);
+        SetMark(m_pChargeMark, false);
+        break;
+
+    case Charge:
+        SetMark(m_pPanicMark, false);
+        SetMark(m_pChargeMark, true);
+        break;
+
+    default:
+        SetMark(m_pPanicMark, false);
+        SetMark(m_pChargeMark, false);
+        break;
+    }
+}
+
+//状態の更新
+void NewEnemyClass::UpdateState(
+    float deltaTime,
+    float distance,
+    const XMVECTOR& toPlayer)
+{
     switch (m_state)
     {
     case Idel:
-        if (GetIsLeader()&&!m_onceStartUI)
+        if (GetIsLeader() && !m_onceStartUI)
         {
             m_isSpwanStart = true;
         }
-
-        // 距離と方向を渡してあげる
         OnIdel(deltaTime, distance, toPlayer);
-       
         break;
+
     case Run:
         OnRun(deltaTime, distance, toPlayer);
-        
         break;
+
     case KnockBack:
         UpdateKnockback(deltaTime);
-        
         break;
+
     case Dead:
         OnDead();
         break;
+
     case Attracted:
-        UpdateAttracted(deltaTime,toPlayer,distance);
+        UpdateAttracted(deltaTime, toPlayer, distance);
         break;
+
     case Follow:
         OnFollow(deltaTime);
         break;
@@ -255,19 +332,20 @@ void NewEnemyClass::Update(float deltaTime)
     case Panic:
         OnPanic(deltaTime);
         break;
+
     case Charge:
-        OnCharge(deltaTime,toPlayer);
+        OnCharge(deltaTime, toPlayer);
         break;
 
     case Patrol:
         OnPatrol(deltaTime, distance);
         break;
     }
+}
 
-
-    //XMVECTOR ropecenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
-    //vnDebugDraw::Sphere(ropecenter, GetEffectiveRadius(), GAME_COLOR_LIME);
-
+// プレイヤーと当たった時にノックバック状態にする
+void NewEnemyClass::UpdateHitPlayer()
+{
     // --- playerと当たった時
     if (m_isHitPlayer && m_state != eState::KnockBack)
     {
@@ -278,31 +356,31 @@ void NewEnemyClass::Update(float deltaTime)
 
         StartKnockback(dir, knockbackDist, knockbackDuration, m_baseKnockSpeed * m_randomKnockNum); // durationは秒で
 
-        if(GetIsLeader())
-        if (GetRandomFloat() < chargeProbability)
-        {
-            m_currentGroupMode = eGroupMode::Charge;
+        if (GetIsLeader())
+            if (GetRandomFloat() < chargeProbability)
+            {
+                m_currentGroupMode = eGroupMode::Charge;
 
-        }
-        else
-        {
+            }
+            else
+            {
 
-            m_currentGroupMode = eGroupMode::Panic;
-        }
+                m_currentGroupMode = eGroupMode::Panic;
+            }
 
         m_state = eState::KnockBack;
     }
-    // --- 学習行動 ---
-
-    UpdateEnemyMessage(deltaTime);
+}
 
 
-    //物理更新
-    //壁（ブロック）が前に来たらジャンプ
+//物理更新
+void NewEnemyClass::UpdatePhysics(float deltaTime)
+{
+    //障害物が目の前に来たらジャンプ
     Jump();
+    //物理更新
     GetRigidbody().Update(deltaTime);
-    
-    //伸び縮みするアニメーション
+    //伸び縮みのアニメーション
     UpdateSquashAndStretch(deltaTime);
 
     // --- 保険 --- 一定範囲（高さ（下））を超えたら戻す
@@ -310,11 +388,6 @@ void NewEnemyClass::Update(float deltaTime)
         //一定以上落下したら
         DeSpawn();
     }
-
-    //待機状態以外で出てくるのを防ぐ用
-    m_panicRecoveryStartTime -= deltaTime;
-
-
 }
 
 void NewEnemyClass::ChangeSpeed(float speed)

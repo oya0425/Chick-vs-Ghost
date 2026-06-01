@@ -31,6 +31,16 @@ public:
 		AllOn,
 	};
 
+	//棒グラフ
+	struct UIBar
+	{
+		vnSprite* pBackBlack = nullptr;
+		vnSprite* pBack = nullptr;
+		vnSprite* pFront = nullptr;
+	};
+
+
+
 
 	//リーダーを探す
 	NewEnemyClass* FindClosestLeader(NewEnemyClass* requester, float radius);
@@ -86,6 +96,17 @@ public:
 	void DebugBossPause();
 
 
+	//棒グラフ設定
+	void SetMeleeBar(const UIBar& bar);
+	void SetRangeBar(const UIBar& bar);
+	void SetPullBar(const UIBar& bar);
+	const UIBar& GetMeleeBar() const { return m_meleeBar; }
+	const UIBar& GetRangeBar() const { return m_rangeBar; }
+	const UIBar& GetPullBar() const { return m_pullBar; }
+
+	void ShowHideBar(bool isShow);
+
+
 private:
 	EnemyPool();
 	std::vector<NewEnemyClass*> _enemies;
@@ -103,5 +124,12 @@ private:
 	void ChangeDisplayMode(eDisplayMode nextMode);
 
 	int	m_debugGroupIndex = 0;//表示する
+
+
+
+	//棒グラフ
+	UIBar m_meleeBar;
+	UIBar m_rangeBar;
+	UIBar m_pullBar;
 
 };

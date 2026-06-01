@@ -62,6 +62,7 @@ private:
 
 	};
 
+
 	// --- 定数 (constexpr) ---
 	static constexpr float COMBO_BASE_TIME = 3.0f;
 	static constexpr float COMBO_MIN_TIME = 1.0f;
@@ -238,11 +239,21 @@ private:
 	// --- カメラ・演出 ---
 	void StartCameraRote();
 	void UpdateFencePositions();
+	
+	// --- バーの関連 ---
 	void setHPbarRender(bool on);
 
 	void SetExpbarRender(bool on);
 
 	void SetSkillUIRender(bool on); 
+
+	//バーの設定
+	void CreateUIBar(
+		EnemyPool::UIBar& ui,
+		float centerX,
+		float posY,
+		float width,
+		float height);
 
 	// --- 衝突判定・計算系 ---
 	eDirection colliderCtoC(CharacterBase* p1, CharacterBase* p2);

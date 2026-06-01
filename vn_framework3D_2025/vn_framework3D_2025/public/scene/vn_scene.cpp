@@ -104,6 +104,9 @@ void vnScene::render()
 		if (pObject2D_Array[i]->isRenderEnable() == false)continue;
 		pObject2D_Array[i]->render();
 	}
+
+
+
 }
 
 //登録された2Dオブジェクトの描画優先順位が変更されたので、配列をソートをする必要がある

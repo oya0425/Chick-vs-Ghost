@@ -117,6 +117,11 @@ namespace {
 	constexpr float maxWPullSkill = 250.0f;
 
 
+	// ポーズ中のバーの基準
+	constexpr float baseBarWidth = 300.0f;
+	constexpr float baseBarHeight = 12.0f;
+
+
 	// --- カメラ関係 ---
 	constexpr float defualtRadius = 30.0f;
 	constexpr float defualtTheta  = 92.688f;
@@ -187,8 +192,17 @@ void SceneMain::SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData&
 	enemy->GetCollision().SetCenter(XMVectorSet(0, centerY, 0, 0));
 
 	// ビルボードを生成
-	//registerObject(enemy->GetChargeMark());
-	//registerObject(enemy->GetPanicMark());
+	
+	enemy->SetChargeMark(new vnSprite(1.1f, 1.1f, 28, 28, L"data/image/怒り.png"));
+	enemy->SetPanicMark(new vnSprite(1.1f, 1.1f, 32, 32, L"data/image/汗.png"));
+
+	registerObject(enemy->GetChargeMark());
+	registerObject(enemy->GetPanicMark());
+
+	//enemy->GetChargeMark()->setParent(enemy->GetModel());
+	//enemy->GetPanicMark()->setParent(enemy->GetModel());
+	//enemy->GetChargeMark()->setPositionY(1.f);
+	//enemy->GetPanicMark()->setPositionY(1.f);
 
 	if (isLeader && isBoss)
 	{
@@ -240,6 +254,46 @@ void SceneMain::SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData&
 		}
 	}
 
+}
+
+//UIBarの設定
+void SceneMain::CreateUIBar(
+	EnemyPool::UIBar& ui,
+	float centerX,
+	float posY,
+	float width,
+	float height) 
+{
+
+	ui.pBackBlack = new vnSprite(
+		centerX,
+		posY,
+		width + 10.0f,
+		height + 6.0f,
+		NULL);
+
+	ui.pBackBlack->setColor(V_GAME_COLOR_BLACK);
+	registerObject(ui.pBackBlack);
+
+	ui.pBack = new vnSprite(
+		centerX,
+		posY,
+		width,
+		height,
+		NULL);
+
+	ui.pBack->setColor(V_GAME_COLOR_BLUEBLACK);
+	registerObject(ui.pBack);
+
+	ui.pFront = new vnSprite(
+		centerX,
+		posY,
+		width,
+		height,
+		NULL);
+
+	ui.pFront->setColor(V_GAME_COLOR_CYAN);
+	registerObject(ui.pFront);
 }
 
 
@@ -604,6 +658,10 @@ bool SceneMain::initialize()
 	registerObject(pExpBarFront);
 
 
+
+
+
+
 	//-------------------------------------------------------------------------------
 	//
 	//	UI関連
@@ -756,9 +814,27 @@ bool SceneMain::initialize()
 
 	SetSkillUIRender(false);
 
+	// ポーズ画面の群情報の画面の棒グラフ
+	EnemyPool::UIBar meleeUIbar;
+	EnemyPool::UIBar rangeUIbar;
+	EnemyPool::UIBar pullUIbar;
+
+	CreateUIBar(meleeUIbar, centerX+400, 310, baseBarWidth, baseBarHeight);
+	CreateUIBar(rangeUIbar, centerX+400, 345, baseBarWidth, baseBarHeight);
+	CreateUIBar(pullUIbar, centerX+400,	 380, baseBarWidth, baseBarHeight);
+
+	enemyPool->SetMeleeBar(meleeUIbar);
+	enemyPool->SetRangeBar(rangeUIbar);
+	enemyPool->SetPullBar(pullUIbar);
+
+
+
+
 
 	//-------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------
+
+
 
 
 
@@ -894,6 +970,22 @@ void SceneMain::terminate()
 		m_pNewPlayer = nullptr; 
 	}
 
+	// --- ポーズ中の棒グラフ ---
+	auto& meleebar = enemyPool->GetMeleeBar();
+	deleteObject(meleebar.pFront);
+	deleteObject(meleebar.pBack);
+	deleteObject(meleebar.pBackBlack);
+
+	auto& rangebar = enemyPool->GetMeleeBar();
+	deleteObject(rangebar.pFront);
+	deleteObject(rangebar.pBack);
+	deleteObject(rangebar.pBackBlack);
+
+	auto& pullbar = enemyPool->GetMeleeBar();
+	deleteObject(pullbar.pFront);
+	deleteObject(pullbar.pBack);
+	deleteObject(pullbar.pBackBlack);
+
 
 	// --- 敵 (完全修正版) ---
 	if (enemyPool) {
@@ -907,6 +999,14 @@ void SceneMain::terminate()
 					deleteObject(enemy->GetModel()->getParts(i));
 				}
 				deleteObject(enemy->GetModel());
+			}
+			if (enemy->GetChargeMark())
+			{
+				deleteObject(enemy->GetChargeMark());
+			}
+			if (enemy->GetPanicMark())
+			{
+				deleteObject(enemy->GetPanicMark());
 			}
 
 			// 2. 敵本体を削除
@@ -1053,7 +1153,7 @@ void SceneMain::terminate()
 
 
 
-
+	//レベルアップ時に出るUI
 	for (int i = 0; i < 3; i++)
 	{
 		deleteObject(m_pUpgradeUI->GetFreamImg(i));
@@ -1066,6 +1166,7 @@ void SceneMain::terminate()
 	// --- レベルアップシステム ---
 	delete m_pExpManager;
 	m_pExpManager = nullptr;
+
 
 	// ...フォント処理...
 	delete[] textFormat;
@@ -1167,7 +1268,7 @@ void SceneMain::execute()
 		pImageE->setRenderEnable(true);
 		pImageQ->setRenderEnable(true);
 		
-
+		
 	}
 	else
 	{
@@ -1186,12 +1287,16 @@ void SceneMain::execute()
 		m_pUIBackGroundBlackPause->setRenderEnable(true);
 		m_pPauseFrame->setRenderEnable(true);
 		m_pPauseFrame2->setRenderEnable(true);
+
+		enemyPool->ShowHideBar(true);
 	}
 	else
 	{
 		m_pUIBackGroundBlackPause->setRenderEnable(false);
 		m_pPauseFrame->setRenderEnable(false);
 		m_pPauseFrame2->setRenderEnable(false);
+		enemyPool->ShowHideBar(false);
+
 	}
 
 	// --- WAVEの状態の切り替え(WAVEクリア→次のWAVEとか) ---

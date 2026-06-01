@@ -312,7 +312,6 @@ void EnemyGhost::OnPanic(float deltaTime)
 
     m_panicDirTimer -= deltaTime;
     m_panicRecoveryTime -= deltaTime;
-    //m_pPanicMark->setPosition(GetModel()->getPosition());
     
     //EnemyAIDebug::ShowStateOnce(*GetModel()->getPosition(), m_aiDebugText, deltaTime, L"リーダー！！", GAME_COLOR_BLUE);
 

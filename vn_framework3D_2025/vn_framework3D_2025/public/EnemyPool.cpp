@@ -14,6 +14,50 @@ EnemyPool::~EnemyPool()
 {
     //_enemies.clear();
 }
+// バーのセッティング -----------------------------------------------------------
+void EnemyPool::SetMeleeBar(const UIBar& bar)
+{
+    m_meleeBar.pBackBlack = bar.pBackBlack;
+    m_meleeBar.pBack = bar.pBack;
+    m_meleeBar.pFront = bar.pFront;
+
+}
+
+void EnemyPool::SetRangeBar(const UIBar& bar)
+{
+    m_rangeBar.pBackBlack = bar.pBackBlack;
+    m_rangeBar.pBack = bar.pBack;
+    m_rangeBar.pFront = bar.pFront;
+
+}
+
+void EnemyPool::SetPullBar(const UIBar& bar)
+{
+    m_pullBar.pBackBlack = bar.pBackBlack;
+    m_pullBar.pBack = bar.pBack;
+    m_pullBar.pFront = bar.pFront;
+}
+
+// --- 全バー表示・非表示 ---
+void EnemyPool::ShowHideBar(bool isShow)
+{
+    m_meleeBar.pBackBlack->setRenderEnable(isShow);
+    m_meleeBar.pBack     ->setRenderEnable(isShow);
+    m_meleeBar.pFront    ->setRenderEnable(isShow);
+
+    m_rangeBar.pBackBlack->setRenderEnable(isShow);
+    m_rangeBar.pBack->setRenderEnable(isShow);
+    m_rangeBar.pFront->setRenderEnable(isShow);
+   
+    m_pullBar.pBackBlack->setRenderEnable(isShow);
+    m_pullBar.pBack->setRenderEnable(isShow);
+    m_pullBar.pFront->setRenderEnable(isShow);
+
+}
+
+
+//--------------------------------------------------------------------------------
+
 
 void EnemyPool::ReStartEnemyGroupData()
 {
@@ -256,6 +300,16 @@ void EnemyPool::HideAllActiveEnemies()
             // これをしないと、Update() が走り続けてしまいます
             //e->SetActive(false);
         }
+        if (e->GetPanicMark())
+        {
+            e->GetPanicMark()->setRenderEnable(false);
+        }
+        if (e->GetChargeMark())
+        {
+            e->GetChargeMark()->setRenderEnable(false);
+        }
+
+
     }
 }
 
@@ -284,6 +338,15 @@ void EnemyPool::ShowAllEnemies()
             // これをしないと、Update() が走り続けてしまいます
             //e->SetActive(true);
         }
+        if (e->GetPanicMark())
+        {
+            e->GetPanicMark()->setRenderEnable(true);
+        }
+        if (e->GetChargeMark())
+        {
+            e->GetChargeMark()->setRenderEnable(true);
+        }
+
     }
 }
 
