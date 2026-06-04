@@ -131,5 +131,7 @@ private:
 	UIBar m_meleeBar;
 	UIBar m_rangeBar;
 	UIBar m_pullBar;
+	//棒グラフの更新
+	void UpdateUIBarHelper(vnSprite* pFront, float currentVal, float maxVal, float leftEdge, float maxW, float posY, XMVECTOR color);
 
 };

@@ -101,14 +101,24 @@ public:
 		const wchar_t* colorName;
 
 		//学習
-		float meleeFear = 0.0f;		//近接警戒
-		float rangeFear = 1.0f;		//範囲攻撃警戒(逃げる速度を上げる)プレイヤーの範囲攻撃にこれを掛けて範囲攻撃に当たらないように
+		float meleeFear = 0.0f;		//近接警戒(特攻確率をあげる)
+		float rangeFear = 0.0f;		//基礎速度アップ
+		//範囲攻撃警戒(逃げる速度を上げる)プレイヤーの範囲攻撃にこれを掛けて範囲攻撃に当たらないように
 		float pullResistance = 0.0f;//引き寄せ耐性
 
 		//一個前の記録上書きしていく比較用
 		float oldMeleeFear = 0.0f;
-		float oldRangeFear = 1.0f;
+		float oldRangeFear = 0.0f;
 		float oldPullResistance = 0.0f;
+
+
+		//学習値の最大
+		float maxMeleeFear = 1.0f;
+		float maxRangeFear = 10.0f;
+		float maxPullResistance = 1.0f;
+
+		float maxBossMeleeFear = 20.0f;
+		float maxBossRangeFear = 20.0f;
 
 		//状態
 		int memberCount = 0;		//群の数

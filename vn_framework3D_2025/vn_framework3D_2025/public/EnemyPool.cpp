@@ -2,6 +2,13 @@
 #include "../framework/vn_environment.h"
 #include "EnemyPool.h"
 
+namespace
+{
+    constexpr float ENEMY_GRAPH_CENTER_X = 630.0f;
+    constexpr float ENEMY_GRAPH_MAX_W = 300.0f; // baseBarWidth
+
+}
+
 EnemyPool::EnemyPool()
 {
     m_groupDatas.clear();
@@ -378,11 +385,13 @@ void EnemyPool::SetBossData()
     m_bossGroupData->meleeFear = 0.0f;
     m_bossGroupData->rangeFear = 0.0f;
 
+    //全てのリーダーの学習データを取って来て足す（÷とかでおかしい数値にならないように調整）
     float pullData = 0;
     for (auto& data : m_groupDatas)
     {
+        //近接耐性（ボス用に変更（プレイヤーにダメージを与える：通常は特攻状態になる確率アップ））
         m_bossGroupData->meleeFear += data->meleeFear / 2;
-        m_bossGroupData->rangeFear += data->rangeFear / 2;
+        m_bossGroupData->rangeFear += data->rangeFear;
         if (pullData <= data->pullResistance)
         {
             pullData = data->pullResistance;
@@ -465,10 +474,10 @@ void EnemyPool::ChangeDisplayMode(eDisplayMode nextMode) {
 void EnemyPool::DebugPause()
 {
     // ポーズ中の更新処理内
-    if (vnKeyboard::trg(DIK_LEFT)) {
+    if (vnKeyboard::trg(DIK_LEFT)||vnKeyboard::trg(DIK_A)) {
         ChangeDebugGroupIndex(-1);
     }
-    if (vnKeyboard::trg(DIK_RIGHT)) {
+    if (vnKeyboard::trg(DIK_RIGHT)||vnKeyboard::trg(DIK_D)) {
         ChangeDebugGroupIndex(1);
     }
 
@@ -542,8 +551,12 @@ void EnemyPool::DrawGroupDebugInfo()
   
     //数値
     vnFont::print(x+ lineXPitch, y + lineYPitch * 4, GAME_COLOR_SUNGLOW, L"：% .2f", data->meleeFear);
-    vnFont::print(x+ lineXPitch, y + lineYPitch * 5, GAME_COLOR_NEON_MAGENTA, L"：%.2f", data->rangeFear);
-    vnFont::print(x+ lineXPitch, y + lineYPitch * 6, GAME_COLOR_AQUA_GREEN, L"：%.0f%%", data->pullResistance * 100);
+    vnFont::print(x+ lineXPitch, y + lineYPitch * 5, GAME_COLOR_NEON_MAGENTA, L"：% .2f", data->rangeFear);
+    vnFont::print(x+ lineXPitch, y + lineYPitch * 6, GAME_COLOR_AQUA_GREEN, L"：% .0f%%", data->pullResistance * 100);
+
+    vnFont::print(x+ lineXPitch*2.8f, y + lineYPitch * 4, GAME_COLOR_SUNGLOW, L"/ % .2f", data->maxMeleeFear);
+    vnFont::print(x+ lineXPitch*2.8f, y + lineYPitch * 5, GAME_COLOR_NEON_MAGENTA, L"/ % .2f", data->maxRangeFear);
+    vnFont::print(x+ lineXPitch*2.8f, y + lineYPitch * 6, GAME_COLOR_AQUA_GREEN, L"/ % .0f%%", data->maxPullResistance * 100);
 
 
     vnFont::print(x, y + lineYPitch * 8, GAME_COLOR_ICE_BLUE, L"～説明～");
@@ -561,8 +574,33 @@ void EnemyPool::DrawGroupDebugInfo()
     vnFont::print(x + lineXPitch * 3.0f, y + lineYPitch, GAME_COLOR_YELLOW, L"← / →：群番号切り替え");
 
 
+    //棒グラフを群れの学習値に基づいて適応
+    // 「左端を固定して右に伸ばす」ための、基準となる左端の座標を計算 (630 - 150 = 480.0f)
+    float barLeftEdge = ENEMY_GRAPH_CENTER_X - (ENEMY_GRAPH_MAX_W * 0.5f);
+
+    UpdateUIBarHelper(m_meleeBar.pFront, data->meleeFear, data->maxMeleeFear, barLeftEdge, ENEMY_GRAPH_MAX_W, 310.0f, V_GAME_COLOR_SUNGLOW);
+    UpdateUIBarHelper(m_rangeBar.pFront, data->rangeFear, data->maxRangeFear, barLeftEdge, ENEMY_GRAPH_MAX_W, 345.0f,V_GAME_COLOR_NEON_MAGENTA);
+    UpdateUIBarHelper(m_pullBar.pFront, data->pullResistance, data->maxPullResistance, barLeftEdge, ENEMY_GRAPH_MAX_W, 380.0f, V_GAME_COLOR_AQUA_GREEN);
 
 }
+// バーの更新を共通化するヘルパー関数
+void EnemyPool::UpdateUIBarHelper(vnSprite* pFront, float currentVal, float maxVal, float leftEdge, float maxW, float posY,XMVECTOR color)
+{
+    if (!pFront) return; // 念のためヌルチェック
+
+    // 1. 比率の計算とクランプ
+    float ratio = (maxVal > 0.0f) ? (currentVal / maxVal) : 0.0f;
+    if (ratio > 1.0f) ratio = 1.0f;
+    if (ratio < 0.0f) ratio = 0.0f;
+
+    // 2. スケールと座標の適用（左端固定の計算式）
+    pFront->setScaleX(ratio);
+    float posX = leftEdge + (maxW * ratio * 0.5f);
+    pFront->setPos(posX, posY);
+    pFront->setColor(color);
+}
+
+
 void EnemyPool::DrawGroupDebugArrow() {
     if (m_groupDatas.empty()) return;
 
@@ -638,51 +676,62 @@ void EnemyPool::DrawBossDebugInfo()
     //タイトル
     // 2. 画面右下の表示位置を計算
     float x = (float)vnMainFrame::screenWidth - 1080;
-    float y = (float)vnMainFrame::screenHeight - 512;
+    float y = (float)vnMainFrame::screenHeight - 512 * 1.1f;
     float lineYPitch = 35.0f; // 行間
     float lineXPitch = 210.0f;
 
 
-    vnFont::setFontSize(38, 25);
+    vnFont::setFontSize(31, 25);
 
     //vnFont::print(x - 50, y - linePitch * 1, GAME_COLOR_YELLOW, L" Tab．戻る:　左右Key. 番号切り替え");
 
-    // タイトルの表示
     vnFont::print(x, y, GAME_COLOR_CYAN, L"～ボス情報表示～");
 
-    //vnFont::print(x, y + lineYPitch * 1, GAME_COLOR_WHITE, L"番号：%d番", m_debugGroupIndex);
-
-    ////vnFont::print(x, y + lineYPitch * 2, GAME_COLOR_WHITE, L"番号：%d", data->id);
-    ////色
-    //vnFont::print(x, y + lineYPitch * 2, GAME_COLOR_WHITE, L"色");
-    //vnFont::print(x + lineXPitch, y + lineYPitch * 2, displayGroupColor, L"： %s", data->colorName);
-    
-    //学習状況
-    //項目
+    // --- 1. 学習状況（成長値）の表示 ---
     vnFont::print(x, y + lineYPitch * 1, GAME_COLOR_ICE_BLUE, L"～成長値～");
+
+    // [項目名] 
     vnFont::print(x, y + lineYPitch * 2, GAME_COLOR_AMBER, L"近接耐性");
     vnFont::print(x, y + lineYPitch * 3, GAME_COLOR_ELECTRIC_PURPLE, L"範囲攻撃耐性");
     vnFont::print(x, y + lineYPitch * 4, GAME_COLOR_ELECTRIC_CYAN, L"引き寄せ攻撃耐性");
-  
-    //数値
-    vnFont::print(x+ lineXPitch, y + lineYPitch * 5, GAME_COLOR_SUNGLOW, L"：% .2f", data->meleeFear);
-    vnFont::print(x+ lineXPitch, y + lineYPitch * 6, GAME_COLOR_NEON_MAGENTA, L"：%.2f", data->rangeFear);
-    vnFont::print(x+ lineXPitch, y + lineYPitch * 7, GAME_COLOR_AQUA_GREEN, L"：%.0f%%", data->pullResistance * 100);
+
+    // [現在値]（項目名と同じ行番号に揃えました）
+    vnFont::print(x + lineXPitch, y + lineYPitch * 2, GAME_COLOR_SUNGLOW, L"：% .2f", data->meleeFear);
+    vnFont::print(x + lineXPitch, y + lineYPitch * 3, GAME_COLOR_NEON_MAGENTA, L"：% .2f", data->rangeFear);
+    vnFont::print(x + lineXPitch, y + lineYPitch * 4, GAME_COLOR_AQUA_GREEN, L"：% .0f%%", data->pullResistance * 100);
+
+    // [最大値]（ボス専用の最大値変数を適用し、横並びになるよう調整）
+    vnFont::print(x + lineXPitch * 2.8f, y + lineYPitch * 2, GAME_COLOR_SUNGLOW, L"/ % .2f", data->maxBossMeleeFear);
+    vnFont::print(x + lineXPitch * 2.8f, y + lineYPitch * 3, GAME_COLOR_NEON_MAGENTA, L"/ % .2f", data->maxBossRangeFear);
+    vnFont::print(x + lineXPitch * 2.8f, y + lineYPitch * 4, GAME_COLOR_AQUA_GREEN, L"/ % .0f%%", data->maxPullResistance * 100);
 
 
-    vnFont::print(x, y + lineYPitch * 8, GAME_COLOR_ICE_BLUE, L"～説明～");
-    //強化の項目
-    vnFont::print(x, y + lineYPitch * 9, GAME_COLOR_AMBER,             L"近接耐性");
-    vnFont::print(x, y + lineYPitch * 10, GAME_COLOR_ELECTRIC_PURPLE,         L"範囲攻撃耐性");
-    vnFont::print(x, y + lineYPitch * 11, GAME_COLOR_ELECTRIC_CYAN,     L"引き寄せ攻撃耐性");
+    // --- 2. 説明セクション ---
+    // 成長値の表示が4行目で終わるため、1行空けて6行目からスタートさせると画面がスッキリ見やすくなります
+    vnFont::print(x, y + lineYPitch * 6, GAME_COLOR_ICE_BLUE, L"～説明～");
 
-    //項目の説明
-    vnFont::print(x + lineXPitch, y + lineYPitch * 9, GAME_COLOR_SUNGLOW,         L"：基本速度に加算");
-    vnFont::print(x + lineXPitch, y + lineYPitch * 10, GAME_COLOR_NEON_MAGENTA, L"：逃げ始める基本範囲に加算(範囲攻撃可能時のみ)");
-    vnFont::print(x + lineXPitch, y + lineYPitch * 11, GAME_COLOR_AQUA_GREEN, L"：無効確率に加算");
+    // [強化の項目]
+    vnFont::print(x, y + lineYPitch * 7, GAME_COLOR_AMBER, L"近接耐性");
+    vnFont::print(x, y + lineYPitch * 8, GAME_COLOR_ELECTRIC_PURPLE, L"範囲攻撃耐性");
+    vnFont::print(x, y + lineYPitch * 9, GAME_COLOR_ELECTRIC_CYAN, L"引き寄せ攻撃耐性");
 
+    // [項目の説明]
+    vnFont::print(x + lineXPitch, y + lineYPitch * 7, GAME_COLOR_SUNGLOW, L"：基本速度に加算");
+    vnFont::print(x + lineXPitch, y + lineYPitch * 8, GAME_COLOR_NEON_MAGENTA, L"：逃げ始める基本範囲に加算(範囲攻撃可能時のみ)");
+    vnFont::print(x + lineXPitch, y + lineYPitch * 9, GAME_COLOR_AQUA_GREEN, L"：無効確率に加算");
+
+
+    // --- 3. 操作ガイド ---
     vnFont::print(x + lineXPitch * 3.0f, y, GAME_COLOR_YELLOW, L"Tab    ：戻る");
-    vnFont::print(x + lineXPitch * 3.0f, y + lineYPitch, GAME_COLOR_YELLOW, L"← / →：群番号切り替え");
+    vnFont::print(x + lineXPitch * 3.0f, y + lineYPitch * 1, GAME_COLOR_YELLOW, L"← / →：群番号切り替え");
+
+    //棒グラフを群れの学習値に基づいて適応
+    // 「左端を固定して右に伸ばす」ための、基準となる左端の座標を計算 (630 - 150 = 480.0f)
+    float barLeftEdge = ENEMY_GRAPH_CENTER_X - (ENEMY_GRAPH_MAX_W * 0.5f);
+
+    UpdateUIBarHelper(m_meleeBar.pFront, data->meleeFear, data->maxBossMeleeFear, barLeftEdge, ENEMY_GRAPH_MAX_W, 310.0f, V_GAME_COLOR_SUNGLOW);
+    UpdateUIBarHelper(m_rangeBar.pFront, data->rangeFear, data->maxBossRangeFear, barLeftEdge, ENEMY_GRAPH_MAX_W, 345.0f, V_GAME_COLOR_NEON_MAGENTA);
+    UpdateUIBarHelper(m_pullBar.pFront, data->pullResistance, data->maxPullResistance, barLeftEdge, ENEMY_GRAPH_MAX_W, 380.0f, V_GAME_COLOR_AQUA_GREEN);
 
 
 }

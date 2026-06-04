@@ -193,11 +193,13 @@ using namespace DirectX;
 #define V_GAME_COLOR_ORANGE     XMVectorSet(1.0f, 0.5f, 0.0f, 1.0f)
 #define V_GAME_COLOR_PINK       XMVectorSet(1.0f, 0.627f, 0.753f, 1.0f)
 #define V_GAME_COLOR_MAGENTA    XMVectorSet(1.0f, 0.0f, 1.0f, 1.0f)
+#define V_GAME_COLOR_DARK_RED       XMVectorSet(0.502f, 0.0f, 0.0f, 1.0f)
 
 // --- 緑系 ---
 #define V_GAME_COLOR_GREEN      XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f)
 #define V_GAME_COLOR_LIME       XMVectorSet(0.502f, 1.0f, 0.0f, 1.0f)
 #define V_GAME_COLOR_TEAL       XMVectorSet(0.0f, 0.502f, 0.502f, 1.0f)
+#define V_GAME_COLOR_NEON_GREEN     XMVectorSet(0.749f, 1.0f, 0.0f, 1.0f)
 
 // --- 青系 ---
 #define V_GAME_COLOR_BLUE       XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f)
@@ -230,3 +232,26 @@ using namespace DirectX;
 #define V_GAME_COLOR_NAVY       XMVectorSet(0.0f, 0.0f, 0.3f, 1.0f)   // 12: 濃紺 (DARK_BLUEよりさらに深く)
 #define V_GAME_COLOR_MINT       XMVectorSet(0.6f, 1.0f, 0.8f, 1.0f)   // 15: ミント (WHITEの代わり)
 #define V_GAME_COLOR_WINE       XMVectorSet(0.5f, 0.0f, 0.2f, 1.0f)   // 20: ワインレッド (SKY_BLUEの代わり)
+
+#define V_GAME_COLOR_DARK_YELLOW    XMVectorSet(0.722f, 0.525f, 0.043f, 1.0f)
+#define V_GAME_COLOR_AMBER          XMVectorSet(1.0f, 0.624f, 0.0f, 1.0f)
+#define V_GAME_COLOR_ELECTRIC_PURPLE XMVectorSet(0.875f, 0.0f, 1.0f, 1.0f)
+#define V_GAME_COLOR_VIOLET         XMVectorSet(0.690f, 0.149f, 1.0f, 1.0f)
+#define V_GAME_COLOR_ELECTRIC_CYAN   XMVectorSet(0.0f, 0.898f, 1.0f, 1.0f)
+
+// --- UI調整・グラデーション用 ---
+#define V_GAME_COLOR_NEON_YELLOW    XMVectorSet(0.918f, 1.0f, 0.0f, 1.0f)
+#define V_GAME_COLOR_PASTEL_PINK    XMVectorSet(1.0f, 0.702f, 0.851f, 1.0f)
+#define V_GAME_COLOR_ICE_BLUE       XMVectorSet(0.816f, 0.980f, 1.0f, 1.0f)
+
+// 近接系バリエーション
+#define V_GAME_COLOR_BRIGHT_ORANGE  XMVectorSet(1.0f, 0.424f, 0.0f, 1.0f)
+#define V_GAME_COLOR_SUNGLOW        XMVectorSet(1.0f, 0.800f, 0.200f, 1.0f) // ★近接警戒テキスト（SUNGLOW）と同期用
+
+// 範囲系バリエーション
+#define V_GAME_COLOR_NEON_MAGENTA   XMVectorSet(1.0f, 0.0f, 0.600f, 1.0f) // ★範囲警戒テキスト（NEON_MAGENTA）と同期用
+#define V_GAME_COLOR_HOT_PINK       XMVectorSet(1.0f, 0.412f, 0.706f, 1.0f)
+
+// 引き寄せ系バリエーション
+#define V_GAME_COLOR_AQUA_GREEN     XMVectorSet(0.0f, 1.0f, 0.800f, 1.0f) // ★引き寄せ耐性テキスト（AQUA_GREEN）と同期用
+#define V_GAME_COLOR_SKY_NEON       XMVectorSet(0.200f, 0.800f, 1.0f, 1.0f)

@@ -49,7 +49,7 @@ void EnemyGhost::OnIdel(float deltaTime, float distance, const XMVECTOR& toPlaye
     {
         // 1. プレイヤーが来たら逃げる（最優先）
         //範囲攻撃の範囲を取って学習していく（逃げ始める距離を上げる）
-        float dynamicEscapeRadius = m_leaderEscapeRadius + GetGroupData()->rangeFear;
+        float dynamicEscapeRadius = m_leaderEscapeRadius/* + GetGroupData()->rangeFear*/;
 
         // 判定距離を書き換えてチェック
         if (InPlayerArea(dynamicEscapeRadius, m_leaderRetreatStopRadius))
@@ -220,7 +220,7 @@ void EnemyGhost::OnRun(float deltaTime, float distance, const XMVECTOR& toPlayer
     ApplyMovement(deltaTime, m_lastMoveDir);
 
     // 5. 状態遷移
-    if (!InPlayerArea(m_leaderEscapeRadius+(5.0f*GetGroupData()->rangeFear), m_leaderRetreatStopRadius))
+    if (!InPlayerArea(m_leaderEscapeRadius/*+(5.0f*GetGroupData()->rangeFear)*/, m_leaderRetreatStopRadius))
     {
         if (GetRigidbody().GetIsGround())
         {
@@ -533,7 +533,7 @@ void EnemyGhost::CheckSurroundings(float distance)
     if (canE)
     {
         float dist = distance;
-        float limit = m_leaderEscapeRadius + (5.0f + GetGroupData()->rangeFear);
+        float limit = m_leaderEscapeRadius /*+ (5.0f + GetGroupData()->rangeFear)*/;
         if (dist < limit)
         {
             StartEscapeTransition(true);

@@ -268,7 +268,7 @@ void SceneMain::CreateUIBar(
 	ui.pBackBlack = new vnSprite(
 		centerX,
 		posY,
-		width + 10.0f,
+		width + 5.0f,
 		height + 6.0f,
 		NULL);
 
@@ -291,9 +291,11 @@ void SceneMain::CreateUIBar(
 		width,
 		height,
 		NULL);
-
+	ui.pFront->setScaleX(0.0f);
 	ui.pFront->setColor(V_GAME_COLOR_CYAN);
 	registerObject(ui.pFront);
+
+
 }
 
 
@@ -327,25 +329,8 @@ bool SceneMain::initialize()
 	isGameFinish = false;
 
 	FenceRadius = defalutFenceRadius;
-	//FenceRadius = 35.0f;
-
 
 	// --- プレイヤー ---
-	//pPlayerTest = new PlayerClass();
-	//pPlayerTest->SetModel(new vnCharacter(L"data/model/Brid/brid_animation_new/", L"brid.bone"));
-	//pPlayerTest->SetMeteorModel(new vnModel(L"data/model/Brid/brid_animation_new/", L"KaraDown.vnm"));
-	//pPlayerTest->SetUpKaraModel(new vnModel(L"data/model/Brid/", L"KaraUp.vnm"));
-
-
-	////	//プレイヤー
-	//registerObject(pPlayerTest->GetModel());
-	//for (int i = 0; i < pPlayerTest->GetModel()->getPartsNum(); i++) {
-	//	registerObject(pPlayerTest->GetModel()->getParts(i));
-	//}
-
-	//registerObject(pPlayerTest->GetMeteorModel());
-	//registerObject(pPlayerTest->GetUpKaraModel());
-
 	m_pNewPlayer = new NewPlayerClass();
 	m_pNewPlayer->SetModel(new vnCharacter(L"data/model/Brid/brid_animation_new/", L"brid.bone"));
 	m_pNewPlayer->SetMeteorModel(new vnModel(L"data/model/Brid/brid_animation_new/", L"KaraDown.vnm"));
@@ -497,7 +482,7 @@ bool SceneMain::initialize()
 			// 4. 木を円の中心（または外側）に向ける回転
 			pTree[index]->setRotationY(radian);
 
-			float treeSize = 4.0f;
+			float treeSize = 3.5f;
 			pTree[index]->setScale(treeSize, treeSize, treeSize);
 
 			// オブジェクトの登録
@@ -541,7 +526,6 @@ bool SceneMain::initialize()
 	}
 #endif
 
-	//地形
     //半透明のオブジェクトは不透明オブジェクトの後に描画
 	pGround = new vnModel(L"data/model/Ground/", L"Ground.vnm");
 	//pGround = new vnModel(L"data/model/", L"ground.vnm");
@@ -549,6 +533,7 @@ bool SceneMain::initialize()
 
 
 	registerObject(pGround);
+
 
 	m_pBlockManager = new BlockManager();
 	for (int i = 0; i < BlockManager::GetMaxBlocksNum(); i++)
@@ -577,7 +562,7 @@ bool SceneMain::initialize()
 
 
 	registerObject(pSky);
-	//registerObject(pEmitter);
+
 	waveManager = new WaveManager();
 	waveManager->Init();
 
@@ -819,9 +804,9 @@ bool SceneMain::initialize()
 	EnemyPool::UIBar rangeUIbar;
 	EnemyPool::UIBar pullUIbar;
 
-	CreateUIBar(meleeUIbar, centerX+400, 310, baseBarWidth, baseBarHeight);
-	CreateUIBar(rangeUIbar, centerX+400, 345, baseBarWidth, baseBarHeight);
-	CreateUIBar(pullUIbar, centerX+400,	 380, baseBarWidth, baseBarHeight);
+	CreateUIBar(meleeUIbar, centerX+450, 310, baseBarWidth, baseBarHeight+2);
+	CreateUIBar(rangeUIbar, centerX+450, 345, baseBarWidth, baseBarHeight+2);
+	CreateUIBar(pullUIbar, centerX+450,	 380, baseBarWidth, baseBarHeight+2);
 
 	enemyPool->SetMeleeBar(meleeUIbar);
 	enemyPool->SetRangeBar(rangeUIbar);
@@ -2565,13 +2550,26 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				{
 					if (!m_pNewPlayer->IsAreaAttack())
 					{
-						m_pNewPlayer->Damage(3.0f);
+						m_pNewPlayer->Damage(4.0f);
 					}
 					//if (m_pNewPlayer->IsPulling())
 					//{
 					//	m_pNewPlayer->Damage(10.0f);
 					//}
 
+				}
+
+				//-------------------------------------------------------
+				// ボス関係
+				//-------------------------------------------------------
+				if (enemy->GetIsBoss())
+				{
+					if (!m_pNewPlayer->IsAreaAttack() || !m_pNewPlayer->IsPulling())
+					{
+						float damage = enemy->GetGroupData()->maxBossMeleeFear;
+						m_pNewPlayer->Damage(damage);
+						m_pNewPlayer->Jump();
+					}
 				}
 
 				//死因を記録
