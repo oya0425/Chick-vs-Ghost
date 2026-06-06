@@ -36,7 +36,11 @@ https://github.com/user-attachments/assets/8df73929-0f82-4c8a-bab3-ec32b873d97c
 
 * 🧲 **引き寄せ攻撃スキル**（クールタイム：長）
   * 広範囲（初期は広い）の敵を一気に中心へと引き寄せて一網打尽にする。
+ 
+
+
 https://github.com/user-attachments/assets/9cfffb0e-9eba-4c27-8264-e5c1fff72374
+
 
 
 ---
