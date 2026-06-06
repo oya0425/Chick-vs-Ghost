@@ -202,7 +202,7 @@ private:
 	float m_currentRadius			  = 1.0f;			// 現在の半径
 	float m_expandTimer				  = 0.0f;			// 拡大用タイマー
 	//float m_maxAttackRadius		      = 2.0f;		// 最大半径
-	float m_maxAttackRadius		      = 20.0f;		    // 最大半径
+	float m_maxAttackRadius		      = 20.0f;		    // 最大半径(随時更新)
 	const float m_defaultAttackRadius = 10.0f;			//攻撃範囲のデフォルトのサイズ
 	const float m_defaultRadius		  = 1.0f;			// 通常時の半径（size.x/2の値に合わせて調整）普通の当たり判定
 	float m_areaAtkCoolTimer		  = 0.0f;			//現在のクールタイム

@@ -44,7 +44,7 @@ namespace {
 	constexpr float minSpawnRadius = 10.0f;
 	constexpr float spawnHeight	   = 40.0f;
 	
-	constexpr int leaderCount = 30;	//リーダーを生成する幅（leaderCountごとにリーダーを作る）
+	constexpr int leaderCount = 50;	//リーダーを生成する幅（leaderCountごとにリーダーを作る）
 
 	//半径設定（Fenceと木）
 	constexpr float defalutFenceRadius = 35.0f;
@@ -298,6 +298,36 @@ void SceneMain::CreateUIBar(
 
 }
 
+//？マークと吹き出しの設定
+EnemyPool::UIQuestionExplain SceneMain::CreateQuestionUI(const WCHAR* text, DWORD color, float offsetSize)
+{
+	EnemyPool::UIQuestionExplain qus;
+
+	// スプライト生成（共通の設定）
+	qus.pQuestionIcon = new vnSprite(-1000, 200, 64 * offsetSize, 64 * offsetSize, L"data/image/keyboard_question.png");
+	qus.pBalloonBg = new vnSprite(-1000, 200, 256*1.5, 128 , L"data/image/吹き出し.png");
+
+	registerObject(qus.pQuestionIcon);
+	registerObject(qus.pBalloonBg);
+
+	// 固有のデータと色の設定
+	qus.explainText = text;
+	qus.textColor = color;
+
+	// 判定用サイズや初期座標の保存
+	qus.qW = 64.0f * offsetSize;
+	qus.qH = 64.0f * offsetSize;
+	qus.qX = qus.pQuestionIcon->posX;
+	qus.qY = qus.pQuestionIcon->posY;
+	qus.textX = qus.qX;
+	qus.textY = qus.qY;
+
+	// フラグの初期化
+	qus.isHovered = false;
+	qus.isShowExplain = false;
+
+	return qus;
+}
 
 //初期化関数
 bool SceneMain::initialize()
@@ -799,22 +829,39 @@ bool SceneMain::initialize()
 
 	SetSkillUIRender(false);
 
+	//=====================================
 	// ポーズ画面の群情報の画面の棒グラフ
+	// ポーズ中の画像の設定
+	//=====================================
 	EnemyPool::UIBar meleeUIbar;
 	EnemyPool::UIBar rangeUIbar;
 	EnemyPool::UIBar pullUIbar;
 
-	CreateUIBar(meleeUIbar, centerX+450, 310, baseBarWidth, baseBarHeight+2);
-	CreateUIBar(rangeUIbar, centerX+450, 345, baseBarWidth, baseBarHeight+2);
-	CreateUIBar(pullUIbar, centerX+450,	 380, baseBarWidth, baseBarHeight+2);
+	CreateUIBar(meleeUIbar, centerX+450, 380, baseBarWidth, baseBarHeight+2);
+	CreateUIBar(rangeUIbar, centerX+450, 415, baseBarWidth, baseBarHeight+2);
+	CreateUIBar(pullUIbar, centerX+450,	 450, baseBarWidth, baseBarHeight+2);
 
 	enemyPool->SetMeleeBar(meleeUIbar);
 	enemyPool->SetRangeBar(rangeUIbar);
 	enemyPool->SetPullBar(pullUIbar);
 
+	float offsetSize = 0.8f;
+	float offsetSizeGhost = 1.5f;
+	enemyPool->SetImageTab(new vnSprite(-100, 200, 64*1.5f, 64*1.5f, L"data/image/keyboard_tab.png"));
+	enemyPool->SetImageA(new vnSprite(- 100, 200, 64* offsetSize, 64* offsetSize, L"data/image/keyboard_a.png"));
+	enemyPool->SetImageD(new vnSprite(-100, 200, 64* offsetSize, 64* offsetSize, L"data/image/keyboard_d.png"));
+	enemyPool->SetImageSlash(new vnSprite(-100, 200, 64* offsetSize, 64* offsetSize, L"data/image/flair_disabled_line_outline.png"));
+	enemyPool->SetImageGhost(new vnSprite(-100, 200, 64 * offsetSizeGhost, 64 * offsetSizeGhost, L"data/image/ghostImage.png"));
+	registerObject(enemyPool->GetImageTab());
+	registerObject(enemyPool->GetImageA());
+	registerObject(enemyPool->GetImageD());
+	registerObject(enemyPool->GetImageSlash());
+	registerObject(enemyPool->GetImageGhost());
 
-
-
+	//？マークと吹き出し
+	enemyPool->SetMeleeQus(CreateQuestionUI(L"：特攻確率に加算", GAME_COLOR_AMBER, 0.6f));
+	enemyPool->SetRangeQus(CreateQuestionUI(L"：基本速度に加算", GAME_COLOR_NEON_MAGENTA, 0.6f));
+	enemyPool->SetPullQus(CreateQuestionUI(L"：無効確率に加算", GAME_COLOR_SKY_NEON, 0.6f));
 
 	//-------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------
@@ -971,6 +1018,13 @@ void SceneMain::terminate()
 	deleteObject(pullbar.pBack);
 	deleteObject(pullbar.pBackBlack);
 
+	deleteObject(enemyPool->GetImageTab());
+	deleteObject(enemyPool->GetImageA());
+	deleteObject(enemyPool->GetImageD());
+	deleteObject(enemyPool->GetImageSlash());
+	deleteObject(enemyPool->GetImageGhost());
+
+	enemyPool->ReleaseQuestionUI(this);
 
 	// --- 敵 (完全修正版) ---
 	if (enemyPool) {
@@ -1252,7 +1306,7 @@ void SceneMain::execute()
 		pImageD->setRenderEnable(true);
 		pImageE->setRenderEnable(true);
 		pImageQ->setRenderEnable(true);
-		
+		enemyPool->ResetQuestionUI();
 		
 	}
 	else
@@ -1273,14 +1327,14 @@ void SceneMain::execute()
 		m_pPauseFrame->setRenderEnable(true);
 		m_pPauseFrame2->setRenderEnable(true);
 
-		enemyPool->ShowHideBar(true);
+		enemyPool->ShowHideUI(true);
 	}
 	else
 	{
 		m_pUIBackGroundBlackPause->setRenderEnable(false);
 		m_pPauseFrame->setRenderEnable(false);
 		m_pPauseFrame2->setRenderEnable(false);
-		enemyPool->ShowHideBar(false);
+		enemyPool->ShowHideUI(false);
 
 	}
 
@@ -1433,8 +1487,8 @@ void SceneMain::render()
 		vnFont::print(950.0f, 70.0f, GAME_COLOR_LIME, L"WAVE %d", waveManager->GetCurrentWave());
 
 		// --- 撃破数関係 ---
-		vnFont::print(950.0f + off, 110.0f + off, shadowCol, L"%d / %d 体撃破", waveManager->GetKillCount(), waveManager->GetKillTargetCount());
-		vnFont::print(950.0f, 110.0f, GAME_COLOR_NEON_GREEN, L"%d / %d 体撃破", waveManager->GetKillCount(), waveManager->GetKillTargetCount());
+		//vnFont::print(950.0f + off, 110.0f + off, shadowCol, L"%d / %d 体撃破", waveManager->GetKillCount(), waveManager->GetKillTargetCount());
+		//vnFont::print(950.0f, 110.0f, GAME_COLOR_NEON_GREEN, L"%d / %d 体撃破", waveManager->GetKillCount(), waveManager->GetKillTargetCount());
 
 
 		// --- 待機中のテキスト ---
@@ -1454,9 +1508,9 @@ void SceneMain::render()
 			vnFont::print(300.0f + off, 320.0f + off, shadowCol, L"NEXT : フィールド拡大 ＆ 速度上昇！");
 			vnFont::print(300.0f, 320.0f, GAME_COLOR_LIME, L"NEXT : フィールド拡大 ＆ 速度上昇！");
 
-			// ノルマ表示 (影あり)
-			vnFont::print(295.0f + off, 370.0f + off, shadowCol, L"ノルマ: %d 体 撃破", waveManager->GetNextKillTargetCount());
-			vnFont::print(295.0f, 370.0f, GAME_COLOR_YELLOW, L"ノルマ: %d 体 撃破", waveManager->GetNextKillTargetCount());
+			//// ノルマ表示 (影あり)
+			//vnFont::print(295.0f + off, 370.0f + off, shadowCol, L"ノルマ: %d 体 撃破", waveManager->GetNextKillTargetCount());
+			//vnFont::print(295.0f, 370.0f, GAME_COLOR_YELLOW, L"ノルマ: %d 体 撃破", waveManager->GetNextKillTargetCount());
 
 			// --- 点滅処理 ---
 			blinkCounter++;
@@ -2272,11 +2326,11 @@ void SceneMain::UpdatePlay(float deltaTime)
 		if (!m_isLevelUpStarted)
 		{
 			// 【解説】
-	// 1. getRotationY(): モデルの現在の向き（背中側）。
-	// 2. + XM_PI: 180度反転させて「正面側」の位置にする。
-	// 3. + XM_PIDIV2: モデル固有の初期姿勢（Zマイナス向き等）による90度のズレを補正。
-	// ※ 最終的な theta 計算時に符号を反転 (-targetTheta) することで、
-	//    モデルの回転方向とカメラの回り込み方向を同期させている。
+		// 1. getRotationY(): モデルの現在の向き（背中側）。
+		// 2. + XM_PI: 180度反転させて「正面側」の位置にする。
+		// 3. + XM_PIDIV2: モデル固有の初期姿勢（Zマイナス向き等）による90度のズレを補正。
+		// ※ 最終的な theta 計算時に符号を反転 (-targetTheta) することで、
+		//    モデルの回転方向とカメラの回り込み方向を同期させている。
 			// 開始した瞬間のモデルの向きに180度足して「正面」の目標を作る
 			//m_levelUpCameraTargetTheta =
 			//	m_pNewPlayer->GetModel()->getRotationY()
@@ -2320,13 +2374,12 @@ void SceneMain::UpdatePlayer(float deltaTime)
 
 	if (waveManager->GetState() == WaveManager::WaveState::InProgress)
 	{
-		//pPlayerTest->applyDamage(0.05f * (waveManager->GetCurrentWave() * 0.8));
-		m_pNewPlayer->Damage((1.0f * (waveManager->GetCurrentWave() * 0.8)*deltaTime));
+		//ゲーム中自動でHPが減る(最終WAVEのみ減らない)
+		if (!waveManager->GetFinalWave())
+		{
+			m_pNewPlayer->Damage((1.0f * (waveManager->GetCurrentWave() * 0.8) * deltaTime));
+		}
 		// --- HPが０になったらGameOver ---
-		//if (pPlayerTest->getCurrentHp() <= 0)
-		//{
-		//	m_gameState = GameOver;
-		//}
 		if (m_pNewPlayer->GetCurrentHp() <= 0)
 		{
 			m_gameState = GameOver;
@@ -2413,7 +2466,6 @@ void SceneMain::SpawnEnemies(float deltaTime)
 void SceneMain::UpdateEnemies(float deltaTime)
 {
 	// プレイヤー座標を全敵に渡す
-	//enemyPool->SetPlayerPosAll(*pPlayerTest->GetModel()->getPosition());
 	enemyPool->SetPlayerPosAll(*m_pNewPlayer);
 
 	// 更新
@@ -2524,16 +2576,11 @@ void SceneMain::UpdateEnemies(float deltaTime)
 		if (enemy->GetState() != NewEnemyClass::eState::KnockBack)
 		{
 			auto dir = colliderStoS(enemy, m_pNewPlayer);
+			//死因を保存（初期値は近接攻撃）
 			NewEnemyClass::DamageSource source = NewEnemyClass::DamageSource::Melee;
 
 			if (dir != None)
 			{
-				//if (!m_pNewPlayer->GetRigidbody().GetIsGround())
-				//{
-				//	if (dir == Y_Pos || dir == Y_Neg)
-				//		return; // 空中のYだけ無視
-				//}
-
 				// --- 倒したとき ---
 				pSound[1]->play(true);
 
@@ -2550,7 +2597,7 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				{
 					if (!m_pNewPlayer->IsAreaAttack())
 					{
-						m_pNewPlayer->Damage(4.0f);
+						m_pNewPlayer->Damage(5.0f);
 					}
 					//if (m_pNewPlayer->IsPulling())
 					//{
@@ -2600,12 +2647,6 @@ void SceneMain::UpdateEnemies(float deltaTime)
 
 			if (dirEtoB != None)
 			{
-				//if (!m_pNewPlayer->GetRigidbody().GetIsGround())
-				//{
-				//	if (dir == Y_Pos || dir == Y_Neg)
-				//		return; // 空中のYだけ無視
-				//}
-
 				// --- 倒したとき ---
 				pSound[1]->play(true);
 

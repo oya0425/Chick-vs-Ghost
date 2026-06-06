@@ -161,6 +161,9 @@ public:
 		setVertexPosition();
 	}
 
+	float getPosX() const { return posX; }
+	float getPosY() const { return posY; }
+
 	// 関数を宣言
 	void setSkewX(float skew);
 };

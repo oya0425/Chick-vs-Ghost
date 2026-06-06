@@ -143,10 +143,12 @@ void vnMainFrame::execute()
 	//[通常処理開始
 
 	//HOMEボタンで起動時のシーンに戻る
+#if _DEBUG
 	if (vnKeyboard::trg(DIK_HOME))
 	{
 		switchScene(initialScene);
 	}
+#endif
 
 	pScene->execute();
 	//]通常処理終了

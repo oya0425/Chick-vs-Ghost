@@ -70,7 +70,7 @@ NewEnemyClass::~NewEnemyClass()
 
 // static変数の実体化
 const NewEnemyClass::EnemyData NewEnemyClass::MasterTable[] = {
-    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    150/*150/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
+    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    175/*150/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMon/", L"MushroomMon.bone", 0 , 1.5f, {1.0f, 1.0f,1.0f}},
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMonster/", L"MushroomMonster.bone", 150 , 5.0f, {1.0f, 1.0f, 1.0f}},
 };
@@ -473,6 +473,7 @@ void NewEnemyClass::CheckPullTrigger(bool isPlayerPulling, float pullRadius, flo
             {
                 // 抵抗成功：状態を変えずに終了
                 m_pullAtkMessage.SetState(eShowUISelect::Text1);
+
                 return;
             }
             else
@@ -945,7 +946,7 @@ void NewEnemyClass::SettingBoss(GroupData* groupData)
     m_leaderRetreatStopRadius = leaderStopRetreatRadius;
 
     //少し速度をあげる
-    m_leaderSpeedMultiplier = 0.1f;
+    m_leaderSpeedMultiplier = 5.0f;
     m_defalutLeaderSpeedMultiplier = m_leaderSpeedMultiplier;
 
     //少しモデルのサイズと当たり判定を大きくする

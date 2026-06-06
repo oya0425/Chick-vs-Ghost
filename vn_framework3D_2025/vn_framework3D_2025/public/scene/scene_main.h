@@ -255,6 +255,10 @@ private:
 		float width,
 		float height);
 
+	//？マークと吹き出しの設定
+	EnemyPool::UIQuestionExplain CreateQuestionUI(const WCHAR* text, DWORD color, float offsetSize);
+
+
 	// --- 衝突判定・計算系 ---
 	eDirection colliderCtoC(CharacterBase* p1, CharacterBase* p2);
 	eDirection colliderStoS(CharacterBase* p1, CharacterBase* p2);

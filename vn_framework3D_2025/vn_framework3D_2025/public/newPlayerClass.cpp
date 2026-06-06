@@ -362,7 +362,7 @@ void NewPlayerClass::UpdateAreaAttackSkill(float deltaTime)
 		bool keyE = vnKeyboard::trg(DIK_E);
 
 		// --- 入力検知（例えば左クリックや特定のキー） ---
-		if ((keyE && !m_isExpanding) || (vnMouse::trgR() && !m_isExpanding))
+		if ((keyE && !m_isExpanding) /*|| (vnMouse::trgR() && !m_isExpanding)*/)
 		{
 			m_isExpanding = true;
 			m_expandTimer = 0.0f;
