@@ -247,6 +247,8 @@ void NewEnemyClass::Update(float deltaTime)
     XMVECTOR enemyPos = *GetModel()->getPosition();
     XMVECTOR toPlayer = *m_pPlayer->GetModel()->getPosition() - enemyPos; // 敵からプレイヤーへの方向
     float distance = XMVectorGetX(XMVector3Length(toPlayer));
+    // 【最適化！】ルート計算をしない「距離の2乗」を求める
+    //float distanceSq = XMVectorGetX(XMVector3LengthSq(toPlayer));
 
     EnemyPool::GetInstance().GetGroupData(GetGroupID());
 
