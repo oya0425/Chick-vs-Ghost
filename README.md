@@ -101,6 +101,15 @@ https://github.com/user-attachments/assets/c5cd6a7f-e850-4302-b750-a0a7757474ef
 * 📏 **範囲攻撃耐性** ➔ 全リーダーの合計値を、自身の移動速度にそのまま加算（高速移動）。
 * 🛡️ **引き寄せ攻撃耐性** ➔ 過去のリーダー達の中で**「最も高い無効化確率」**をそのまま継承。
 
+
+
+
+
+https://github.com/user-attachments/assets/a6d19d74-0a57-462f-811f-796ab608c176
+
+
+
+
 ---
 
 
