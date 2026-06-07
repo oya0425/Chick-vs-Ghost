@@ -103,10 +103,6 @@ https://github.com/user-attachments/assets/c5cd6a7f-e850-4302-b750-a0a7757474ef
 
 近接多めでリーダーを倒した場合、プレイヤーに倒されたときに多めにダメージを与える
 
-<img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/c218d8e8-7075-41af-ac47-bec07cfc0e65" />
-
-
-
 
 
 
