@@ -101,7 +101,15 @@ https://github.com/user-attachments/assets/c5cd6a7f-e850-4302-b750-a0a7757474ef
 * 📏 **範囲攻撃耐性** ➔ 全リーダーの合計値を、自身の移動速度にそのまま加算（高速移動）。
 * 🛡️ **引き寄せ攻撃耐性** ➔ 過去のリーダー達の中で**「最も高い無効化確率」**をそのまま継承。
 
+近接多めでリーダーを倒した場合、
 
+<img width="1595" height="897" alt="image" src="https://github.com/user-attachments/assets/b74e3704-dc2d-4c55-a437-332033c1ffd5" />
+
+
+
+
+
+https://github.com/user-attachments/assets/1e5fa5c9-886b-4816-9ad7-aa60766a2893
 
 
 
@@ -118,7 +126,8 @@ https://github.com/user-attachments/assets/a6d19d74-0a57-462f-811f-796ab608c176
 
 
 
-
+特にこだわった点は、敵の学習システムです。
+プレイヤーの行動によって敵の行動パターンや能力が変化し、その結果が最終ボスに反映される仕組みを構築することで、プレイヤーの行動がゲーム体験に影響を与えるよう工夫しました。 
 
 
 
