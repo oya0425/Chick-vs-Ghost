@@ -2377,7 +2377,7 @@ void SceneMain::UpdatePlayer(float deltaTime)
 		//ゲーム中自動でHPが減る(最終WAVEのみ減らない)
 		if (!waveManager->GetFinalWave())
 		{
-			m_pNewPlayer->Damage((1.0f * (waveManager->GetCurrentWave() * 0.8) * deltaTime));
+			//m_pNewPlayer->Damage((1.0f * (waveManager->GetCurrentWave() * 0.8) * deltaTime));
 		}
 		// --- HPが０になったらGameOver ---
 		if (m_pNewPlayer->GetCurrentHp() <= 0)
@@ -2613,9 +2613,9 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				{
 					if (!m_pNewPlayer->IsAreaAttack() || !m_pNewPlayer->IsPulling())
 					{
-						float damage = enemy->GetGroupData()->maxBossMeleeFear;
+						float damage = enemy->GetGroupData()->meleeFear;
 						m_pNewPlayer->Damage(damage);
-						m_pNewPlayer->Jump();
+						//m_pNewPlayer->Jump();
 					}
 				}
 
@@ -3208,19 +3208,43 @@ void SceneMain::DebugDraw()
 	//for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
 	//{
 	//	NewEnemyClass* enemy = enemyPool->GetEnemies()[i];
-	
+	//
 	//	// 1. アクティブ状態（生存か死んでいるか）
 	//	const wchar_t* activeStr = enemy->GetActive() ? L"ALIVE" : L"DEAD ";
-	
+	//
 	//	// 2. ボスかザコかの文字列判定
 	//	const wchar_t* typeStr = enemy->GetIsBoss() ? L"★BOSS★" : L"Zako   ";
-	
+	//
 	//	// 3. 画面に表示
 	//	vnFont::print(400, 100 + (static_cast<int>(i) * 25), L"[%s] Enemy[%03d] : %s",
 	//		activeStr, i, typeStr);
 	//}
-
-	
+//	vnFont::print(400, 70, L"[PLAYER HP] : %.1f", m_pNewPlayer->GetCurrentHp());
+//
+//	for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
+//	{
+//		NewEnemyClass* enemy = enemyPool->GetEnemies()[i];
+//
+//
+//		// ----------------------------------------------------------------
+//		// 2. もしボスなら、そのボスが持っている maxBossMeleeFear も横に表示する
+//		// ----------------------------------------------------------------
+//// ループ内では「ボスが見つかったらそこに固定で出す」か、一度変数に受ける
+//		if (enemy->GetIsBoss())
+//		{
+//			if (enemy->GetGroupData())
+//			{
+//				// 座標を (800, 100) など、絶対に被らない右側に強制固定
+//				vnFont::print(800, 100, L"[BOSS FOUND] Damage(Fear): %.2f",
+//					enemy->GetGroupData()->maxBossMeleeFear);
+//			}
+//			else
+//			{
+//				// もし GroupData が NULL ならこっちが出る
+//				vnFont::print(800, 100, L"[BOSS FOUND] BUT GroupData is NULL!");
+//			}
+//		}
+//	}
 	//vnFont::print(10.0f, 500, L"X %.f,Y%.f,Z%.f",
 	//	m_pBullet->GetModel()->getPositionX(),
 	//	m_pBullet->GetModel()->getPositionY(),

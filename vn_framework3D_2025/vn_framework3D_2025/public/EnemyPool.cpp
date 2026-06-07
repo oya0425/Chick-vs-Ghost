@@ -619,17 +619,23 @@ void EnemyPool::SetBossData()
     for (auto& data : m_groupDatas)
     {
         //近接耐性（ボス用に変更（プレイヤーにダメージを与える：通常は特攻状態になる確率アップ））
-        m_bossGroupData->meleeFear += data->meleeFear*1.5f;
+        m_bossGroupData->meleeFear += data->meleeFear*10.0f;
         m_bossGroupData->rangeFear += data->rangeFear*1.2f;
         if (pullData <= data->pullResistance)
         {
             pullData = data->pullResistance;
         }
     }
-    if (m_bossGroupData->meleeFear < 5.0f)
+    if (m_bossGroupData->meleeFear > m_bossGroupData->maxBossMeleeFear)
     {
-        m_bossGroupData->meleeFear *= 1.2f;
+        m_bossGroupData->meleeFear =m_bossGroupData->maxBossMeleeFear;
     }
+    //もし近接が１以下だったら最低１にする
+    if (m_bossGroupData->meleeFear < 1)
+    {
+        m_bossGroupData->meleeFear = 1.0f;
+    }
+
     m_bossGroupData->pullResistance = pullData;
 
 }

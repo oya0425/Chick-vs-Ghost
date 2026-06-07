@@ -60,6 +60,11 @@ bool SceneTitle::initialize()
 }
 void SceneTitle::execute()
 {
+    if (!pSound[1]->isPlaying())
+    {
+        pSound[1]->play(true);
+
+    }
 
     if (!isStarting) {
         int mx = vnMouse::getX();
