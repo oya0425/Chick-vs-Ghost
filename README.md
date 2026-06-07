@@ -97,8 +97,12 @@ https://github.com/user-attachments/assets/c5cd6a7f-e850-4302-b750-a0a7757474ef
 
 
 ### 2. ボスWAVE（最終決戦）
+<img width="842" height="550" alt="image" src="https://github.com/user-attachments/assets/e6c9a221-95b6-4f87-b38f-7d6bce1bda5a" />
+
+
 最後のWAVEには、それまでの戦術の「ツケ」が全て回ってきたボスが単体で登場します。
 ボスは、**これまでにプレイヤーが倒してきた全てのリーダーの学習データを凝縮・合成**して自身のステータスにします。
+
 
 * 🏃‍♂️ **近接攻撃耐性** ➔ 全リーダーの合計値を、自身が倒されるときにプレイヤーへダメージを与える。
 
