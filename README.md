@@ -76,9 +76,7 @@ https://github.com/user-attachments/assets/9cfffb0e-9eba-4c27-8264-e5c1fff72374
 
 
 
-
-
-Uploading 画面録画 2026-06-07 164900.mp4…
+https://github.com/user-attachments/assets/c5cd6a7f-e850-4302-b750-a0a7757474ef
 
 
 
