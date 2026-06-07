@@ -1,3 +1,7 @@
+
+
+https://github.com/user-attachments/assets/18b51889-d1c6-4a5b-bcbe-09107896fbad
+
 # Chick vs Ghost(ひよこ vs お化け)
 DirectX11 / C++ で制作した、スピード感あふれる3Dアクションゲームです。
 <img width="1602" height="901" alt="スクリーンショット 2026-06-06 185223" src="https://github.com/user-attachments/assets/e2c4249e-507c-4f9b-b4f5-06a643bfbe0d" />
@@ -97,6 +101,10 @@ https://github.com/user-attachments/assets/c5cd6a7f-e850-4302-b750-a0a7757474ef
 
 
 
+
+
+
+https://github.com/user-attachments/assets/6b85f3dc-cd59-4748-a701-685d2cb68951
 
 
 
