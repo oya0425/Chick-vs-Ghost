@@ -102,8 +102,8 @@ https://github.com/user-attachments/assets/c5cd6a7f-e850-4302-b750-a0a7757474ef
 * 🛡️ **引き寄せ攻撃耐性** ➔ 過去のリーダー達の中で**「最も高い無効化確率」**をそのまま継承。
 
 
-<img width="1349" height="720" alt="image" src="https://github.com/user-attachments/assets/7e4ebdcf-e4f7-4b2a-bb11-59e5df888e80" />
 
+<img width="1354" height="726" alt="image" src="https://github.com/user-attachments/assets/fd4c117b-0514-459b-93c5-2599b859d741" />
 
 
 
