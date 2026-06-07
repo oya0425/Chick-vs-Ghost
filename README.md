@@ -101,7 +101,10 @@ https://github.com/user-attachments/assets/c5cd6a7f-e850-4302-b750-a0a7757474ef
 * 📏 **範囲攻撃耐性** ➔ 全リーダーの合計値を、自身の移動速度にそのまま加算（高速移動）。
 * 🛡️ **引き寄せ攻撃耐性** ➔ 過去のリーダー達の中で**「最も高い無効化確率」**をそのまま継承。
 
-近接多めでリーダーを倒した場合、
+近接多めでリーダーを倒した場合、プレイヤーに倒されたときに多めにダメージを与える
+通常時
+<img width="1599" height="895" alt="image" src="https://github.com/user-attachments/assets/135e0d13-63de-49bf-af0c-85b4d5038343" />
+
 
 <img width="1595" height="897" alt="image" src="https://github.com/user-attachments/assets/b74e3704-dc2d-4c55-a437-332033c1ffd5" />
 
