@@ -65,6 +65,9 @@ https://github.com/user-attachments/assets/9cfffb0e-9eba-4c27-8264-e5c1fff72374
 * 🔥 **特攻状態**
   * 狂暴化し、プレイヤー目掛けて一斉に突撃してきます。接触するとダメージを受けますが、**「範囲攻撃スキル」で迎え撃てばノーダメージ**で一掃できます。
 
+<img width="1249" height="587" alt="image" src="https://github.com/user-attachments/assets/a6ce01e9-df56-49db-8c13-a71cecae1c7e" />
+
+
 ### 【経験値システム】
 * **リーダーお化け**：討伐時、通常よりも多くの経験値を獲得。
 * **通常の雑魚お化け**：「パニック状態」の時に倒すことで、通常より多くの経験値を獲得。
