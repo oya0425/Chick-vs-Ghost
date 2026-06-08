@@ -15,9 +15,9 @@ static const ExperienceManager::UpgradeUIData MASTER_DATA[] =
 	//スキルのレベル
 	//スキルの最大レベル(一応保険としての最大)
 
-    { L"移動速度",     L"%アップ", { 10.0f, 15.0f, 10.0f, 15.0f, 10.0f }, 0, 1, 50 },
-	{ L"攻撃範囲",     L"%アップ", { 10.0f, 15.0f, 20.0f, 25.0f, 20.0f }, 1, 0, 50 },
-	{ L"引き寄せ範囲", L"%アップ", { 10.0f, 15.0f, 20.0f, 10.0f, 15.0f }, 2, 0, 50 },
+    { L"移動速度",     L"%アップ", L"プレイヤーの移動が速くなるぞ！",{10.0f, 15.0f, 10.0f, 15.0f, 10.0f}, 0, 1, 50},
+	{ L"攻撃範囲",     L"%アップ", L"攻撃範囲が大きくなるぞ！",{10.0f, 15.0f, 20.0f, 25.0f, 20.0f}, 1, 0, 50},
+	{ L"引き寄せ範囲", L"%アップ", L"引き寄せる範囲が大きくなるぞ！",{10.0f, 15.0f, 20.0f, 10.0f, 15.0f}, 2, 0, 50},
 	//{ L"反射回数",     L"回増加",     {  1.0f,  2.0f,  3.0f,  1.0f,  2.0f },   3,  1,  50 },
 	//{ L"弾の速度",     L"%アップ",    { 10.0f, 15.0f, 10.0f, 15.0f, 10.0f },   4,  1,  50 },
 
@@ -111,7 +111,7 @@ void ExperienceManager::GenerateLevelUpOptions()
 		if (m_uiDisplayChoices[i].currentLv == 0)
 		{
 			m_uiDisplayChoices[i].suffix = L"Lvを習得！";
-
+			m_uiDisplayChoices[i].explanation = L"スキルを取得！";
 			// 習得時は数値をレベルとして出す
 			m_uiDisplayChoices[i].value[m_choiceIndex] = 1.0f;//表示する時に（int）にして使用
 		}

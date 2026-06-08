@@ -10,6 +10,9 @@ public:
 	{
 		const wchar_t* label;		//「速度」「攻撃範囲」
 		const wchar_t* suffix;		//「%アップ」「回増加」などの単位
+	
+		const wchar_t* explanation;	//項目に対する説明
+		
 		float value[5];			//10,5などの数値
 
 		int spriteID;			//アイコン画像の番号
