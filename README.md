@@ -53,7 +53,9 @@ https://github.com/user-attachments/assets/8df73929-0f82-4c8a-bab3-ec32b873d97c
 https://github.com/user-attachments/assets/9cfffb0e-9eba-4c27-8264-e5c1fff72374
 
 
-**レベルアップ**
+* 🆙 **レベルアップ（アップグレード選択）**
+  * 敵を倒して経験値を溜めることでレベルアップ。
+  * 提示される3つのランダムな強化案（ステータスUPやスキル強化）から、好みのビルドを1つ選択可能。
 
 
 
