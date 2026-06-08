@@ -55,12 +55,19 @@ namespace {
 	constexpr float uiHidePosX = -5000.0f;
 	constexpr float uiHidePosY = -5000.0f;
 
-	constexpr float freamImgX = 1050.0f;
-	constexpr float freamImgY = 150.0f;
-	constexpr float backGroundImgX = 1020.0f;
-	constexpr float backGroundImgY = 120.0f;
-	constexpr float mainImgX = 110.0f;
-	constexpr float mainImgY = 110.0f;
+	//constexpr float freamImgX = 1050.0f;
+	//constexpr float freamImgY = 150.0f;
+	//constexpr float backGroundImgX = 1020.0f;
+	//constexpr float backGroundImgY = 120.0f;
+	//constexpr float mainImgX = 110.0f;
+	//constexpr float mainImgY = 110.0f;
+
+	constexpr float freamImgX = 1050.0f*0.9f;
+	constexpr float freamImgY = 150.0f*0.9f;
+	constexpr float backGroundImgX = 1020.0f*0.9f;
+	constexpr float backGroundImgY = 120.0f*0.9f;
+	constexpr float mainImgX = 110.0f*0.9f;
+	constexpr float mainImgY = 110.0f*0.9f;
 
 	// --- HPバー ---
 	constexpr float barLeftEdgeHp = 90.0f;
@@ -128,29 +135,33 @@ namespace {
 	constexpr float defualtPhi	  = 0.7f;
 
 	//経験値のマネージャーが画像の番号を持ってるからそれを見て画像を入れる
+	// 1.フレーム
+	// 2.後ろの背景
+	// 3.メインのアイコン
 	const UpgradeUIResource upgradeUIResources[5] =
 	{
+		//移動速度アップ
 		{
-			L"data/image/IMG_E6067.png",
-			L"data/image/BackGround.png",
-			L"data/image/IMG_E6067.png"
+			L"data/image/フレーム１.png",
+			L"data/image/BackGroundWhite.png",
+			L"data/image/移動速度アップのアイコン.png"
+		},
+		//範囲攻撃
+		{
+			L"data/image/フレーム１.png",
+			L"data/image/BackGroundWhite.png",
+			L"data/image/範囲攻撃のアイコン.png"
+		},
+		//引き寄せ攻撃
+		{
+			L"data/image/フレーム１.png",
+			L"data/image/BackGroundWhite.png",
+			L"data/image/引き寄せ攻撃のアイコン.png"
 		},
 
 		{
 			L"data/image/IMG_E6067.png",
-			L"data/image/BackGround.png",
-			L"data/image/IMG_E6067.png"
-		},
-
-		{
-			L"data/image/IMG_E6067.png",
-			L"data/image/BackGround.png",
-			L"data/image/IMG_E6067.png"
-		},
-
-		{
-			L"data/image/IMG_E6067.png",
-			L"data/image/BackGround.png",
+			L"data/image/BackGroundWhite.png",
 			L"data/image/IMG_E6067.png"
 		},
 
@@ -1251,6 +1262,7 @@ void SceneMain::execute()
 	}
 
 	case LevelUp:
+		//プレイヤーの正面にカメラが行くように基準を取る
 		m_levelUpCameraTargetTheta =
 			m_pNewPlayer->GetModel()->getRotationY()
 			+ XM_PI
@@ -2974,6 +2986,7 @@ void SceneMain::UpdateLevelUp()
 	// 共通の更新（演出など）
 	m_pNewPlayer->UpdateLevelUp();
 	OnCollider(m_pNewPlayer->GetModel(), pGround, 1.0f, m_pNewPlayer->GetRigidbody());
+
 	m_pUpgradeUI->UpdateUI();
 
 	//vnFont::print(500, 100, L"--- LEVEL UP! SELECT UPGRADE ---", GAME_COLOR_GOLD);
@@ -2990,6 +3003,7 @@ void SceneMain::UpdateLevelUp()
 		{
 			m_pExpManager->ApplyUpgrade(selectedIndex);
 			pSound[2]->play();
+			m_pUpgradeUI->SetUiPhase(UpgradeSelectionUI::UIPhase::Closing);
 			m_pUpgradeUI->HideUI(); // ここでアニメーション開始（IsHidingがtrueになる想定）
 		}
 	}
@@ -3008,9 +3022,12 @@ void SceneMain::UpdateLevelUp()
 
 			enemyPool->ShowAllEnemies();
 			m_pNewPlayer->FinishLevelUp();
+			m_pUpgradeUI->ResetPhase();
+
 		}
 		else
 		{
+			m_pUpgradeUI->ResetPhase();
 			// まだストックがあるなら再抽選して、UIを再度表示状態に戻す
 			// m_pExpManager->GenerateLevelUpOptions();
 			// m_pUpgradeUI->ShowUI(); // 再表示
