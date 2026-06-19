@@ -4,6 +4,8 @@
 namespace
 {
 	constexpr int canSelectCount = 3;	//選択肢の数
+	constexpr int expOffset = 2;		//レベルアップで増える量を増やす（N倍）
+
 }
 
 static const ExperienceManager::UpgradeUIData MASTER_DATA[] =
@@ -15,9 +17,16 @@ static const ExperienceManager::UpgradeUIData MASTER_DATA[] =
 	//スキルのレベル
 	//スキルの最大レベル(一応保険としての最大)
 
-    { L"移動速度",     L"%アップ", L"プレイヤーの移動が速くなるぞ！",{10.0f, 15.0f, 10.0f, 15.0f, 10.0f}, 0, 1, 50},
-	{ L"攻撃範囲",     L"%アップ", L"攻撃範囲が大きくなるぞ！",{10.0f, 15.0f, 20.0f, 25.0f, 20.0f}, 1, 0, 50},
-	{ L"引き寄せ範囲", L"%アップ", L"引き寄せる範囲が大きくなるぞ！",{10.0f, 15.0f, 20.0f, 10.0f, 15.0f}, 2, 0, 50},
+    { L"移動速度",     L"%アップ", L"プレイヤーの移動が速くなるぞ！",
+	{10.0f* expOffset, 15.0f* expOffset, 10.0f* expOffset, 15.0f* expOffset, 10.0f* expOffset},
+	0, 1, 50},
+	
+	{ L"攻撃範囲",     L"%アップ", L"攻撃範囲が大きくなるぞ！",
+	{10.0f* expOffset, 15.0f * expOffset, 20.0f * expOffset, 25.0f * expOffset, 20.0f * expOffset}, 1, 0, 50},
+
+	{ L"引き寄せ範囲", L"%アップ", L"引き寄せる範囲が大きくなるぞ！",
+	{10.0f* expOffset, 15.0f * expOffset, 20.0f * expOffset, 10.0f * expOffset, 15.0f * expOffset}, 2, 0, 50},
+
 	//{ L"反射回数",     L"回増加",     {  1.0f,  2.0f,  3.0f,  1.0f,  2.0f },   3,  1,  50 },
 	//{ L"弾の速度",     L"%アップ",    { 10.0f, 15.0f, 10.0f, 15.0f, 10.0f },   4,  1,  50 },
 
@@ -37,7 +46,7 @@ ExperienceManager::ExperienceManager()
 	// その他初期化
 	m_currentLevel = 1;
 	m_currentExp = 0;
-	m_neededExp = 20.0f;
+	m_neededExp = 60.0f;
 	m_maxLevel = 999;
 	for (int i = 0; i < canSelectCount; i++)
 	{

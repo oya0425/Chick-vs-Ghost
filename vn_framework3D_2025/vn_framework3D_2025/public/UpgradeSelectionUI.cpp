@@ -133,9 +133,10 @@ void UpgradeSelectionUI::UpdateUI()
 		float ty = 360.0f - textHeight;
 
 		// 4. 文字の描画（影と本体）
-		float off = 3.0f * m_logoScale;
+		float off = 5.0f * m_logoScale;
 		vnFont::print(tx + off, ty + off, GAME_COLOR_BLACK, L"LEVEL UP !");
-		vnFont::print(tx, ty, GAME_COLOR_GOLD, L"LEVEL UP !");
+		//vnFont::print(tx, ty, GAME_COLOR_GOLD, L"LEVEL UP !");
+		vnFont::print(tx, ty, GAME_COLOR_GOLD_LIGHT, L"LEVEL UP !");
 
 		// 5. 最大サイズに達したらフェーズ移行
 		if (m_logoScale >= 0.99f)
@@ -157,7 +158,9 @@ void UpgradeSelectionUI::UpdateUI()
 	// 画面内にいる時だけ描画
 	if (m_headerY > -50.0f)
 	{
+		float off = 3.0f;
 		vnFont::setFontSize(31, 30);
+		vnFont::print(420+off, (int)m_headerY+off, GAME_COLOR_BLACK, L"強化する項目を選択してください");
 		vnFont::print(420, (int)m_headerY, GAME_COLOR_WHITE, L"強化する項目を選択してください");
 	}
 

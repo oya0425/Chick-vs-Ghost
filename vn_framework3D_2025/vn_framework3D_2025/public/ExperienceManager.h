@@ -108,7 +108,7 @@ private:
 	int m_currentLevel = 1;		 //現在のレベル
 	int m_maxLevel	   = 999;	 //一応保険の最大レベル
 	float m_currentExp = 0;	 //現在の経験値量
-	float m_neededExp = 20;	 //必要な経験値量
+	float m_neededExp = 100;	 //必要な経験値量(もとが20)
 	int m_levelUpStock = 0;      //多重にレベルアップしたときのいる奴
 
 	int m_choiceIndex = 0;

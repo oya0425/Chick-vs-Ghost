@@ -3168,6 +3168,8 @@ void SceneMain::UpdateBlocksCollision()
 
 void SceneMain::DebugDraw() 
 {
+	vnFont::print(200, 400, L"needExp %.f", m_pExpManager->GetNeedExp());
+	vnFont::print(200, 450, L"currentExp %.f", m_pExpManager->GetCurrentExp());
 	//vnFont::print(200, 400, L"spawnNum %d", m_spawnNum);
 
 	//vnFont::print(200, 450, L"activeCount %d", m_activeCount);

@@ -162,6 +162,15 @@ using namespace DirectX;
 #define GAME_COLOR_CURSOR      0xFFFFFF80  // カーソル色
 #define GAME_COLOR_GOLD        0xFFFFD700  // ゴールド（金色、アイテム用）
 
+
+#define GAME_COLOR_GOLD_METALLIC    0xFFD4AF37  // 候補1：メタリックゴールド（一番おすすめ）
+
+#define GAME_COLOR_GOLD_DEEP        0xFFE6B800  // 候補2：ディープゴールド
+
+#define GAME_COLOR_GOLD_LIGHT       0xFFF5D76E  // 候補3：ライトゴールド
+
+#define GAME_COLOR_GOLD_ANTIQUE     0xFFC5A059  // 候補4：アンティークゴールド
+
 #define GAME_COLOR_DARK_YELLOW 0xFFB8860B  // ダークゴールデンロッド / 暗い黄色（パトロール用）
 
 #define GAME_COLOR_AMBER         0xFFFF9F00  // アンバー（深みのある琥珀色・近接耐性の輝きに）
