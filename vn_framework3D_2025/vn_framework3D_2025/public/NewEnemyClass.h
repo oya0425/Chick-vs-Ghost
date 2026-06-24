@@ -125,7 +125,12 @@ public:
 		bool isLeaderAlive = true;	//リーダーが生きているか
 
 		bool isLeaderEscaping = false;	//プレイヤーから全力で逃げる（号令を出す）
+	
+		eGroupMode oldMode;
+		eGroupMode mode;
+
 	};
+
 
 	struct MessageBanner
 	{
@@ -268,7 +273,7 @@ public:
 	bool GetIsBoss() const { return m_isBoss; }
 
 	// --- 群れ ---
-	eGroupMode GetGroupMode() const { return m_currentGroupMode; }
+	//eGroupMode GetGroupMode() const { return m_currentGroupMode; }
 
 	void SetGroupID(int id) { m_gruoupID = id; }
 	int GetGroupID() const { return m_gruoupID; }
@@ -480,7 +485,7 @@ private:
 	// 状態管理
 	//==================================================
 	eState m_state = eState::Idel;
-	eGroupMode m_currentGroupMode = eGroupMode::Normal;
+	//eGroupMode m_currentGroupMode = eGroupMode::Normal;
 
 	bool m_isEscaping = false;			// 逃走中か
 	bool m_leaderInTrouble = false;		// リーダーが異常（ノックバック・死亡）か

@@ -20,6 +20,10 @@ namespace
     constexpr float wallJumpPower = 18.0f;  //ジャンプ力 
     constexpr float fallLimitY = -10.0f;    //リスポーンする保険の高さ
 
+    // --- 特攻時の速度アップ ---
+    constexpr float chargeMultiplierOffset = 2.0f;
+
+
     // --- ノックバック詳細設定 ---
     constexpr float knockbackDist = 100.0f;     //飛ぶ距離
     constexpr float knockbackDuration = 2.0f;   //飛ぶ時間
@@ -34,7 +38,7 @@ namespace
 
     // --- リーダー・群れ設定 ---
     constexpr float leaderScaleMultiplier   = 2.0f;     // リーダーの大きさの倍率
-    constexpr float leaderSpeedBoost        = 2.0f;     // リーダー専用速度
+    constexpr float leaderSpeedBoost        = 4.0f;     // リーダー専用速度
     constexpr float leaderSenseRadius       = 10.0f;    // プレイヤーを感知して逃げ始める距離
     constexpr float leaderStopRetreatRadius = 20.0f;    // プレイヤーから十分に離れて逃げやめる距離
     constexpr float leaderRepelRadius       = 20.0f;    // リーダー同士が重ならないように反発する距離（排他範囲）
@@ -155,7 +159,6 @@ void NewEnemyClass::Spawn(const XMVECTOR& pos)
     rb.SetIsGround(false);
     rb.SetIsUseGravity(true);
     m_state = eState::Idel; // 待機状態に戻す
-    m_currentGroupMode = eGroupMode::Normal;
     m_isCharge = false;
 
 
@@ -170,6 +173,9 @@ void NewEnemyClass::Spawn(const XMVECTOR& pos)
         data->isLeaderAlive = true;
         m_onceStartUI = false;
         CheckEvolutionOnSpawn();
+        data->mode= eGroupMode::Normal;
+        data->oldMode= eGroupMode::Normal;
+
     }
     else
     {
@@ -273,6 +279,9 @@ void NewEnemyClass::Update(float deltaTime)
     //待機状態以外で出てくるのを防ぐ用
     m_panicRecoveryStartTime -= deltaTime;
 }
+//============================================================
+// 頭上にあるマークの表示切り替え
+//============================================================
 void NewEnemyClass::UpdateMark()
 {
     switch (m_state)
@@ -362,15 +371,16 @@ void NewEnemyClass::UpdateHitPlayer()
         {
             GroupData* data = GetGroupData();
             float finalChargeProbability = chargeProbability + data->meleeFear;
+            //リーダーがいなくなった時、パニック状態か特攻状態に変化する
             if (GetRandomFloat() < finalChargeProbability)
             {
-                m_currentGroupMode = eGroupMode::Charge;
+                data->mode = eGroupMode::Charge;
 
             }
             else
             {
 
-                m_currentGroupMode = eGroupMode::Panic;
+                data->mode = eGroupMode::Panic;
             }
         }
 
@@ -712,6 +722,10 @@ void NewEnemyClass::ApplyMovement(float deltaTime, const XMVECTOR moveDir)
 
     // 2. 範囲攻撃の学習データ（基礎速度アップ）をそのまま加算
     roleMultiplier += rangeFear;
+
+    float chargeMultiplier = GetState() == eState::Charge ? chargeMultiplierOffset : 0;
+
+    roleMultiplier += chargeMultiplier;
 #pragma endregion
 
 

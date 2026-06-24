@@ -87,6 +87,7 @@ using namespace DirectX;
 #include"vn_camera.h"
 #include"vn_light.h"
 #include"vn_debugDraw.h"
+#include"../public/SoundManager.h"
 
 #include"../public/vn_object.h"
 

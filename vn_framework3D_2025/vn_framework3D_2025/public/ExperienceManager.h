@@ -31,6 +31,8 @@ public:
 	// --- 経験値獲得 ---
 	void GainExp(float amount);
 
+	// --- レベルアップ ---
+	void GainLevel(int level);
 
 	// --- 選択した結果をプレイヤーに適応する ---
 	void ApplyUpgrade(int choiceIndex);

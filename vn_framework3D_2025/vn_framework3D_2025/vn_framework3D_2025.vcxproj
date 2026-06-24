@@ -180,6 +180,7 @@
     <ClInclude Include="public\scene\skinned_simple_cube.h" />
     <ClInclude Include="public\scene\vn_scene.h" />
     <ClInclude Include="public\SkillButtonUI.h" />
+    <ClInclude Include="public\SoundManager.h" />
     <ClInclude Include="public\TerrainBlock.h" />
     <ClInclude Include="public\UpgradeSelectionUI.h" />
     <ClInclude Include="public\vn_billboard.h" />
@@ -249,6 +250,7 @@
     <ClCompile Include="public\scene\skinned_simple_cube.cpp" />
     <ClCompile Include="public\scene\vn_scene.cpp" />
     <ClCompile Include="public\SkillButtonUI.cpp" />
+    <ClCompile Include="public\SoundManager.cpp" />
     <ClCompile Include="public\TerrainBlock.cpp" />
     <ClCompile Include="public\UpgradeSelectionUI.cpp" />
     <ClCompile Include="public\vn_billboard.cpp" />

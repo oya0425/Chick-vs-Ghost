@@ -163,7 +163,8 @@ public:
 	//UIの状態のリセット
 	void ResetQuestionUI();
 
-
+	//soundmanagerセット
+	void SetSoundManager(SoundManager* soundManager) { m_soundManager = soundManager; }
 
 private:
 	EnemyPool();
@@ -184,6 +185,8 @@ private:
 	int	m_debugGroupIndex = 0;//表示する
 
 
+	//音
+	SoundManager* m_soundManager;
 
 	//棒グラフ
 	UIBar m_meleeBar;

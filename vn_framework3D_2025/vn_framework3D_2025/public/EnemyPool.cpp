@@ -14,6 +14,8 @@ EnemyPool::EnemyPool()
     m_groupDatas.clear();
     m_groupDatas.reserve(100);
 
+    m_isFinalWave = false;
+
     //_enemies.reserve(30);
 }
 
@@ -315,6 +317,31 @@ void EnemyPool::Update(float deltaTime)
         if (e->GetActive())
         {
             e->Update(deltaTime);
+        }
+    }
+
+    //状態が切り替わった時に鳴らす（特攻・パニック）
+    for (auto& group : m_groupDatas)
+    {
+        if (group->mode != group->oldMode)
+        {
+            if (group == nullptr)
+            {
+                OutputDebugString(L"group is null\n");
+                continue;
+            }
+            switch (group->mode)
+            {
+            case NewEnemyClass::eGroupMode::Panic:
+                m_soundManager->PlaySE(SE_ENEMY_PANIC);
+                break;
+
+            case NewEnemyClass::eGroupMode::Charge:
+                m_soundManager->PlaySE(SE_ENEMY_CHARGE);
+                break;
+            }
+
+            group->oldMode = group->mode;
         }
     }
 }

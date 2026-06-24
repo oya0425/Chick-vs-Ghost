@@ -198,8 +198,11 @@ private:
 	int                 FontNum;
 	IDWriteTextFormat** textFormat;
 	int                 fileNum;
-	vnSound** pSound;
-	int                 blinkCounter;
+	int                 blinkCounter;	//文字の点滅用
+
+	//vnSound** pSound;
+
+	std::unique_ptr<SoundManager> soundManager;
 
 
 	// デバッグ

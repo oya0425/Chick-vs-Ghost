@@ -245,7 +245,7 @@ void EnemyGhost::OnFollow(float deltaTime)
 {
 
     //リーダーが決めたモードを群れで共有
-    auto mode = m_pMyLeader->GetGroupMode();
+    auto mode = m_pMyLeader->GetGroupData()->mode;
     if (mode == eGroupMode::Panic)
     {
         m_panicDirTimer = 0.0f;

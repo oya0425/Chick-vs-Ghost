@@ -200,7 +200,7 @@ void NewPlayerClass::HandlePhysicsAndMovement(XMVECTOR vInput, float deltaTime)
 	//ジャンプ入力
 	if (currentJumpInput)
 	{
-		Jump();
+		Jump(false);
 	}
 
 	//速度設定
@@ -286,10 +286,16 @@ void NewPlayerClass::UpdateVisuals(XMVECTOR vInput, float deltaTime)
 	}
 }
 
-void NewPlayerClass::Jump()
+void NewPlayerClass::Jump(bool isLevelUping)
 {
 	if (!m_isJump)
 	{
+		//レベルアップ画面では音は鳴らさない
+		if (!isLevelUping)
+		{
+			//ジャンプしたときになる音
+			m_sound->PlaySE(SE_JUMP);
+		}
 		m_isJump = true;
 		GetRigidbody().SetIsGround(false);
 		GetRigidbody().AddVerticalVelocity(18.0f);
@@ -364,10 +370,14 @@ void NewPlayerClass::UpdateAreaAttackSkill(float deltaTime)
 		// --- 入力検知（例えば左クリックや特定のキー） ---
 		if ((keyE && !m_isExpanding) /*|| (vnMouse::trgR() && !m_isExpanding)*/)
 		{
+			//範囲攻撃時に音を鳴らす
+			m_sound->PlaySE(SE_AREA_ATTACK);
+
 			m_isExpanding = true;
 			m_expandTimer = 0.0f;
 			m_currentRadius = m_defaultRadius;
 			m_areaAttackState = eSkillState::ACTIVE;
+
 		}
 
 	}
@@ -408,6 +418,8 @@ void NewPlayerClass::UpdateAreaAttackSkill(float deltaTime)
 		m_areaAtkCoolTimer -= deltaTime;
 		if (m_areaAtkCoolTimer <= 0)
 		{
+			//スキル回復時に音を出す
+			m_sound->PlaySE(SE_SKILL_HEAL);
 			m_areaAttackState = eSkillState::READY;
 
 		}
@@ -430,8 +442,12 @@ void NewPlayerClass::UpdatePullSkill(float deltaTime)
 		//入力判定
 		if (vnKeyboard::trg(DIK_Q))
 		{
+			//引き寄せ攻撃時に音を鳴らす
+			m_sound->PlaySE(SE_PULL_ATTACK);
+			
 			m_pullState = eSkillState::ACTIVE;
 			m_pullTimer = m_pullDuration;
+
 		}
 		break;
 
@@ -451,6 +467,9 @@ void NewPlayerClass::UpdatePullSkill(float deltaTime)
 		m_pullCooldownTimer -= deltaTime;
 		if (m_pullCooldownTimer <= 0)
 		{
+			//スキル回復時に音を出す
+			m_sound->PlaySE(SE_SKILL_HEAL);
+
 			m_pullState = eSkillState::READY;
 		}
 
@@ -670,7 +689,7 @@ void NewPlayerClass::UpdateLevelUp()
 		//プレイヤーがジャンプするようにする
 	if (!GetIsJump()) {
 		SetPlayerMove(false); // これでキー入力による移動ベクトルが 0 になる
-		Jump();
+		Jump(true);
 	}
 	Update(vnScene::getDeltaTime());
 

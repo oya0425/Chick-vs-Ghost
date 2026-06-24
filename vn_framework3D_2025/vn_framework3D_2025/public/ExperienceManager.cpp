@@ -88,6 +88,31 @@ void ExperienceManager::GainExp(float exp)
 
 }
 
+void ExperienceManager::GainLevel(int level)
+{
+	if (!m_player)return;
+
+	for (int i = 0; i < level; i++)
+	{
+		if (m_currentLevel >= m_maxLevel)
+		{
+			break;
+		}
+
+		m_currentLevel++;
+		m_levelUpStock++;
+
+		m_neededExp = m_neededExp * 1.2f;
+	}
+
+	if (m_levelUpStock && OnLevelUp)
+	{
+		GenerateLevelUpOptions();
+		OnLevelUp();
+	}
+}
+
+
 void ExperienceManager::GenerateLevelUpOptions()
 {
 	//1.候補リストを作成（最大レベルに達していないものだけを入れる）

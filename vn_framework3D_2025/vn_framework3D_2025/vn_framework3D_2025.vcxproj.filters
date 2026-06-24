@@ -49,6 +49,9 @@
     <Filter Include="public\MainScript\UI">
       <UniqueIdentifier>{5bdc31e7-8f72-44ed-9cb3-8fb52cbf730c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="public\MainScript\Sound">
+      <UniqueIdentifier>{d25f34dd-2cb9-4f54-afd9-d12bc18e5bcb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -249,6 +252,9 @@
     <ClInclude Include="public\EnemyAIDebug.h">
       <Filter>public\MainScript\Enemy</Filter>
     </ClInclude>
+    <ClInclude Include="public\SoundManager.h">
+      <Filter>public\MainScript\Sound</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vn_framework3D_2025.cpp">
@@ -439,6 +445,9 @@
     </ClCompile>
     <ClCompile Include="public\EnemyAIDebug.cpp">
       <Filter>public\MainScript\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="public\SoundManager.cpp">
+      <Filter>public\MainScript\Sound</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

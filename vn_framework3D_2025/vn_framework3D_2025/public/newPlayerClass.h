@@ -21,6 +21,10 @@ public:
 
 	void Update(float deltaTime)override;
 
+	//soundManagerをセット
+	void SetSoundManager(SoundManager* soundmanager) { m_sound = soundmanager; }
+
+
 	// --- モデルセット ---
 	void SetMeteorModel(vnModel* model); //上の殻のモデルをセット
 	vnModel* GetMeteorModel()const;	//上の殻のモデルを返す
@@ -89,7 +93,7 @@ public:
 
 	//レベルアップ時にジャンプ
 	bool GetIsJump()const { return m_isJump; }
-	void Jump();
+	void Jump(bool isLevelUping);
 
 	//レベルアップ中かどうか（スキルの時間の経過を止めるため）
 	void SetIsLevelUp(bool isLevelUp) { isLevelUp = m_isLevelUp; }
@@ -248,5 +252,8 @@ private:
 	int m_pullUseCount = 0;	//引き寄せ攻撃の発動回数
 	int m_areaUseCount = 0;	//範囲攻撃の発動回数
 
+
+	//音
+	SoundManager* m_sound;
 
 };

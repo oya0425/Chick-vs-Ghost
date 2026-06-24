@@ -9,17 +9,17 @@
 
 
 // --- BGM ---
-#define FILE_PATH_MAX	(256)
-
-WCHAR seFile_Main[][FILE_PATH_MAX] =
-{
-	L"data/sound/灼熱のユーロビート.wav",    //ゲームプレイ中のサウンド
-	L"data/sound/maou_se_battle_gun02.wav",	 //敵を倒したときになるSE
-	L"data/sound/システム決定音_8.wav",		 //Enter押したときになるSE
-	L"data/sound/maou_bgm_orchestra26.wav",	 //ゲームオーバーになった時に鳴らすBGM
-	L"data/sound/キラキラ効果音.wav",		 //WAVEクリア時に鳴らすSE
-	L"data/sound/maou_bgm_acoustic40.wav",	 //ゲームクリアになった時に鳴らすBGM
-};
+//#define FILE_PATH_MAX	(256)
+//
+//WCHAR seFile_Main[][FILE_PATH_MAX] =
+//{
+//	L"data/sound/灼熱のユーロビート.wav",    //ゲームプレイ中のサウンド
+//	L"data/sound/maou_se_battle_gun02.wav",	 //敵を倒したときになるSE
+//	L"data/sound/システム決定音_8.wav",		 //Enter押したときになるSE
+//	L"data/sound/maou_bgm_orchestra26.wav",	 //ゲームオーバーになった時に鳴らすBGM
+//	L"data/sound/キラキラ効果音.wav",		 //WAVEクリア時に鳴らすSE
+//	L"data/sound/maou_bgm_acoustic40.wav",	 //ゲームクリアになった時に鳴らすBGM
+//};
 
 
 //extern stMotion motion_idle;
@@ -946,16 +946,25 @@ bool SceneMain::initialize()
 	}
 
 	// --- BGM ---
-	fileNum = sizeof(seFile_Main) / (sizeof(WCHAR) * FILE_PATH_MAX);
+	//fileNum = sizeof(seFile_Main) / (sizeof(WCHAR) * FILE_PATH_MAX);
 
-	pSound = new vnSound * [fileNum];
-	for (int i = 0; i < fileNum; i++)
-	{
-		pSound[i] = new vnSound(seFile_Main[i]);
-	}
-	// --- はじめからBGMを鳴らす ---
-	pSound[0]->play(true);
-	pSound[0]->setVolume(1.0f);
+	//pSound = new vnSound * [fileNum];
+	//for (int i = 0; i < fileNum; i++)
+	//{
+	//	pSound[i] = new vnSound(seFile_Main[i]);
+	//}
+	//// --- はじめからBGMを鳴らす ---
+	//pSound[0]->play(true);
+	//pSound[0]->setVolume(1.0f);
+
+	soundManager = std::make_unique<SoundManager>();
+	//================================================
+	//サウンドが必要な奴にセットする
+	//================================================
+	enemyPool->SetSoundManager(soundManager.get());
+	m_pNewPlayer->SetSoundManager(soundManager.get());
+
+
 
 
 
@@ -1222,33 +1231,25 @@ void SceneMain::terminate()
 	delete[] textFormat;
 	textFormat = nullptr;
 
-	if (pSound != NULL)
-	{
-		for (int i = 0; i < fileNum; i++)
-		{
-			if (pSound[i] == NULL)continue;
-			delete pSound[i];
-			pSound[i] = NULL;
-		}
-		delete[] pSound;
-		pSound = NULL;
-	}
 
 }
 //処理関数
 void SceneMain::execute()
 {
-	if (!pSound[0]->isPlaying())
-	{
-		pSound[0]->play(true);
+	//if (!pSound[0]->isPlaying())
+	//{
+	//	pSound[0]->play(true);
 
-	}
+	//}
+
 
 	float dt = vnScene::getDeltaTime();
 	switch (m_gameState)
 	{
 	case IdelPlay:
 	{
+		soundManager->PlayBGM(BGM_GAME);
+
 		UpdateIdel();
 		// 入力待ち
 		break;
@@ -1256,6 +1257,7 @@ void SceneMain::execute()
 
 	case Play:
 	{
+
 		UpdatePlay(dt);
 		
 		break;
@@ -1360,6 +1362,7 @@ void SceneMain::execute()
 #endif
 	//if (vnKeyboard::trg(DIK_R)) {
 	//	m_gameState = GameClear;
+
 	//}
 
 	//if (vnKeyboard::trg(DIK_T)) {
@@ -2234,7 +2237,8 @@ void SceneMain::UpdateIdel()
 	if (vnMouse::onR() || vnKeyboard::on(DIK_RETURN))
 	{
 		m_gameState = Play;
-		pSound[2]->play();
+		//pSound[2]->play();
+		soundManager->PlaySE(SE_ENTER);
 
 		waveManager->Init();   //ここでWave開始
 		m_pBlockManager->RespawnBlocks(waveManager->GetCurrentWave(), FenceRadius);
@@ -2319,6 +2323,8 @@ void SceneMain::UpdatePlay(float deltaTime)
 	if (m_pExpManager && m_pExpManager->GetLevelUpStock() > 0)
 	{
 		m_gameState = LevelUp;
+		soundManager->PlaySE(SE_LEVELUP);
+
 		// 3つの選択肢を表示
 		for (int i = 0; i < 3; i++)
 		{
@@ -2594,7 +2600,9 @@ void SceneMain::UpdateEnemies(float deltaTime)
 			if (dir != None)
 			{
 				// --- 倒したとき ---
-				pSound[1]->play(true);
+				soundManager->PlaySE(SE_ENEMY_DEAD);
+
+
 
 
 				pEmitter->setPosition(enemy->GetModel()->getPosition());
@@ -2603,7 +2611,7 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				pEmitter->SetColor(vnEmitter::colors[index]);
 				pEmitter->setEmit(true, 0.3f);
 				AddCombo(enemy);
-				
+
 				// 敵が特攻状態の時に範囲攻撃以外で倒すとダメージを受けるようにする
 				if (enemy->GetState() == NewEnemyClass::eState::Charge/*|| enemy->GetIsCharge()*/)
 				{
@@ -2660,7 +2668,8 @@ void SceneMain::UpdateEnemies(float deltaTime)
 			if (dirEtoB != None)
 			{
 				// --- 倒したとき ---
-				pSound[1]->play(true);
+				soundManager->PlaySE(SE_ENEMY_DEAD);
+
 
 
 				pEmitter->setPosition(enemy->GetModel()->getPosition());
@@ -2782,6 +2791,8 @@ void SceneMain::UpdateCombo(float deltaTime)
 		m_comboTimer = m_currentComboLimit;
 	}
 
+
+
 #pragma endregion
 }
 // --- コンボ加算 ---
@@ -2795,7 +2806,11 @@ void SceneMain::AddCombo(NewEnemyClass* enemy)
 	m_killCounter++; // 回復用カウンターを増やす
 	if (m_comboCount %100==0)
 	{
-		
+		//==================================
+		// コンボ100ごとにレベルアップ
+		//==================================
+		m_pExpManager->GainLevel(1);
+
 		Common::StartCameraShake(3.5f, 3.5f, 1.0f);
 	}
 	//経験値を獲得
@@ -2876,16 +2891,16 @@ void SceneMain::UpdateWaveTransition()
 	// --- WAVEの状態の切り替え(WAVEクリア→次のWAVEとか) ---
 	if ((waveManager->GetState() == WaveManager::WaveState::ClearWait) && waveManager->GetCurrentWave() < waveManager->GetMaxWave())
 	{
-		if (isWaveClear == false) // まだ「乗っている状態」に切り替わる前なら
+		if (isWaveClear == false) // WAVEクリア時
 		{
-			pSound[4]->play();   // 鳴らす
+			soundManager->PlaySE(SE_WAVE_CLEAR);
+
 		}
 		isWaveClear = true;
 
 		if (vnKeyboard::on(DIK_RETURN) || vnMouse::onR())
 		{
-
-			pSound[2]->play();
+			soundManager->PlaySE(SE_ENTER);
 			//WAVEを更新
 			waveManager->GoNextWave();
 			
@@ -2895,9 +2910,12 @@ void SceneMain::UpdateWaveTransition()
 
 			isWaveClear = false;
 			m_pBlockManager->RespawnBlocks(waveManager->GetCurrentWave(), FenceRadius);
+			
+			//最終ステージ（ボス登場）
 			if (waveManager->GetFinalWave())
 			{
 				enemyPool->SetBossData();
+				soundManager->PlaySE(SE_BOSS_ENEMY);
 			}
 
 		}
@@ -2905,8 +2923,12 @@ void SceneMain::UpdateWaveTransition()
 	if (waveManager->GetState() == WaveManager::WaveState::ClearWait && waveManager->GetCurrentWave() == waveManager->GetMaxWave())
 	{
 		if (!isGameFinish)
+		{
 			m_gameState = GameClear;
-		CleanUpScene();
+
+			CleanUpScene();
+
+		}
 	}
 
 }
@@ -2980,6 +3002,8 @@ void SceneMain::SetWAVETree()
 // --- レベルアップ画面の更新 ---
 void SceneMain::UpdateLevelUp()
 {
+
+
 	//敵を全て消す
 	enemyPool->HideAllActiveEnemies();
 
@@ -2987,9 +3011,10 @@ void SceneMain::UpdateLevelUp()
 	m_pNewPlayer->UpdateLevelUp();
 	OnCollider(m_pNewPlayer->GetModel(), pGround, 1.0f, m_pNewPlayer->GetRigidbody());
 
+	
 	m_pUpgradeUI->UpdateUI();
 
-	//vnFont::print(500, 100, L"--- LEVEL UP! SELECT UPGRADE ---", GAME_COLOR_GOLD);
+
 
 	// --- 1. 入力判定（UIがまだ消えていない時だけ受け付ける） ---
 	if (!m_pUpgradeUI->GetIsClosingUI()) // UIが消去演出中でなければ
@@ -3002,7 +3027,7 @@ void SceneMain::UpdateLevelUp()
 		if (selectedIndex != -1)
 		{
 			m_pExpManager->ApplyUpgrade(selectedIndex);
-			pSound[2]->play();
+			soundManager->PlaySE(SE_ENTER);
 			m_pUpgradeUI->SetUiPhase(UpgradeSelectionUI::UIPhase::Closing);
 			m_pUpgradeUI->HideUI(); // ここでアニメーション開始（IsHidingがtrueになる想定）
 		}
@@ -3028,9 +3053,20 @@ void SceneMain::UpdateLevelUp()
 		else
 		{
 			m_pUpgradeUI->ResetPhase();
-			// まだストックがあるなら再抽選して、UIを再度表示状態に戻す
-			// m_pExpManager->GenerateLevelUpOptions();
-			// m_pUpgradeUI->ShowUI(); // 再表示
+
+			const ExperienceManager::UpgradeUIData* pChoices =
+				m_pExpManager->GetUIDisplayChoices();
+
+			if (pChoices)
+			{
+				for (int i = 0; i < 3; i++)
+				{
+					ExperienceManager::UpgradeUIData data = pChoices[i];
+					int index = m_pExpManager->GetChoiceIndex();
+
+					m_pUpgradeUI->SettingUI(data, i, index);
+				}
+			}
 		}
 	}
 
@@ -3047,14 +3083,11 @@ void SceneMain::UpdateLevelUp()
 void SceneMain::UpdateGameOver()
 {
 
-	if (!pSound[3]->isPlaying())
-	{
-		pSound[3]->play();
-
-	}
+	soundManager->PlayBGM(BGM_GAMEOVER);
 	if (vnKeyboard::trg(DIK_RETURN))
 	{
-		pSound[2]->play();
+		soundManager->PlaySE(SE_ENTER);
+
 		isGameFinish = true;
 		m_gameState = GameFinish;
 	}
@@ -3071,18 +3104,15 @@ void SceneMain::UpdateGameOver()
 void SceneMain::UpdateGameClear()
 {
 
-	if (!pSound[5]->isPlaying())
-	{
-		pSound[5]->play();
+	soundManager->PlayBGM(BGM_GAMECLEAR);
 
-	}
 	if (vnKeyboard::trg(DIK_RETURN))
 	{
-		pSound[2]->play();
+		soundManager->PlaySE(SE_ENTER);
+
 		isGameFinish = true;
 		m_gameState = GameFinish;
 	}
-
 
 }
 
@@ -3091,7 +3121,6 @@ void SceneMain::UpdateGameClear()
 void SceneMain::CleanUpScene()
 {
 	pDustEmitter->setEmit(false, 0);
-	pSound[0]->stop();
 	
 	//敵を全て消す
 	for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
@@ -3168,8 +3197,8 @@ void SceneMain::UpdateBlocksCollision()
 
 void SceneMain::DebugDraw() 
 {
-	vnFont::print(200, 400, L"needExp %.f", m_pExpManager->GetNeedExp());
-	vnFont::print(200, 450, L"currentExp %.f", m_pExpManager->GetCurrentExp());
+	//vnFont::print(200, 400, L"needExp %.f", m_pExpManager->GetNeedExp());
+	//vnFont::print(200, 450, L"currentExp %.f", m_pExpManager->GetCurrentExp());
 	//vnFont::print(200, 400, L"spawnNum %d", m_spawnNum);
 
 	//vnFont::print(200, 450, L"activeCount %d", m_activeCount);
