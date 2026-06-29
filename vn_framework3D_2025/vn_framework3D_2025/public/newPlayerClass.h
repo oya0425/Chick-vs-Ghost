@@ -218,8 +218,8 @@ private:
 	// --- 引き寄せ攻撃 ---
 	eSkillState m_pullState			= eSkillState::READY;	//現在の状態
 	bool  m_isHavePullSkill			= false;				//スキル獲得済みか？
-	const float m_defaultPullRadius = 15.0f;				//デフォルトの引き寄せ範囲
-	float m_pullRadius				= 15.0f;			    //引き寄せ範囲
+	const float m_defaultPullRadius = 10.0f;				//デフォルトの引き寄せ範囲
+	float m_pullRadius				= 10.0f;			    //引き寄せ範囲
 	float m_pullTimer				= 0.0f;				    //吸引時間の計測用
 	float m_pullCooldownTimer		= 0.0f;				    //クールタイムの計測用
 

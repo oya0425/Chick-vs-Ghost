@@ -10,7 +10,8 @@ WCHAR bgmFile_Main[][FILE_PATH_MAX] =
 	L"data/sound/灼熱のユーロビート.wav",    //ゲームプレイ中のサウンド
 	L"data/sound/maou_bgm_orchestra26.wav",	 //ゲームオーバーになった時に鳴らすBGM
 	L"data/sound/maou_bgm_acoustic40.wav",	 //ゲームクリアになった時に鳴らすBGM
-	
+	L"data/sound/maou_bgm_piano04.wav",	     //タイトル画面のBGM
+
 };
 WCHAR seFile_Main[][FILE_PATH_MAX] =
 {
@@ -25,6 +26,11 @@ WCHAR seFile_Main[][FILE_PATH_MAX] =
 	L"data/sound/特攻状態変化.wav",				 //特攻状態時に鳴らすSE
 	L"data/sound/パニック状態変化.wav",		     //パニック時に鳴らすSE
 	L"data/sound/Jump.wav",					     //ジャンプ時に鳴らすSE
+
+	//タイトル画面で使用
+	L"data/sound/maou_se_battle03.wav",		//STARTボタン押したときの音
+	L"data/sound/maou_se_system10.wav",		//STARTボタンにカーソルを合わせたときの音(お気に入り)
+	L"data/sound/PageChange.wav",	//進むボタン等の音
 
 };
 
@@ -57,12 +63,13 @@ SoundManager::SoundManager()
 	pSE[SE_ENEMY_PANIC]->setVolume(2);
 	pSE[SE_JUMP]->setVolume(1.5f);
 
+	pSE[SE_TITLE_CHANGEPAGE]->setVolume(2);
 
 }
 
 void SoundManager::PlayBGM(BGM_ID id)
 {
-	if (id == currentBGM)
+	if (id == currentBGM&&pBGM[id]->isPlaying())
 	{
 		return;
 	}

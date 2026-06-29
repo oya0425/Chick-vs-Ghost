@@ -11,7 +11,42 @@ WCHAR seFile_Title[][FILE_PATH_MAX] =
     L"data/sound/maou_se_system10.wav",	 //STARTボタンにカーソルを合わせたときの音(お気に入り)
 
 };
+//タイトル画面の背景（ルールとか）
+WCHAR ui_Title[][FILE_PATH_MAX] =
+{
+    L"data/image/タイトル画面.png",
+    L"data/image/説明１.png",
+    L"data/image/説明２.png",
+    L"data/image/説明３.png",
+    L"data/image/説明４.png",
 
+
+};
+
+
+namespace
+{
+    //スタートボタン位置
+    constexpr float startButton_x = 650;
+    constexpr float startButton_y = 500;
+
+    //ルールボタン
+    constexpr float ruleButton_x = 650;
+    constexpr float ruleButton_y = 600;
+    //スタートボタン位置
+    constexpr float leftButton_x = 200;
+    constexpr float leftButton_y = 600;
+    //スタートボタン位置
+    constexpr float rightButton_x = 1100;
+    constexpr float rightButton_y = 600;
+
+
+    //全ボタンサイズ
+    constexpr float button_w = 250;
+    constexpr float button_h = 80;
+
+
+}
 
 bool SceneTitle::initialize()
 {
@@ -30,29 +65,71 @@ bool SceneTitle::initialize()
     }
 
     // --- BGM ---
-    fileNum = sizeof(seFile_Title) / (sizeof(WCHAR) * FILE_PATH_MAX);
+    m_soundManager = std::make_unique<SoundManager>();
 
-    pSound = new vnSound * [fileNum];
-    for (int i = 0; i < fileNum; i++)
+
+    //================================================
+    // 背景設定
+    //================================================
+    int uifileNum = sizeof(ui_Title) / (sizeof(WCHAR) * FILE_PATH_MAX);
+
+    for (int i = 0; i < uifileNum; i++)
     {
-        pSound[i] = new vnSound(seFile_Title[i]);
+        vnSprite* pSprite = new vnSprite(
+            SCREEN_WIDTH / 2,
+            SCREEN_HEIGHT / 2,
+            SCREEN_WIDTH,
+            SCREEN_HEIGHT,
+            ui_Title[i]
+        );
+
+        pSprite->setRenderEnable(false);
+        pSprite->setAlpha(0.8f);
+        pSprite->setColor(V_GAME_COLOR_WHITE);
+
+        m_pBackGround.push_back(pSprite);
+        registerObject(pSprite);
     }
 
+    m_pBackGround[TITLE_MAIN]->setRenderEnable(true);
 
-    pBackGround = new vnSprite(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH , SCREEN_HEIGHT ,L"data/image/TitleBG.png");
-    registerObject(pBackGround);
-    pBackGround->setAlpha(0.8f);
+    //pBackGround = new vnSprite(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH , SCREEN_HEIGHT ,L"data/image/TitleBG.png");
+    //pBackGround = new vnSprite(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH , SCREEN_HEIGHT ,L"data/image/タイトル画面.png");
+    //pBackGround = new vnSprite(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH , SCREEN_HEIGHT ,L"data/image/説明１.png");
+    //pBackGround = new vnSprite(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH , SCREEN_HEIGHT ,L"data/image/説明２.png");
+    //pBackGround = new vnSprite(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH , SCREEN_HEIGHT ,L"data/image/説明３.png");
+    //pBackGround = new vnSprite(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH , SCREEN_HEIGHT ,L"data/image/説明４.png");
 
-    pButton = new vnSprite(650, 500, 250, 80, L"data/image/選択ボタン形.png");
-    registerObject(pButton);
+    //スタートボタン
+    //pStartButton = new vnSprite(startButton_x, startButton_y, button_w, button_h, L"data/image/選択ボタン形.png");
+    pStartButton = new vnSprite(startButton_x, startButton_y, button_w, button_h, L"data/image/無題.png");
+    registerObject(pStartButton);
+    //ルールボタン
+    pRuleButton = new vnSprite(ruleButton_x, ruleButton_y, button_w, button_h, L"data/image/選択ボタン形.png");
+    pRuleButton = new vnSprite(ruleButton_x, ruleButton_y, button_w, button_h, L"data/image/無題.png");
+    registerObject(pRuleButton);
+    //左ボタン（戻るボタン）
+    pLeftButton = new vnSprite(leftButton_x, leftButton_y, button_w, button_h, L"data/image/選択ボタン形.png");
+    registerObject(pLeftButton);
+    //右ボタン（進むボタン）
+    pRightButton = new vnSprite(rightButton_x, rightButton_y, button_w, button_h, L"data/image/選択ボタン形.png");
+    registerObject(pRightButton);
+
+    pStartButton->setRenderEnable(false);
+    pRuleButton->setRenderEnable(false);
+    pLeftButton->setRenderEnable(false);
+    pRightButton->setRenderEnable(false);
+
     //pBackGround->setAlpha(0.8f);
 
-    pSound[1]->play();
-    pSound[1]->setVolume(1.0f);
+    m_soundManager->PlayBGM(BGM_TITLE);
 
     isStarting = false;
-    isOnButton = false;
     titleRotation = 0.0f;
+    isOnStartButton  =false;
+    isOnRuleButton   =false;
+    isOnLeftButton   =false;
+    isOnRightButton  =false;
 
 
 
@@ -60,77 +137,215 @@ bool SceneTitle::initialize()
 }
 void SceneTitle::execute()
 {
-    if (!pSound[1]->isPlaying())
+    m_soundManager->PlayBGM(BGM_TITLE);
+
+    int mx = vnMouse::getX(); 
+    int my = vnMouse::getY();
+
+    switch (m_titleState)
     {
-        pSound[1]->play(true);
+    case SceneTitle::TitleState::MAIN:
+        pStartButton->setRenderEnable(true);
+        pRuleButton->setRenderEnable(true);
+        pRightButton->setRenderEnable(false);
+        pLeftButton->setRenderEnable(false);
 
-    }
-
-    if (!isStarting) {
-        int mx = vnMouse::getX();
-        int my = vnMouse::getY();
-
-        float bx = 650.0f;
-        float by = 500.0f;
-        float bw = 250.0f;
-        float bh = 80.0f;
-
-        // --- 当たり判定 ---
-        if (mx >= bx - bw / 2 && mx <= bx + bw / 2 &&
-            my >= by - bh / 2 && my <= by + bh / 2) // 中心座標からの判定
+        if (!isStarting)
         {
-            if (isOnButton == false) // まだ「乗っている状態」に切り替わる前なら
+            if (UpdateButton(
+                startButton_x,
+                startButton_y,
+                pStartButton,
+                isOnStartButton,
+                startButtonScale))
             {
-                pSound[3]->play();   // 鳴らす
-            }
-
-            isOnButton = true;
-
-            // 目標サイズを1.2にする
-            buttonScale += (1.2f - buttonScale) * 0.2f;
-            // 別の光スプライトを表示させるか、ボタンの色を赤っぽくする
-            pButton->setColor(V_GAME_COLOR_BLACK);
-            if (vnMouse::trgL()) {
-                isStarting = true; // 演出開始！
-                pSound[2]->play();   // 鳴らす
-
-                //switchScene(eSceneTable::Main);
+                isStarting = true;
+                m_soundManager->PlaySE(SE_TITLE_START);
             }
         }
-        else
-        {
-            isOnButton = false;
-            // 目標サイズを1.0にする
-            buttonScale += (1.0f - buttonScale) * 0.2f;
-            pButton->setColor(V_GAME_COLOR_YELLOW);
+        //=============================
+        // スタートボタンを押したら
+        //=============================
+        else {
+            // --- 演出開始：回転しながら巨大化 ---
 
+            //ルールボタンは非表示
+            pRuleButton->setRenderEnable(false);
+
+                    // 回転速度を徐々に上げる
+            titleRotation += 10.0f;
+
+            // スケールを指数関数的に増やす (1.1倍し続ける)
+            startButtonScale *= 1.05f;
+
+            // 適用
+            pStartButton->setScale(startButtonScale);
+            titleRotation += (startButtonScale * 2.0f);
+            pStartButton->rot = titleRotation; // 直接代入
+
+
+            // 画面を完全に覆うサイズになったら遷移
+            if (startButtonScale > 70.0f)
+            {
+                switchScene(eSceneTable::Main);
+            }
         }
-    }
-    else {
-        // --- 演出開始：回転しながら巨大化 ---
+        //-----------------------------
 
-                // 回転速度を徐々に上げる
-        titleRotation += 10.0f;
-
-        // スケールを指数関数的に増やす (1.1倍し続ける)
-        buttonScale *= 1.05f;
-
-        // 適用
-        pButton->setScale(buttonScale);
-        titleRotation += (buttonScale * 2.0f);
-        pButton->rot = titleRotation; // 直接代入
-
-
-        // 画面を完全に覆うサイズになったら遷移
-        if (buttonScale > 50.0f)
+        //ルールボタン押す
+        if (UpdateButton(
+            ruleButton_x,
+            ruleButton_y,
+            pRuleButton,
+            isOnRuleButton,
+            ruleButtonScale))
         {
-            switchScene(eSceneTable::Main);
+
+            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
+            m_titleState = TitleState::RULE1;
+            ChangeBackGround(TITLE_RULE1);
         }
+
+
+
+
+        break;
+    case SceneTitle::TitleState::RULE1:
+        //Start,ルールボタンを隠して、進むボタンのみ表示
+        pStartButton->setRenderEnable(false);
+        pRuleButton->setRenderEnable(false);
+        pLeftButton->setRenderEnable(false);
+        pRightButton->setRenderEnable(false);
+
+        //戻るボタン
+        if (UpdateButton(
+            leftButton_x,
+            leftButton_y,
+            pLeftButton,
+            isOnLeftButton,
+            leftButtonScale))
+        {
+
+            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
+            m_titleState = TitleState::MAIN;
+            ChangeBackGround(TITLE_MAIN);
+        }
+
+        //進むボタン
+        if (UpdateButton(
+            rightButton_x,
+            rightButton_y,
+            pRightButton,
+            isOnRightButton,
+            rightButtonScale))
+        {
+
+            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
+            m_titleState = TitleState::RULE2;
+            ChangeBackGround(TITLE_RULE2);
+        }
+
+
+
+        break;
+    case SceneTitle::TitleState::RULE2:
+        //戻るボタンも表示する
+        //pLeftButton->setRenderEnable(true);
+        
+        //戻るボタン
+        if (UpdateButton(
+            leftButton_x,
+            leftButton_y,
+            pLeftButton,
+            isOnLeftButton,
+            leftButtonScale))
+        {
+
+            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
+            m_titleState = TitleState::RULE1;
+            ChangeBackGround(TITLE_RULE1);
+        }
+
+
+        //進むボタン（右ボタン）
+        if (UpdateButton(
+            rightButton_x,
+            rightButton_y,
+            pRightButton,
+            isOnRightButton,
+            rightButtonScale))
+        {
+
+            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
+            m_titleState = TitleState::RULE3;
+            ChangeBackGround(TITLE_RULE3);
+        }
+
+        break;
+    case SceneTitle::TitleState::RULE3:
+        //戻るボタン
+        if (UpdateButton(
+            leftButton_x,
+            leftButton_y,
+            pLeftButton,
+            isOnLeftButton,
+            leftButtonScale))
+        {
+
+            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
+            m_titleState = TitleState::RULE2;
+            ChangeBackGround(TITLE_RULE2);
+        }
+
+
+        //進むボタン（右ボタン）
+        if (UpdateButton(
+            rightButton_x,
+            rightButton_y,
+            pRightButton,
+            isOnRightButton,
+            rightButtonScale))
+        {
+
+            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
+            m_titleState = TitleState::RULE4;
+            ChangeBackGround(TITLE_RULE4);
+        }
+
+
+
+        break;
+    case SceneTitle::TitleState::RULE4:
+        //戻るボタン
+        if (UpdateButton(
+            leftButton_x,
+            leftButton_y,
+            pLeftButton,
+            isOnLeftButton,
+            leftButtonScale))
+        {
+
+            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
+            m_titleState = TitleState::RULE3;
+            ChangeBackGround(TITLE_RULE3);
+        }
+
+
+        //進むボタン（右ボタン）
+        if (UpdateButton(
+            rightButton_x,
+            rightButton_y,
+            pRightButton,
+            isOnRightButton,
+            rightButtonScale))
+        {
+
+            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
+            m_titleState = TitleState::MAIN;
+            ChangeBackGround(TITLE_MAIN);
+        }
+        break;
     }
-
-    // 更新した値を適用
-    pButton->setScale(buttonScale);
-
 
 }
 
@@ -149,64 +364,190 @@ void SceneTitle::terminate()
     //作成したフォント用の情報を確保しておく変数を削除
     delete[] textFormat_score;
 
-    if (pSound != NULL)
+    //if (pSound != NULL)
+    //{
+    //    for (int i = 0; i < fileNum; i++)
+    //    {
+    //        if (pSound[i] == NULL)continue;
+    //        pSound[i]->stop();
+    // 
+    //        delete pSound[i];
+    //        pSound[i] = NULL;
+    //    }
+    //    delete[] pSound;
+    //    pSound = NULL;
+    //}
+    int uifileNum = sizeof(ui_Title) / (sizeof(WCHAR) * FILE_PATH_MAX);
+
+    for (int i = 0; i < uifileNum; i++)
     {
-        for (int i = 0; i < fileNum; i++)
-        {
-            if (pSound[i] == NULL)continue;
-            pSound[i]->stop();
-            delete pSound[i];
-            pSound[i] = NULL;
-        }
-        delete[] pSound;
-        pSound = NULL;
+        deleteObject(m_pBackGround[i]);
     }
-
-
-    deleteObject(pBackGround);
-    deleteObject(pButton);
+    deleteObject(pStartButton);
+    deleteObject(pRuleButton);
+    deleteObject(pLeftButton);
+    deleteObject(pRightButton);
 }
 
 //描画
 void SceneTitle::render()
 {
-    float off = 5.0f; // 影のズレ幅
-    unsigned int shadowCol = 0xFF000000;
-
-    blinkCounter++;
-    // クリア文字を上下に「ふわふわ」させる
-    float offsetY = sinf(blinkCounter * 0.08f) * 15.0f;
-    if (!isStarting)
+    switch (m_titleState)
     {
-        vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 90));
-        vnFont::print(150 + off, 200 + offsetY + off, shadowCol, L"『ミネートクレーター』");
-        vnFont::print(150, 200 + offsetY, GAME_COLOR_GOLD, L"『ミネートクレーター』");
+    case SceneTitle::TitleState::MAIN:
+    {
+        float off = 5.0f; // 影のズレ幅
+        unsigned int shadowCol = 0xFF000000;
 
+        blinkCounter++;
+        // クリア文字を上下に「ふわふわ」させる
+        float offsetY = sinf(blinkCounter * 0.08f) * 15.0f;
+        if (!isStarting)
+        {
+            vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 90));
+            vnFont::print(150 + off, 200 + offsetY + off, shadowCol, L"『ミネートクレーター』");
+            vnFont::print(150, 200 + offsetY, GAME_COLOR_GOLD, L"『ミネートクレーター』");
+
+            ChangeButtonTextSize(ruleButton_x, ruleButton_y, ruleButtonScale, isOnRuleButton, L"RULES");
+
+        }
+
+        ChangeButtonTextSize(startButton_x, startButton_y, startButtonScale, isOnStartButton, L"START");
     }
+        break;
+    case SceneTitle::TitleState::RULE1:
+        ChangeButtonTextSize(rightButton_x-10, rightButton_y, rightButtonScale, isOnRightButton, L"進む");
+        ChangeButtonTextSize(leftButton_x - 10, leftButton_y, leftButtonScale, isOnLeftButton, L"タイトル");
+
+        break;
+    case SceneTitle::TitleState::RULE2:
+        ChangeButtonTextSize(leftButton_x-10, leftButton_y, leftButtonScale, isOnLeftButton, L"戻る");
+        ChangeButtonTextSize(rightButton_x-10, rightButton_y, rightButtonScale, isOnRightButton, L"進む");
+
+        break;
+    case SceneTitle::TitleState::RULE3:
+        ChangeButtonTextSize(leftButton_x-10, leftButton_y, leftButtonScale, isOnLeftButton, L"戻る");
+        ChangeButtonTextSize(rightButton_x-10, rightButton_y, rightButtonScale, isOnRightButton, L"進む");
+
+        break;
+    case SceneTitle::TitleState::RULE4:
+        ChangeButtonTextSize(leftButton_x-10, leftButton_y, leftButtonScale, isOnLeftButton, L"戻る");
+        ChangeButtonTextSize(rightButton_x-30, rightButton_y, rightButtonScale, isOnRightButton, L"タイトル");
+
+        break;
+    }
+
+    vnScene::render();
+}
+
+//ボタン当たり判定
+bool SceneTitle::OnButton(float x, float y)
+{
+    int mx = vnMouse::getX();
+    int my = vnMouse::getY();
+
+    if (mx >= x - button_w / 2 && mx <= x + button_w / 2 &&
+        my >= y - button_h / 2 && my <= y + button_h / 2) // 中心座標からの判定
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+//ボタン処理（ボタン押したときにtrue）
+bool SceneTitle::UpdateButton(
+    float x,
+    float y,
+    vnSprite* pButton,
+    bool& isOnButton,
+    float& buttonScale)
+{
+    if (OnButton(x, y))
+    {
+        if (!isOnButton)
+        {
+            m_soundManager->PlaySE(SE_TITLE_CURSOR);
+        }
+
+        isOnButton = true;
+
+        buttonScale += (1.2f - buttonScale) * 0.2f;
+        pButton->setColor(V_GAME_COLOR_BLACK);
+
+        if (vnMouse::trgL())
+        {
+            return true;
+        }
+    }
+    else
+    {
+        isOnButton = false;
+
+        buttonScale += (1.0f - buttonScale) * 0.2f;
+        pButton->setColor(V_GAME_COLOR_YELLOW);
+    }
+
+    pButton->setScale(buttonScale);
+
+    return false;
+}
+
+//=====================
+// 背景の変更
+//=====================
+void SceneTitle::ChangeBackGround(TitleUI ui)
+{
+    m_pBackGround[m_currentUI]->setRenderEnable(false);
+    m_pBackGround[ui]->setRenderEnable(true);
+
+    m_currentUI = ui;
+}
+
+
+//=========================================================
+// 文字の大きさ変更（ボタンに合わせた大きさにする）
+//=========================================================
+void SceneTitle::ChangeButtonTextSize(float x,float y,float fontScale, bool isOnButton, const WCHAR* text)
+{
+    float off = 4.0f; // 影のズレ幅
+    unsigned int shadowCol = GAME_COLOR_WHITE;
+
+    //文字数の取得
+    int len = wcslen(text);
+
     // 現在のフォントサイズ
-    float currentFontSize = 50.0f * buttonScale;
+    float currentFontSize = 45.0f * fontScale;
     vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), (int)currentFontSize));
 
     // --- 座標の補正計算 ---
     // 1文字あたりの幅をざっくりフォントサイズの半分と仮定して、
     // 「START」の5文字分が中心に来るように調整します。
-    float textWidth = currentFontSize * 1.6f; 
-    float textHeight = currentFontSize * 0.5f; // 高さも調整
+    //float textWidth = currentFontSize * 1.6f;
+    //float textHeight = currentFontSize * 0.5f; // 高さも調整
+    
+    float textWidth = currentFontSize * 0.65f * (len);
+    float textHeight = currentFontSize * 0.5f;
+
+    float tx = x - textWidth*0.5f;
+    float ty = y - textHeight;
 
     // ボタンの中心(650, 500)から引く
-    float tx = 650.0f - textWidth;
-    float ty = 500.0f - textHeight;
+    //float tx = x - textWidth;
+    //float ty = y - textHeight;
 
     // 影と本体を描画
-    vnFont::print(tx + off, ty + off, shadowCol, L"START");
+    vnFont::print(tx + off, ty + off*0.3, shadowCol, text);
     if (isOnButton)
     {
-        vnFont::print(tx, ty, GAME_COLOR_GOLD, L"START");
+        vnFont::print(tx, ty, GAME_COLOR_RED, text);
     }
     else {
-        vnFont::print(tx, ty, GAME_COLOR_WHITE, L"START");
+        vnFont::print(tx, ty, GAME_COLOR_BLACK, text);
     }
 
 
-    vnScene::render();
+
 }

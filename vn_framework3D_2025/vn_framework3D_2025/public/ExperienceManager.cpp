@@ -4,7 +4,7 @@
 namespace
 {
 	constexpr int canSelectCount = 3;	//選択肢の数
-	constexpr int expOffset = 2;		//レベルアップで増える量を増やす（N倍）
+	constexpr int expOffset = 1;		//レベルアップで増える量を増やす（N倍）
 
 }
 

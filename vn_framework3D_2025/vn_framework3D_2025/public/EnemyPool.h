@@ -177,7 +177,7 @@ private:
 	float m_spawnTimer = 0.0f;
 	const float SPAWN_INTERVAL = 0.1f; // 0.1•b‘Ò‹@
 
-	eDisplayMode m_displayMode = eDisplayMode::LeaderOnly;
+	eDisplayMode m_displayMode = eDisplayMode::AllOff;
 
 	void DebugSetting();
 	void ChangeDisplayMode(eDisplayMode nextMode);

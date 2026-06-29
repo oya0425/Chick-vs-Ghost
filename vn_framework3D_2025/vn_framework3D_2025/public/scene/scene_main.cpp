@@ -1257,6 +1257,7 @@ void SceneMain::execute()
 
 	case Play:
 	{
+		soundManager->PlayBGM(BGM_GAME);
 
 		UpdatePlay(dt);
 		
@@ -1397,7 +1398,16 @@ void SceneMain::execute()
 
 	// 光の色：完全な白より少しだけ抑える
 	//vnLight::setLightCol(0.95f, 0.95f, 0.95f);
-	vnLight::setLightCol(0.5f, 0.5f, 0.5f);
+	vnLight::setLightCol(0.7f, 0.5f, 0.5f);
+
+	//// 環境光：少し暖かい色
+	//vnLight::setAmbient(0.4f, 0.35f, 0.3f);
+
+	//// 太陽が斜めから当たる感じ
+	//vnLight::setLightDir(0.5f, -1.0f, 0.2f);
+
+	//// 夕方っぽいオレンジ色
+	//vnLight::setLightCol(1.0f, 0.75f, 0.5f);
 
 	//vnDebugDraw::Grid();
 	//vnDebugDraw::Axis();
@@ -1816,8 +1826,8 @@ void SceneMain::render()
 		vnFont::setFontSize(38, 40);
 
 		// 影も一緒に点滅させる
-		vnFont::print(400.0f + off, 450.0f + off, blinkShadow, L"[ENTER]  BACK TITLE");
-		vnFont::print(400.0f, 450.0f, blinkColor, L"[ENTER]  BACK TITLE");
+		vnFont::print(400.0f + off, 450.0f + off, blinkShadow, L"[RIGHT CLICK]  BACK TITLE");
+		vnFont::print(400.0f, 450.0f, blinkColor, L"[RIGHT CLICK]  BACK TITLE");
 
 		break;
 
@@ -1857,8 +1867,8 @@ void SceneMain::render()
 		unsigned int blinkShadow = ((unsigned int)(alpha * 255) << 24) | 0x00000000;
 		unsigned int blinkColor = ((unsigned int)(alpha * 255) << 24) | (GAME_COLOR_CYAN & 0x00FFFFFF);
 
-		vnFont::print(370.0f + off, 600.0f + off, blinkShadow, L"[ENTER]  BACK TITLE");
-		vnFont::print(370.0f, 600.0f, blinkColor, L"[ENTER]  BACK TITLE");
+		vnFont::print(370.0f + off, 600.0f + off, blinkShadow, L"[RIGHT CLICK]  BACK TITLE");
+		vnFont::print(370.0f, 600.0f, blinkColor, L"[RIGHT CLICK]  BACK TITLE");
 
 
 		break;
@@ -2292,6 +2302,7 @@ void SceneMain::UpdatePause()
 
 void SceneMain::UpdateBossPause()
 {
+
 }
 
 
@@ -2816,7 +2827,7 @@ void SceneMain::AddCombo(NewEnemyClass* enemy)
 	//経験値を獲得
 	if (m_pExpManager)
 	{
-		float expAmount = 1.0f * (1.0f + (waveManager->GetCurrentWave() * 0.2f));
+		float expAmount = 0.5f * (1.0f + (waveManager->GetCurrentWave() * 0.2f));
 		//リーダーの時と、その他がパニック状態の時にもらえる経験値が増える
 		if (enemy->GetIsLeader())
 		{
@@ -3084,7 +3095,7 @@ void SceneMain::UpdateGameOver()
 {
 
 	soundManager->PlayBGM(BGM_GAMEOVER);
-	if (vnKeyboard::trg(DIK_RETURN))
+	if (vnKeyboard::trg(DIK_RETURN) || vnMouse::trgR())
 	{
 		soundManager->PlaySE(SE_ENTER);
 
@@ -3106,7 +3117,7 @@ void SceneMain::UpdateGameClear()
 
 	soundManager->PlayBGM(BGM_GAMECLEAR);
 
-	if (vnKeyboard::trg(DIK_RETURN))
+	if (vnKeyboard::trg(DIK_RETURN)||vnMouse::trgR())
 	{
 		soundManager->PlaySE(SE_ENTER);
 

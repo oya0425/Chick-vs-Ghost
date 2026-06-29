@@ -74,7 +74,7 @@ NewEnemyClass::~NewEnemyClass()
 
 // static変数の実体化
 const NewEnemyClass::EnemyData NewEnemyClass::MasterTable[] = {
-    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    175/*150/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
+    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    300/*150/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMon/", L"MushroomMon.bone", 0 , 1.5f, {1.0f, 1.0f,1.0f}},
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMonster/", L"MushroomMonster.bone", 150 , 5.0f, {1.0f, 1.0f, 1.0f}},
 };
@@ -1119,6 +1119,17 @@ void NewEnemyClass::CheckEvolutionOnSpawn()
     GroupData* data = GetGroupData();
     m_upgradeTexts.clear(); //リストをきれいにする
 
+
+    //現在のモードを取得
+    auto currentMode = EnemyPool::GetInstance().GetDisplayMode();
+    bool shouldShow = false;
+    switch (currentMode)
+    {
+    case EnemyPool::eDisplayMode::AllOff:      shouldShow = false; break;
+    case EnemyPool::eDisplayMode::AllOn:       shouldShow = true; break;
+    }
+
+
     //1.近接耐性が上がっていたらリストに追加
     if (data->meleeFear > data->oldMeleeFear)
     {
@@ -1137,6 +1148,7 @@ void NewEnemyClass::CheckEvolutionOnSpawn()
         m_upgradeTexts.push_back({ L"「引き寄せ耐性アップ」", GAME_COLOR_GREEN });
         data->oldPullResistance = data->pullResistance;
     }
+    if (!shouldShow)return;
 
     //進化した項目が１つでもあれば、表示する
     if (!m_upgradeTexts.empty())

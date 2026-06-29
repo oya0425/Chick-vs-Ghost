@@ -7,6 +7,8 @@ enum BGM_ID
 	BGM_GAMEOVER,		//ゲームオーバーになった時に鳴らすBGM
 	BGM_GAMECLEAR,		//ゲームクリアになった時に鳴らすBGM
 
+	BGM_TITLE,			
+
 	BGM_MAX
 };
 enum SE_ID
@@ -22,6 +24,13 @@ enum SE_ID
 	SE_ENEMY_CHARGE,	//特攻状態時に鳴らすSE
 	SE_ENEMY_PANIC,		//パニック時に鳴らすSE
 	SE_JUMP,			//ジャンプ時に鳴らすSE
+
+
+
+	//タイトル画面で使用
+	SE_TITLE_START,		//スタートボタン押したときの音
+	SE_TITLE_CURSOR,	//カーソルを併せたときの音
+	SE_TITLE_CHANGEPAGE,//ルール説明の画面の進むボタン等の音
 	SE_MAX
 };
 
