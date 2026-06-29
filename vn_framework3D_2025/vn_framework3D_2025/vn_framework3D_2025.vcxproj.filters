@@ -22,9 +22,6 @@
     <Filter Include="public">
       <UniqueIdentifier>{d523f397-833d-4ff9-babc-7f68be0a5808}</UniqueIdentifier>
     </Filter>
-    <Filter Include="public\object">
-      <UniqueIdentifier>{7281c8ef-f06d-4bb0-9372-1b1170168be2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="public\scene">
       <UniqueIdentifier>{b9658068-a6aa-46bc-8bce-d7d53c80883e}</UniqueIdentifier>
     </Filter>
@@ -108,18 +105,6 @@
     <ClInclude Include="public\scene\scene_boot.h">
       <Filter>public\scene</Filter>
     </ClInclude>
-    <ClInclude Include="public\scene\scene_font_test.h">
-      <Filter>public\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="public\scene\scene_joystick_test.h">
-      <Filter>public\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="public\scene\scene_se_test.h">
-      <Filter>public\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="public\scene\scene_sprite_test.h">
-      <Filter>public\scene</Filter>
-    </ClInclude>
     <ClInclude Include="public\scene\scene_table.h">
       <Filter>public\scene</Filter>
     </ClInclude>
@@ -128,9 +113,6 @@
     </ClInclude>
     <ClInclude Include="public\vn_sprite.h">
       <Filter>public</Filter>
-    </ClInclude>
-    <ClInclude Include="public\object\cube.h">
-      <Filter>public\object</Filter>
     </ClInclude>
     <ClInclude Include="framework\vn_camera.h">
       <Filter>framework</Filter>
@@ -147,19 +129,7 @@
     <ClInclude Include="public\vn_object.h">
       <Filter>public</Filter>
     </ClInclude>
-    <ClInclude Include="public\scene\scene_model_test.h">
-      <Filter>public\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="public\scene\scene_filed_test .h">
-      <Filter>public\scene</Filter>
-    </ClInclude>
     <ClInclude Include="public\vn_billboard.h">
-      <Filter>public\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="public\scene\scene_ground_test.h">
-      <Filter>public\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="public\scene\scene_pick_test.h">
       <Filter>public\scene</Filter>
     </ClInclude>
     <ClInclude Include="public\vn_collide.h">
@@ -168,37 +138,13 @@
     <ClInclude Include="public\common.h">
       <Filter>public</Filter>
     </ClInclude>
-    <ClInclude Include="public\scene\scene_effect_test.h">
-      <Filter>public\scene</Filter>
-    </ClInclude>
     <ClInclude Include="public\vn_effect.h">
       <Filter>public</Filter>
-    </ClInclude>
-    <ClInclude Include="public\scene\scene_KeyFrame_test.h">
-      <Filter>public\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="public\object\bear.h">
-      <Filter>public\object</Filter>
     </ClInclude>
     <ClInclude Include="public\vn_character.h">
       <Filter>public</Filter>
     </ClInclude>
-    <ClInclude Include="public\object\skinned_cube.h">
-      <Filter>public\object</Filter>
-    </ClInclude>
-    <ClInclude Include="public\scene\scene_skin_test.h">
-      <Filter>public\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="public\scene\skinned_simple_cube.h">
-      <Filter>public\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="public\playerClass.h">
-      <Filter>public\MainScript</Filter>
-    </ClInclude>
     <ClInclude Include="public\RigidbodyComponent.h">
-      <Filter>public\MainScript</Filter>
-    </ClInclude>
-    <ClInclude Include="public\EnemyClass.h">
       <Filter>public\MainScript</Filter>
     </ClInclude>
     <ClInclude Include="public\scene\scene_main.h">
@@ -299,18 +245,6 @@
     <ClCompile Include="public\scene\scene_boot.cpp">
       <Filter>public\scene</Filter>
     </ClCompile>
-    <ClCompile Include="public\scene\scene_font_test.cpp">
-      <Filter>public\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="public\scene\scene_joystick_test.cpp">
-      <Filter>public\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="public\scene\scene_se_test.cpp">
-      <Filter>public\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="public\scene\scene_sprite_test.cpp">
-      <Filter>public\scene</Filter>
-    </ClCompile>
     <ClCompile Include="public\scene\scene_table.cpp">
       <Filter>public\scene</Filter>
     </ClCompile>
@@ -319,9 +253,6 @@
     </ClCompile>
     <ClCompile Include="public\vn_sprite.cpp">
       <Filter>public</Filter>
-    </ClCompile>
-    <ClCompile Include="public\object\cube.cpp">
-      <Filter>public\object</Filter>
     </ClCompile>
     <ClCompile Include="framework\vn_camera.cpp">
       <Filter>framework</Filter>
@@ -338,19 +269,7 @@
     <ClCompile Include="public\vn_object.cpp">
       <Filter>public</Filter>
     </ClCompile>
-    <ClCompile Include="public\scene\scene_model_test.cpp">
-      <Filter>public\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="public\scene\scene_filed_test.cpp">
-      <Filter>public\scene</Filter>
-    </ClCompile>
     <ClCompile Include="public\vn_billboard.cpp">
-      <Filter>public\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="public\scene\scene_ground_test.cpp">
-      <Filter>public\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="public\scene\scene_pick_test.cpp">
       <Filter>public\scene</Filter>
     </ClCompile>
     <ClCompile Include="public\vn_collide.cpp">
@@ -359,40 +278,13 @@
     <ClCompile Include="public\common.cpp">
       <Filter>public</Filter>
     </ClCompile>
-    <ClCompile Include="public\scene\scene_effect_test.cpp">
-      <Filter>public\scene</Filter>
-    </ClCompile>
     <ClCompile Include="public\vn_effect.cpp">
       <Filter>public</Filter>
-    </ClCompile>
-    <ClCompile Include="public\scene\scene_KeyFrame_test.cpp">
-      <Filter>public\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="public\object\bear_motion.cpp">
-      <Filter>public\object</Filter>
-    </ClCompile>
-    <ClCompile Include="public\object\bear.cpp">
-      <Filter>public\object</Filter>
     </ClCompile>
     <ClCompile Include="public\vn_character.cpp">
       <Filter>public</Filter>
     </ClCompile>
-    <ClCompile Include="public\object\skinned_cube.cpp">
-      <Filter>public\object</Filter>
-    </ClCompile>
-    <ClCompile Include="public\scene\scene_skin_test.cpp">
-      <Filter>public\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="public\scene\skinned_simple_cube.cpp">
-      <Filter>public\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="public\playerClass.cpp">
-      <Filter>public\MainScript</Filter>
-    </ClCompile>
     <ClCompile Include="public\RigidbodyComponent.cpp">
-      <Filter>public\MainScript</Filter>
-    </ClCompile>
-    <ClCompile Include="public\EnemyClass.cpp">
       <Filter>public\MainScript</Filter>
     </ClCompile>
     <ClCompile Include="public\scene\scene_main.cpp">

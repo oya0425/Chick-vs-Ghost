@@ -27,17 +27,6 @@ WCHAR SceneName[(int)eSceneTable::SceneMax][32] =
 	L"Boot",
 	L"TITEL",
 	L"Main",
-	L"SkinTest",
-	L"KeyTest",
-	L"PickTest",
-	L"EffectTest",
-	L"GroundTest",
-	L"FieldTest",
-	L"Model Test",
-	L"Sprite Test",
-	L"Joystick Test",
-	L"SE Test",
-	L"Font Test",
 };
 
 //ステージ切り替え関数(予約)
@@ -63,17 +52,6 @@ void switchScene()
 
 	case Main:			pScene = new SceneMain();			break;
 	case TITEL:			pScene = new SceneTitle();			break;
-	case SkinTest:		pScene = new SceneSkinTest();		break;
-	case KeyTest:		pScene = new SceneKeyFrameTest();	break;
-	case PickTest:		pScene = new ScenePickTest();		break;
-	case EffectTest:	pScene = new SceneEffectTest();		break;
-	case GroundTest:	pScene = new SceneGroundTest();		break;
-	case Field_Test:	pScene = new SceneFieldTest();		break;
-	case ModelTest:		pScene = new SceneModelTest();		break;
-	case SpriteTest:	pScene = new SceneSpriteTest();		break;
-	case JoystickTest:	pScene = new SceneJoystickTest();	break;
-	case SeTest:		pScene = new SceneSeTest();			break;
-	case FontTest:		pScene = new SceneFontTest();		break;
 	}
 	
 	vnMainFrame::initializeScene(pScene);

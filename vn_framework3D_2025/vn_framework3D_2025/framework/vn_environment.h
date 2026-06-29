@@ -105,10 +105,7 @@ using namespace DirectX;
 #include"../public/EnemyAIDebug.h"
 
 #include"../public/newPlayerClass.h"
-#include"../public/playerClass.h"
 #include"../public/Bullet.h"
-
-#include"../public/EnemyClass.h"
 #include"../public/NewEnemyClass.h"
 
 #include"../public/EnemyMushroomMon.h"
