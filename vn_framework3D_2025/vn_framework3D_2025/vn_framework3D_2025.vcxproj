@@ -24,6 +24,7 @@
     <ProjectGuid>{988bdb64-1379-4719-9e34-58692d1c168c}</ProjectGuid>
     <RootNamespace>vnframework3D2025</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Chick vs Ghost</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

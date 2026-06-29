@@ -405,8 +405,8 @@ void SceneTitle::render()
         if (!isStarting)
         {
             vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 90));
-            vnFont::print(150 + off, 200 + offsetY + off, shadowCol, L"『ミネートクレーター』");
-            vnFont::print(150, 200 + offsetY, GAME_COLOR_GOLD, L"『ミネートクレーター』");
+            vnFont::print(250 + off, 200 + offsetY + off, shadowCol, L"『Chick vs Ghost』");
+            vnFont::print(250, 200 + offsetY, GAME_COLOR_GOLD, L"『Chick vs Ghost』");
 
             ChangeButtonTextSize(ruleButton_x, ruleButton_y, ruleButtonScale, isOnRuleButton, L"RULES");
 

@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35818.85 d17.13
+VisualStudioVersion = 17.13.35818.85
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vn_framework3D_2025", "vn_framework3D_2025\vn_framework3D_2025.vcxproj", "{988BDB64-1379-4719-9E34-58692D1C168C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Chick vs Ghost", "vn_framework3D_2025\vn_framework3D_2025.vcxproj", "{988BDB64-1379-4719-9E34-58692D1C168C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
