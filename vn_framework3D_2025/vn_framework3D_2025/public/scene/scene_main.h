@@ -5,6 +5,7 @@
 //
 #define FENCE_NUM_MAIN (40)			//フェンスモデルの数
 #define TREE_NUM (10)
+constexpr float GROUND_OFFSET = 0.1f;
 
 //#define FENCE_RADIUS (40)	//フェンスを配置する円周の半径
 // --- UI用アセットパスの定義リスト（外に出す） ---

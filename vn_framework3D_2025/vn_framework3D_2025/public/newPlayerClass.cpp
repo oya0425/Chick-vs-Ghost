@@ -1,7 +1,7 @@
 #include"../framework.h"
 #include"../framework/vn_environment.h"
 
-extern vnMotionData* motion_idle_bird;
+vnMotionData* motion_idle_bird;
 
 namespace 
 {
