@@ -7,18 +7,6 @@
 #define TREE_NUM (10)
 constexpr float GROUND_OFFSET = 0.1f;
 
-//#define FENCE_RADIUS (40)	//フェンスを配置する円周の半径
-// --- UI用アセットパスの定義リスト（外に出す） ---
-namespace {
-	const wchar_t* ASSET_PATHS[] = {
-		L"data/image/IMG_E6067.png",   // ID 0
-		L"data/image/IMG_E6067.png",   // ID 1
-		L"data/image/IMG_E6067.png",   // ID 2
-		L"data/image/IMG_E6067.png",  // ID 3
-	};
-	// 要素数を自動計算しておく
-	const int ASSET_COUNT = sizeof(ASSET_PATHS) / sizeof(ASSET_PATHS[0]);
-}
 struct UpgradeUIResource
 {
 	const wchar_t* framePath;
@@ -148,7 +136,7 @@ private:
 	vnSprite* pAreaSkillIcon;		//範囲攻撃のアイコン
 	bool m_bIsAreaSkillMaxPrev = true; // 前回MAXだったか
 	float m_areaSkillIconScale = 1.0f;           // 現在のアイコンのスケール（初期値 1.0）
-	float m_areaSkillIargetScale = 1.0f;         // 目標のスケール（初期値 1.0）
+	float m_areaSkillTargetScale = 1.0f;         // 目標のスケール（初期値 1.0）
 	UIColor m_areaAtkUIColor;			//色を保存しておくよう
 
 
@@ -158,7 +146,7 @@ private:
 	vnSprite* pPullBtnFront;
 	vnSprite* pPullSkillIcon;
 	bool m_bIsPullSkillMaxPrev = true; // 前回MAXだったか
-	float m_pullSkillIargetScale = 1.0f;         // 目標のスケール（初期値 1.0）
+	float m_pullSkillTargetScale = 1.0f;         // 目標のスケール（初期値 1.0）
 	float m_pullSkillIconScale = 1.0f;           // 現在のアイコンのスケール（初期値 1.0）
 	UIColor m_pullUIColor;
 
@@ -212,6 +200,21 @@ private:
 	int m_spawnNum = 0;
 
 private:
+	void RegisterCharacter(vnCharacter* character);
+
+	//初期化関数
+	void InitializeVariables();      // 変数初期化
+	void InitializePlayer();         // プレイヤー・弾
+	void InitializeEnemies();        // EnemyPool・敵生成
+	void InitializeField();          // 地形・木・フェンス
+	void InitializeEffects();        // エフェクト
+	void InitializeUI();             // HP・Exp・スキルUI
+	void InitializePauseUI();        // ポーズ画面
+	void InitializeUpgradeUI();      // レベルアップUI
+	void InitializeFont();           // フォント
+	void InitializeSound();          // サウンド
+
+
 	// --- 内部処理関数 (executeの分割) ---
 	void UpdateIdel();
 	void UpdatePlay(float deltaTime);
@@ -250,6 +253,20 @@ private:
 	void SetExpbarRender(bool on);
 
 	void SetSkillUIRender(bool on); 
+
+	//スキルのバーのUpdate
+	void UpdateSkillBar(
+		float currentCoolTime,	//現在のクールタイム
+		float maxCoolTime,		//最大クールタイム
+		vnSprite* pSkillIcon,	//スキルアイコン
+		vnSprite* pSkillBar,	//ゲージ前面
+		bool& isSkillMaxPrev,	//前のフレームで満タンだったか
+		float& skillIconScale,	//アイコン倍率
+		float& skillTargetScale,//目標倍率
+		float barLeftEdge,		//バー左端設定
+		float maxWidth,			//バー最大幅
+		float heightY			//Y座標
+	);
 
 	//バーの設定
 	void CreateUIBar(

@@ -7,31 +7,6 @@
 #include"../RigidbodyComponent.h"
 #define ENABLE_TREE_DELETE (1)  // 1: 解放する、0: 解放しない
 
-
-// --- BGM ---
-//#define FILE_PATH_MAX	(256)
-//
-//WCHAR seFile_Main[][FILE_PATH_MAX] =
-//{
-//	L"data/sound/灼熱のユーロビート.wav",    //ゲームプレイ中のサウンド
-//	L"data/sound/maou_se_battle_gun02.wav",	 //敵を倒したときになるSE
-//	L"data/sound/システム決定音_8.wav",		 //Enter押したときになるSE
-//	L"data/sound/maou_bgm_orchestra26.wav",	 //ゲームオーバーになった時に鳴らすBGM
-//	L"data/sound/キラキラ効果音.wav",		 //WAVEクリア時に鳴らすSE
-//	L"data/sound/maou_bgm_acoustic40.wav",	 //ゲームクリアになった時に鳴らすBGM
-//};
-
-
-//extern stMotion motion_idle;
-//extern stMotion motion_walk;
-
-extern vnMotionData* motion_idle;
-extern vnMotionData* motion_walk;
-extern vnMotionData* motion_idle_bird;
-extern vnMotionData* motion_BoxUnity_RunF;
-
-
-
 // --- メンバ変数 ---
 namespace {
 	constexpr float playerModelScale = 1.2f;
@@ -180,13 +155,13 @@ void SceneMain::SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData&
 	// 1. データテーブルからパスを取得してモデルを生成
 	vnCharacter* model = new vnCharacter(data.folder, data.file);
 	enemy->SetModel(model);
-	registerObject(model);
+
+	RegisterCharacter(model);
 
 	model->setRenderEnable(false);
 
 	for (int i = 0; i < model->getPartsNum(); i++)
 	{
-		registerObject(model->getParts(i));
 		model->getParts(i)->setRenderEnable(false);
 	}
 
@@ -209,11 +184,6 @@ void SceneMain::SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData&
 
 	registerObject(enemy->GetChargeMark());
 	registerObject(enemy->GetPanicMark());
-
-	//enemy->GetChargeMark()->setParent(enemy->GetModel());
-	//enemy->GetPanicMark()->setParent(enemy->GetModel());
-	//enemy->GetChargeMark()->setPositionY(1.f);
-	//enemy->GetPanicMark()->setPositionY(1.f);
 
 	if (isLeader && isBoss)
 	{
@@ -345,7 +315,36 @@ bool SceneMain::initialize()
 {
 	srand((unsigned int)time(nullptr));
 
-	// --- 変数初期化 ---
+	InitializeVariables();
+	InitializePlayer();
+	InitializeEnemies();
+	InitializeField();
+	InitializeEffects();
+	InitializeUI();
+	InitializePauseUI();
+	InitializeUpgradeUI();
+	InitializeFont();
+	InitializeSound();
+
+	return true;
+}
+//=========================================
+// 初期化関数
+//=========================================
+
+void SceneMain::RegisterCharacter(vnCharacter* character)
+{
+	registerObject(character);
+
+	for (int i = 0; i < character->getPartsNum(); i++)
+	{
+		registerObject(character->getParts(i));
+	}
+}
+
+//変数の初期化
+void SceneMain::InitializeVariables()
+{
 	m_gameState = IdelPlay;
 
 	radius = defualtRadius;
@@ -358,281 +357,233 @@ bool SceneMain::initialize()
 
 	isWaveClear = false;
 
-	oldWaveCount = 1; // 最初はWave 1
-	m_comboScale = 1.0f; // 1.0 が基準（100%の大きさ）
-	m_killCounter = 0; // 敵を倒した累計（5でリセット）
+	oldWaveCount = 1;
+	m_comboScale = 1.0f;
+	m_killCounter = 0;
 
-	// --- 時間 ---
 	totalClearTime = 0.0f;
-	isTimerActive = false; // 最初のWAVE開始時にtrueにする
+	isTimerActive = false;
 
 	backGroundBlackScale = 0.0f;
 	isGameFinish = false;
 
 	FenceRadius = defalutFenceRadius;
+}
 
+//プレイヤーの初期化
+void SceneMain::InitializePlayer()
+{
 	// --- プレイヤー ---
 	m_pNewPlayer = new NewPlayerClass();
 	m_pNewPlayer->SetModel(new vnCharacter(L"data/model/Brid/brid_animation_new/", L"brid.bone"));
 	m_pNewPlayer->SetMeteorModel(new vnModel(L"data/model/Brid/brid_animation_new/", L"KaraDown.vnm"));
 	m_pNewPlayer->SetUpKaraModel(new vnModel(L"data/model/Brid/", L"KaraUp.vnm"));
 
-	//	//プレイヤー
-	registerObject(m_pNewPlayer->GetModel());
-	for (int i = 0; i < m_pNewPlayer->GetModel()->getPartsNum(); i++) {
-		registerObject(m_pNewPlayer->GetModel()->getParts(i));
-	}
+	RegisterCharacter(m_pNewPlayer->GetModel());
+
 	m_pNewPlayer->GetModel()->setScale(playerModelScale, playerModelScale, playerModelScale);
+
 	registerObject(m_pNewPlayer->GetMeteorModel());
 	registerObject(m_pNewPlayer->GetUpKaraModel());
-	
+
+	// --- 弾 ---
 	m_pBullet = new Bullet();
 	m_pBullet->SetModel(new vnCharacter(L"data/model/Brid/KaraUp/", L"KaraUp.bone"));
 	m_pBullet->GetModel()->SetAllPartsDiffuse(V_GAME_COLOR_YELLOW, 1);
-	//m_pBullet->SetModel(new vnCharacter(L"data/model/Brid/brid_animation_new/", L"brid.bone"));
-	registerObject(m_pBullet->GetModel());
-	for (int i = 0; i < m_pBullet->GetModel()->getPartsNum(); i++) {
-		registerObject(m_pBullet->GetModel()->getParts(i));
-	}
-	//m_pBullet->GetModel()->setRenderEnable(false);
-	//for (int i = 0; i < m_pBullet->GetModel()->getPartsNum(); i++) {
-	//	m_pBullet->GetModel()->getParts(i)->setRenderEnable(false);
-	//}
+
+	RegisterCharacter(m_pBullet->GetModel());
 
 	m_pBullet->GetModel()->setPositionY(-10.0f);
 	m_pBullet->GetModel()->setScale(2, 2, 2);
 
 	m_pNewPlayer->SetBulletClass(m_pBullet);
 
-	//enemyPool = new EnemyPool();
+}
+
+//敵の初期化
+void SceneMain::InitializeEnemies()
+{
 	enemyPool = &EnemyPool::GetInstance();
 
-	//--1.敵の種類の数ループ
 	int totalEnemyCount = 0;
+
 	for (int i = 0; i < NewEnemyClass::MasterTableCount; i++)
 	{
-		//今の敵の種類のデータを取得（最大数とかファイルとか）
 		const auto& data = NewEnemyClass::MasterTable[i];
 
-		//--2.その種類の最大数（maxCount）だけループして生成
-		for (int j = 0; j < data.maxCount+1; j++)
+		for (int j = 0; j < data.maxCount + 1; j++)
 		{
-			//型に合わせたクラスをnew する
-			NewEnemyClass* enemy = NewEnemyClass::CreateEnemyByType(data.type);
+			NewEnemyClass* enemy =
+				NewEnemyClass::CreateEnemyByType(data.type);
 
-			if (enemy)
+			if (!enemy)
 			{
-				if (j < data.maxCount)
+				continue;
+			}
+
+			if (j < data.maxCount)
+			{
+				bool isLeader = (totalEnemyCount % leaderCount == 0);
+
+				if (isLeader)
 				{
-					//10体おきにリーダーにする
-					bool isLeader = (totalEnemyCount % leaderCount == 0);
-					if (isLeader)
-					{
-						m_leaderCount++;
-					}
-					//セットアップ関数を呼ぶ
-					SetupEnemy(enemy, data, isLeader,false);
-
-					//プールに追加
-					enemyPool->AddEnemy(enemy);
-
-					//生成した累計をインクリメント
-					totalEnemyCount++;
+					m_leaderCount++;
 				}
-				else
-				{
-					//ボスの設定
-					bool isLeader = true;
-					bool isBoss = true;
-					SetupEnemy(enemy, data, isLeader, isBoss);
-					//
-					enemyPool->AddEnemy(enemy);
 
-				}
+				SetupEnemy(enemy, data, isLeader, false);
+
+				enemyPool->AddEnemy(enemy);
+				totalEnemyCount++;
+			}
+			else
+			{
+				SetupEnemy(enemy, data, true, true);
+				enemyPool->AddEnemy(enemy);
 			}
 		}
 	}
 
-
 	enemyPool->UnlockEnemyType(NewEnemyClass::EnemyType::GHOST);
 	enemyPool->UnlockEnemyType(NewEnemyClass::EnemyType::MUSHROOM);
+}
 
-	// --- 地形 ---
-
+//地形の初期化
+void SceneMain::InitializeField()
+{
+	// --- スカイドーム ---
 	pSky = new vnModel(L"data/model/", L"skydome.vnm");
-
 	pSky->setLighting(false);
 	pSky->setScale(5.0f, 5.0f, 5.0f);
 	pSky->setZWrite(false);
+	registerObject(pSky);
 
-	//フェンスの配置
+	// --- フェンス ---
 	for (int i = 0; i < FENCE_NUM_MAIN; i++) {
 		pFence[i] = new vnModel(L"data/model/", L"fence.vnm");
 
-		//角度
-		float degree = 360.0f/ FENCE_NUM_MAIN * (float)i;
-		//Degree->Radian
+		float degree = 360.0f / FENCE_NUM_MAIN * (float)i;
 		float radian = degree * 3.141592f / 180.0f;
 
-		//極座標->直交座標
 		float x = sin(radian) * FenceRadius;
 		float z = cos(radian) * FenceRadius;
-		float angle = (2.0f * 3.14159f / FENCE_NUM_MAIN) * i;
 
-		float degrees = -angle +3.14159f;
 		pFence[i]->setPosition(x, 0.0, z);
-		//pFence[i]->setRotationY(degrees + 3.141592 / 2);
-
-
 		pFence[i]->setRotationY(radian);
 
 		registerObject(pFence[i]);
 	}
-	//木の生成（１で２０本手前奥で）（０で１０本手前のみ）
+
+	// --- 木の生成 ---
 #if ENABLE_TREE_DELETE
 	for (int line = 0; line < 2; line++)
 	{
 		for (int i = 0; i < TREE_NUM; i++)
 		{
 			int index = line * TREE_NUM + i;
-
-			// モデルの生成
 			pTree[index] = new vnModel(L"data/model/ST_Tree_01_LOD0/", L"ST_Tree_01_LOD0.vnm");
 
-			// 1. 正しい等間隔のラジアンを計算 (i番目の角度)
 			float radian = (2.0f * 3.14159f / (float)TREE_NUM) * (float)i;
-
-			// 2本目のライン（外側）は角度を半分ずらして互い違いにする
 			if (line == 1)
 			{
 				float halfGap = (2.0f * 3.14159f / (float)TREE_NUM / 2.0f);
 				radian += halfGap;
 			}
 
-			// 2. 半径の決定
-			float lineOffset = (line == 0) ? 0.0f : 7.0f; // 内側(0.0f)と外側(4.0f)で半径を変える
+			float lineOffset = (line == 0) ? 0.0f : 7.0f;
 			float totalRadius = FenceRadius + treeRadius + lineOffset;
 
-			// 3. 円周上の座標を計算
 			float x = sinf(radian) * totalRadius;
 			float z = cosf(radian) * totalRadius;
 
-			//  pTree[i] になっていた部分をすべて  pTree[index] に修正
 			pTree[index]->setPosition(x, 0.0f, z);
-
-			// 4. 木を円の中心（または外側）に向ける回転
 			pTree[index]->setRotationY(radian);
 
 			float treeSize = 3.5f;
 			pTree[index]->setScale(treeSize, treeSize, treeSize);
 
-			// オブジェクトの登録
 			registerObject(pTree[index]);
 		}
 	}
 #else
-	// 宣言の直後、または初期化関数の先頭で
 	for (int i = 0; i < TREE_NUM; i++)
 	{
-		pTree[i] = nullptr; // 一度すべて安全な「空っぽ」状態にする
+		pTree[i] = nullptr;
 	}
 	for (int i = 0; i < TREE_NUM; i++)
 	{
-		int index =  i;
-
-		// モデルの生成
+		int index = i;
 		pTree[index] = new vnModel(L"data/model/ST_Tree_01_LOD0/", L"ST_Tree_01_LOD0.vnm");
 
-		// 1. 正しい等間隔のラジアンを計算 (i番目の角度)
 		float radian = (2.0f * 3.14159f / (float)TREE_NUM) * (float)i;
-
-		// 2. 半径の決定
 		float totalRadius = FenceRadius + treeRadius;
 
-		// 3. 円周上の座標を計算
 		float x = sinf(radian) * totalRadius;
 		float z = cosf(radian) * totalRadius;
 
-		// ❌ pTree[i] になっていた部分をすべて ⭕ pTree[index] に修正
 		pTree[index]->setPosition(x, 0.0f, z);
-
-		// 4. 木を円の中心（または外側）に向ける回転
 		pTree[index]->setRotationY(radian);
 
 		float treeSize = 4.0f;
 		pTree[index]->setScale(treeSize, treeSize, treeSize);
 
-		// オブジェクトの登録
 		registerObject(pTree[index]);
 	}
 #endif
 
-    //半透明のオブジェクトは不透明オブジェクトの後に描画
+	// --- 地面 ---
 	pGround = new vnModel(L"data/model/Ground/", L"Ground.vnm");
-	//pGround = new vnModel(L"data/model/", L"ground.vnm");
 	pGround->setScale(30.0f, 0.5f, 30.0f);
-
-
 	registerObject(pGround);
 
-
+	// --- ブロックマネージャー ---
 	m_pBlockManager = new BlockManager();
 	for (int i = 0; i < BlockManager::GetMaxBlocksNum(); i++)
 	{
 		TerrainBlock* pBlock = new TerrainBlock();
-
 		pBlock->SetModel(new vnCharacter(L"data/model/Block/", L"Block.bone"));
 
 		registerObject(pBlock->GetModel());
-
 		for (int j = 0; j < pBlock->GetModel()->getPartsNum(); j++)
 		{
 			registerObject(pBlock->GetModel()->getParts(j));
 		}
 
 		pBlock->GetModel()->setRenderEnable(false);
-		for (int i = 0; i < pBlock->GetModel()->getPartsNum(); i++)
+		for (int j = 0; j < pBlock->GetModel()->getPartsNum(); j++)
 		{
-			pBlock->GetModel()->getParts(i)->setRenderEnable(false);
+			pBlock->GetModel()->getParts(j)->setRenderEnable(false);
 		}
 
-
 		m_pBlockManager->AddBlock(pBlock);
-
 	}
 
-
-	registerObject(pSky);
-
+	// --- ウェーブマネージャー ---
 	waveManager = new WaveManager();
 	waveManager->Init();
+}
 
- 
-	// --- エフェクト ---
-	//エミッターの作成
-    //設定構造体
+//エフェクトの初期化
+void SceneMain::InitializeEffects()
+{
 	vnEmitter::stEmitterDesc desc;
-	//swprintf_s(desc.Texture, L"%s", L"data/image/cfxr aura rays.png");
+
+	// 通常エミッター（星など）
 	swprintf_s(desc.Texture, L"%s", L"data/image/cfxr star_new.png");
-	//swprintf_s(desc.Texture, L"%s", L"data/image/cfxr magic star.png");
-	//desc.ColorMax = XMVectorSet(0.9f, 0.5f, 0.4f, 1.0f);
 	desc.ColorMax = V_GAME_COLOR_YELLOW;
-	desc.SizeMin = 1.0f;   // 最小サイズ
-	desc.SizeMax = 3.0f;  // 最大サイズ（差を大きくする）
-	desc.SpeedMin = 0.08f;  
-	desc.SpeedMax = 0.1f;  
+	desc.SizeMin = 1.0f;
+	desc.SizeMax = 3.0f;
+	desc.SpeedMin = 0.08f;
+	desc.SpeedMax = 0.1f;
 	pEmitter = new vnEmitter(&desc);
-	pEmitter->setEmit(false,0);
+	pEmitter->setEmit(false, 0);
 	registerObject(pEmitter);
 	pEmitter->setZWrite(false);
 
-	//pEmitter->setParent(pPlayerTest->GetModel());
-
-	// --- 土埃 ---
+	// 土埃エミッター
 	swprintf_s(desc.Texture, L"data/image/cfxr cloud blur.png");
 	desc.ColorMax = V_GAME_COLOR_DARK_GRAY;
-	desc.SizeMin = 0.3f;   // 最小サイズ
-	desc.SizeMax = 0.5f;  // 最大サイズ（差を大きくする）
+	desc.SizeMin = 0.3f;
+	desc.SizeMax = 0.5f;
 	desc.SpeedMin = 0.08f;
 	desc.SpeedMax = 0.1f;
 	pDustEmitter = new vnEmitter(&desc);
@@ -640,21 +591,20 @@ bool SceneMain::initialize()
 	registerObject(pDustEmitter);
 	pDustEmitter->setZWrite(false);
 	pDustEmitter->setParent(m_pNewPlayer->GetModel());
+}
 
-
+//UIの初期化
+void SceneMain::InitializeUI()
+{
 	// --- HPバー ---
-	// 背景バー	Hpバー　Exp
-	// 背景（黒）: 高さ22
 	pHpBarBackBlack = new vnSprite(newBarPosXHp, heigtYHp, 458.0f, 22.0f, NULL);
 	pHpBarBackBlack->setColor(V_GAME_COLOR_BLACK);
 	pHpBarBackBlack->setSkewX(12.0f);
 	registerObject(pHpBarBackBlack);
 
-	// 背景（赤・緑）: 高さ18
-	// Y座標は同じ 30.0f にしておけば、高さの差で上下に 2px ずつ黒縁が出ます
 	pHpBarBack = new vnSprite(newBarPosXHp, heigtYHp, 450.0f, 18.0f, NULL);
 	pHpBarBack->setColor(V_GAME_COLOR_RED);
-	pHpBarBack->setSkewX(9.8f);
+	pHpBarBack->setSkewX(9.8f); 
 	registerObject(pHpBarBack);
 
 	pHpBarFront = new vnSprite(newBarPosXHp, heigtYHp, 450.0f, 18.0f, NULL);
@@ -662,42 +612,25 @@ bool SceneMain::initialize()
 	pHpBarFront->setSkewX(9.8f);
 	registerObject(pHpBarFront);
 
-
-
-	// --- Expバーの設計図 ---
-	// 背景（黒枠）: 少しだけ大きく
+	// --- Expバー ---
 	pExpBarBackBlack = new vnSprite(barLeftEdgeExp + (maxWExp * 0.5f), heightYExp, maxWExp + 10.0f, barThick + 4.0f, NULL);
 	pExpBarBackBlack->setColor(V_GAME_COLOR_BLACK);
-	pExpBarBackBlack->setSkewX(8.0f); // 斜め度合いも少し控えめにすると綺麗
+	pExpBarBackBlack->setSkewX(8.0f);
 	registerObject(pExpBarBackBlack);
 
-	// 背景（白/グレー）
 	pExpBarBack = new vnSprite(barLeftEdgeExp + (maxWExp * 0.5f), heightYExp, maxWExp, barThick, NULL);
 	pExpBarBack->setColor(V_GAME_COLOR_WHITE);
 	pExpBarBack->setSkewX(8.0f);
 	registerObject(pExpBarBack);
 
-	// 前景（シアン）: 最初は幅0でOK
 	pExpBarFront = new vnSprite(barLeftEdgeExp, heightYExp, maxWExp, barThick, NULL);
 	pExpBarFront->setColor(V_GAME_COLOR_CYAN);
 	pExpBarFront->setSkewX(8.0f);
 	registerObject(pExpBarFront);
 
-
-
-
-
-
-	//-------------------------------------------------------------------------------
-	//
-	//	UI関連
-	//
-	//-------------------------------------------------------------------------------
-	
-	// --- アイコン ---
+	// --- プレイヤーアイコン ---
 	pIconPlayer = new vnSprite(40, 40, 70, 70, L"data/image/Icon.png");
 	registerObject(pIconPlayer);
-
 
 	setHPbarRender(false);
 	SetExpbarRender(false);
@@ -710,7 +643,7 @@ bool SceneMain::initialize()
 
 			pComboSprites[i][j] = new vnSprite(-1000, -1000, 96, 96, path);
 			registerObject(pComboSprites[i][j]);
-			pComboSprites[i][j]->setColor(V_GAME_COLOR_GOLD); // RGBで指定
+			pComboSprites[i][j]->setColor(V_GAME_COLOR_GOLD);
 		}
 	}
 
@@ -718,7 +651,7 @@ bool SceneMain::initialize()
 	pComboWord->setColor(V_GAME_COLOR_RED);
 	registerObject(pComboWord);
 
-	// --- 文字を見やすくするための背景 ---
+	// --- 文字用背景 ---
 	m_pUIBackGroundBlack[0] = new vnSprite(1280 - 1120, 720.0f - 450.0f, 256 * 1.2f, 512 * 0.7, L"BackGroundBlack.png");
 	m_pUIBackGroundBlack[0]->setColor(V_GAME_COLOR_BLACK);
 	m_pUIBackGroundBlack[0]->setAlpha(0.6f);
@@ -731,103 +664,54 @@ bool SceneMain::initialize()
 	registerObject(m_pUIBackGroundBlack[1]);
 	m_pUIBackGroundBlack[1]->setRenderEnable(true);
 
+	// --- キーボード画像 ---
+	pImageW = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_w_outline.png"); registerObject(pImageW);
+	pImageA = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_a_outline.png"); registerObject(pImageA);
+	pImageS = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_s_outline.png"); registerObject(pImageS);
+	pImageD = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_d_outline.png"); registerObject(pImageD);
+	pImageE = new vnSprite(-100, 200, 64 * 0.7f, 64 * 0.7f, L"data/image/keyboard_e_outline.png"); registerObject(pImageE);
+	pImageQ = new vnSprite(-100, 200, 64 * 0.7f, 64 * 0.7f, L"data/image/keyboard_q_outline.png"); registerObject(pImageQ);
 
-	//--ポーズ中に出る背景
-	m_pUIBackGroundBlackPause = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"BackGroundBlack.png");
-	m_pUIBackGroundBlackPause->setColor(V_GAME_COLOR_BLACK);
-	m_pUIBackGroundBlackPause->setAlpha(0.6f);
-	registerObject(m_pUIBackGroundBlackPause);
-	m_pUIBackGroundBlackPause->setRenderEnable(false);
-
-	//フレーム
-	m_pPauseFrame = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"data/image/Pauseframe.png");
-	registerObject(m_pPauseFrame);
-	//m_pPauseFrame->setColor(V_GAME_COLOR_CYAN);
-	m_pPauseFrame->setRenderEnable(false);
-
-	//フレーム
-	m_pPauseFrame2 = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"data/image/Pauseframe2.png");
-	registerObject(m_pPauseFrame2);
-	//m_pPauseFrame->setColor(V_GAME_COLOR_CYAN);
-	m_pPauseFrame2->setRenderEnable(false);
-
-
-	// --- WASDのキーボードの画像 ---
-	pImageW = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_w_outline.png");
-	registerObject(pImageW);
-	pImageA = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_a_outline.png");
-	registerObject(pImageA);
-	pImageS = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_s_outline.png");
-	registerObject(pImageS);
-	pImageD = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_d_outline.png");
-	registerObject(pImageD);
-
-	pImageE = new vnSprite(-100, 200, 64 * 0.7f, 64 * 0.7f, L"data/image/keyboard_e_outline.png");
-	registerObject(pImageE);
-	pImageQ = new vnSprite(-100, 200, 64 * 0.7f, 64 * 0.7f, L"data/image/keyboard_q_outline.png");
-	registerObject(pImageQ);
-
-
-
-	// --- スキルのボタン設定 ---
-	// 範囲攻撃
-	// --- 1. 背景黒枠（少し大きく：幅+10, 縦+6） ---
-	// 中心座標を正しく計算 (90 + 100 = 190)
+	// --- スキルUI設定 ---
 	float centerX = barLeftEdgeAreaSkill + (maxWAreaSkill * 0.5f);
 
+	// 範囲攻撃
 	pAreaAtkBtnBackBlack = new vnSprite(centerX, heightYAreaSkill, maxWAreaSkill + 10.0f, skillBarThick + 6.0f, NULL);
 	pAreaAtkBtnBackBlack->setColor(V_GAME_COLOR_BLACK);
 	registerObject(pAreaAtkBtnBackBlack);
 
-
-	// --- 2. バーの背景（中身の土台：グレーなど暗い色にするのがおすすめ） ---
 	pAreaAtkBtnBack = new vnSprite(centerX, heightYAreaSkill, maxWAreaSkill, skillBarThick, NULL);
-	// クールダウン中（スキルが溜まっていない状態）の土台なので、暗いグレーなどにすると見やすいです
 	pAreaAtkBtnBack->setColor(V_GAME_COLOR_BLUEBLACK);
 	registerObject(pAreaAtkBtnBack);
 
-
-	// --- 3. 前景（実際に伸縮するシアンのバー） ---
-	// ★ここも最初は「背景と全く同じ中心座標とサイズ」で生成します！
 	pAreaAtkBtnFront = new vnSprite(centerX, heightYAreaSkill, maxWAreaSkill, skillBarThick, NULL);
 	pAreaAtkBtnFront->setColor(V_GAME_COLOR_CYAN);
 	registerObject(pAreaAtkBtnFront);
 
-	// --- 4.アイコン --- 
-	pAreaSkillIcon = new vnSprite(centerX - 130, heightYAreaSkill - 15, 64*1.2f, 64*1.2f, L"data/image/areaAttackIconImg2.png");
+	pAreaSkillIcon = new vnSprite(centerX - 130, heightYAreaSkill - 15, 64 * 1.2f, 64 * 1.2f, L"data/image/areaAttackIconImg2.png");
 	pAreaSkillIcon->setColor(V_GAME_COLOR_WHITE);
 	pAreaSkillIcon->setAlpha(1.0f);
 	registerObject(pAreaSkillIcon);
 
 	m_areaAtkUIColor.colorBackBlack = V_GAME_COLOR_BLACK;
-	m_areaAtkUIColor.colorBack		= V_GAME_COLOR_BLUEBLACK;
-	m_areaAtkUIColor.colorFront		= V_GAME_COLOR_CYAN;
-	m_areaAtkUIColor.colorIcon		= V_GAME_COLOR_WHITE;
-
-
-	
+	m_areaAtkUIColor.colorBack = V_GAME_COLOR_BLUEBLACK;
+	m_areaAtkUIColor.colorFront = V_GAME_COLOR_CYAN;
+	m_areaAtkUIColor.colorIcon = V_GAME_COLOR_WHITE;
 
 	// 引き寄せ攻撃
 	pPullBtnBackBlack = new vnSprite(centerX, heightYPullSkill, maxWAreaSkill + 10.0f, skillBarThick + 6.0f, NULL);
 	pPullBtnBackBlack->setColor(V_GAME_COLOR_BLACK);
 	registerObject(pPullBtnBackBlack);
 
-
-	// --- 2. バーの背景（中身の土台：グレーなど暗い色にするのがおすすめ） ---
 	pPullBtnBack = new vnSprite(centerX, heightYPullSkill, maxWAreaSkill, skillBarThick, NULL);
-	// クールダウン中（スキルが溜まっていない状態）の土台なので、暗いグレーなどにすると見やすいです
 	pPullBtnBack->setColor(V_GAME_COLOR_BLUEBLACK);
 	registerObject(pPullBtnBack);
 
-
-	// --- 3. 前景（実際に伸縮するシアンのバー） ---
-	// ★ここも最初は「背景と全く同じ中心座標とサイズ」で生成します！
 	pPullBtnFront = new vnSprite(centerX, heightYPullSkill, maxWAreaSkill, skillBarThick, NULL);
 	pPullBtnFront->setColor(V_GAME_COLOR_CYAN);
 	registerObject(pPullBtnFront);
 
-	// --- 4.アイコン --- 
-	pPullSkillIcon = new vnSprite(centerX - 130, heightYPullSkill-15, 64 * 1.2f, 64 * 1.2f, L"data/image/pullAttackIconImg2.png");
+	pPullSkillIcon = new vnSprite(centerX - 130, heightYPullSkill - 15, 64 * 1.2f, 64 * 1.2f, L"data/image/pullAttackIconImg2.png");
 	pPullSkillIcon->setColor(V_GAME_COLOR_WHITE);
 	pPullSkillIcon->setAlpha(1.0f);
 	registerObject(pPullSkillIcon);
@@ -837,139 +721,117 @@ bool SceneMain::initialize()
 	m_pullUIColor.colorFront = V_GAME_COLOR_CYAN;
 	m_pullUIColor.colorIcon = V_GAME_COLOR_WHITE;
 
-
 	SetSkillUIRender(false);
+}
 
-	//=====================================
-	// ポーズ画面の群情報の画面の棒グラフ
-	// ポーズ中の画像の設定
-	//=====================================
+void SceneMain::InitializePauseUI()
+{
+	float centerX = barLeftEdgeAreaSkill + (maxWAreaSkill * 0.5f);
+
+	// ポーズ背景幕
+	m_pUIBackGroundBlackPause = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"BackGroundBlack.png");
+	m_pUIBackGroundBlackPause->setColor(V_GAME_COLOR_BLACK);
+	m_pUIBackGroundBlackPause->setAlpha(0.6f);
+	registerObject(m_pUIBackGroundBlackPause);
+	m_pUIBackGroundBlackPause->setRenderEnable(false);
+
+	// ポーズフレーム
+	m_pPauseFrame = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"data/image/Pauseframe.png");
+	registerObject(m_pPauseFrame);
+	m_pPauseFrame->setRenderEnable(false);
+
+	m_pPauseFrame2 = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"data/image/Pauseframe2.png");
+	registerObject(m_pPauseFrame2);
+	m_pPauseFrame2->setRenderEnable(false);
+
+	// グラフバー設定
 	EnemyPool::UIBar meleeUIbar;
 	EnemyPool::UIBar rangeUIbar;
 	EnemyPool::UIBar pullUIbar;
 
-	CreateUIBar(meleeUIbar, centerX+450, 380, baseBarWidth, baseBarHeight+2);
-	CreateUIBar(rangeUIbar, centerX+450, 415, baseBarWidth, baseBarHeight+2);
-	CreateUIBar(pullUIbar, centerX+450,	 450, baseBarWidth, baseBarHeight+2);
+	CreateUIBar(meleeUIbar, centerX + 450, 380, baseBarWidth, baseBarHeight + 2);
+	CreateUIBar(rangeUIbar, centerX + 450, 415, baseBarWidth, baseBarHeight + 2);
+	CreateUIBar(pullUIbar, centerX + 450, 450, baseBarWidth, baseBarHeight + 2);
 
 	enemyPool->SetMeleeBar(meleeUIbar);
 	enemyPool->SetRangeBar(rangeUIbar);
 	enemyPool->SetPullBar(pullUIbar);
 
+	// 各種アイコン
 	float offsetSize = 0.8f;
 	float offsetSizeGhost = 1.5f;
-	enemyPool->SetImageTab(new vnSprite(-100, 200, 64*1.5f, 64*1.5f, L"data/image/keyboard_tab.png"));
-	enemyPool->SetImageA(new vnSprite(- 100, 200, 64* offsetSize, 64* offsetSize, L"data/image/keyboard_a.png"));
-	enemyPool->SetImageD(new vnSprite(-100, 200, 64* offsetSize, 64* offsetSize, L"data/image/keyboard_d.png"));
-	enemyPool->SetImageSlash(new vnSprite(-100, 200, 64* offsetSize, 64* offsetSize, L"data/image/flair_disabled_line_outline.png"));
+	enemyPool->SetImageTab(new vnSprite(-100, 200, 64 * 1.5f, 64 * 1.5f, L"data/image/keyboard_tab.png"));
+	enemyPool->SetImageA(new vnSprite(-100, 200, 64 * offsetSize, 64 * offsetSize, L"data/image/keyboard_a.png"));
+	enemyPool->SetImageD(new vnSprite(-100, 200, 64 * offsetSize, 64 * offsetSize, L"data/image/keyboard_d.png"));
+	enemyPool->SetImageSlash(new vnSprite(-100, 200, 64 * offsetSize, 64 * offsetSize, L"data/image/flair_disabled_line_outline.png"));
 	enemyPool->SetImageGhost(new vnSprite(-100, 200, 64 * offsetSizeGhost, 64 * offsetSizeGhost, L"data/image/ghostImage.png"));
+
 	registerObject(enemyPool->GetImageTab());
 	registerObject(enemyPool->GetImageA());
 	registerObject(enemyPool->GetImageD());
 	registerObject(enemyPool->GetImageSlash());
 	registerObject(enemyPool->GetImageGhost());
 
-	//？マークと吹き出し
+	// 吹き出し
 	enemyPool->SetMeleeQus(CreateQuestionUI(L"：特攻確率に加算", GAME_COLOR_AMBER, 0.6f));
 	enemyPool->SetRangeQus(CreateQuestionUI(L"：基本速度に加算", GAME_COLOR_NEON_MAGENTA, 0.6f));
 	enemyPool->SetPullQus(CreateQuestionUI(L"：無効確率に加算", GAME_COLOR_SKY_NEON, 0.6f));
+}
 
-	//-------------------------------------------------------------------------------
-	//-------------------------------------------------------------------------------
-
-
-
-
-
-
-
-	// --- 黒い幕 ---
-	pBackGroundBlack = new vnSprite(1280/2, 720/2, 1280, 720, L"BackGroundBlack.png");
+void SceneMain::InitializeUpgradeUI()
+{
+	// 黒い幕
+	pBackGroundBlack = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"BackGroundBlack.png");
 	pBackGroundBlack->setColor(V_GAME_COLOR_BLACK);
 	registerObject(pBackGroundBlack);
 	pBackGroundBlack->setRenderEnable(false);
 	pBackGroundBlack->setScale(0);
 
-	// --- レベルアップシステム ---
+	// 経験値マネージャー
 	m_pExpManager = new ExperienceManager;
 	m_pExpManager->SetPlayer(m_pNewPlayer);
 
-
-
+	// アップグレードUI
 	m_pUpgradeUI = new UpgradeSelectionUI;
 	for (int i = 0; i < 3; i++)
 	{
 		const auto& resource = upgradeUIResources[i];
 
-		m_pUpgradeUI->SetFreamImg(i,
-			new vnSprite(
-				uiHidePosX,
-				uiHidePosY,
-				freamImgX,
-				freamImgY,
-				resource.framePath));
-
-		m_pUpgradeUI->SetBackGroundImg(i,
-			new vnSprite(
-				uiHidePosX,
-				uiHidePosY,
-				backGroundImgX,
-				backGroundImgY,
-				resource.backGroundPath));
-
-		m_pUpgradeUI->SetMainImg(i,
-			new vnSprite(
-				uiHidePosX,
-				uiHidePosY,
-				mainImgX,
-				mainImgY,
-				resource.mainPath));
+		m_pUpgradeUI->SetFreamImg(i, new vnSprite(uiHidePosX, uiHidePosY, freamImgX, freamImgY, resource.framePath));
+		m_pUpgradeUI->SetBackGroundImg(i, new vnSprite(uiHidePosX, uiHidePosY, backGroundImgX, backGroundImgY, resource.backGroundPath));
+		m_pUpgradeUI->SetMainImg(i, new vnSprite(uiHidePosX, uiHidePosY, mainImgX, mainImgY, resource.mainPath));
 
 		registerObject(m_pUpgradeUI->GetFreamImg(i));
 		registerObject(m_pUpgradeUI->GetBackGroundImg(i));
 		registerObject(m_pUpgradeUI->GetMainImg(i));
 	}
+}
 
-	//---フォント--------
-	// 
-	//使用できるフォントの数を取得
-
+//フォントの初期化
+void SceneMain::InitializeFont()
+{
 	FontNum = vnFont::getFontNum();
-
-	//作成したフォント用の情報を確保しておく変数を必要な数作成
-	textFormat= new IDWriteTextFormat * [FontNum];
+	textFormat = new IDWriteTextFormat * [FontNum];
 
 	for (int i = 0; i < FontNum; i++)
 	{
-		//フォント名とサイズを指定してフォントを作成(フォント名は直接指定することも可能)
 		textFormat[i] = vnFont::create(vnFont::getFontName(i), 50);
 	}
+}
 
-	// --- BGM ---
-	//fileNum = sizeof(seFile_Main) / (sizeof(WCHAR) * FILE_PATH_MAX);
-
-	//pSound = new vnSound * [fileNum];
-	//for (int i = 0; i < fileNum; i++)
-	//{
-	//	pSound[i] = new vnSound(seFile_Main[i]);
-	//}
-	//// --- はじめからBGMを鳴らす ---
-	//pSound[0]->play(true);
-	//pSound[0]->setVolume(1.0f);
-
+//音の初期化
+void SceneMain::InitializeSound()
+{
 	soundManager = std::make_unique<SoundManager>();
-	//================================================
-	//サウンドが必要な奴にセットする
-	//================================================
 	enemyPool->SetSoundManager(soundManager.get());
 	m_pNewPlayer->SetSoundManager(soundManager.get());
-
-
-
-
-
-	return true;
 }
+
+
+//==============================================================================
+
+
+
 //終了関数
 void SceneMain::terminate()
 {
@@ -1519,23 +1381,16 @@ void SceneMain::render()
 		// --- 待機中のテキスト ---
 		if (waveManager->IsWaitingForNext() && (waveManager->GetCurrentWave() < waveManager->GetMaxWave()))
 		{
-			//vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 80));
 			vnFont::setFontSize(38, 80);
-
 			// メインのクリア表示 (影あり)
 			vnFont::print(320.0f + off, 200.0f + off, shadowCol, L"WAVE %d CLEAR!!", waveManager->GetCurrentWave());
 			vnFont::print(320.0f, 200.0f, GAME_COLOR_WHITE, L"WAVE %d CLEAR!!", waveManager->GetCurrentWave());
 
-			//vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 40));
 			vnFont::setFontSize(38, 40);
 
 			// NEXT表示 (影あり)
-			vnFont::print(300.0f + off, 320.0f + off, shadowCol, L"NEXT : フィールド拡大 ＆ 速度上昇！");
-			vnFont::print(300.0f, 320.0f, GAME_COLOR_LIME, L"NEXT : フィールド拡大 ＆ 速度上昇！");
-
-			//// ノルマ表示 (影あり)
-			//vnFont::print(295.0f + off, 370.0f + off, shadowCol, L"ノルマ: %d 体 撃破", waveManager->GetNextKillTargetCount());
-			//vnFont::print(295.0f, 370.0f, GAME_COLOR_YELLOW, L"ノルマ: %d 体 撃破", waveManager->GetNextKillTargetCount());
+			vnFont::print(300.0f + off, 320.0f + off, shadowCol, L"NEXT : フィールド拡大");
+			vnFont::print(300.0f, 320.0f, GAME_COLOR_LIME, L"NEXT : フィールド拡大");
 
 			// --- 点滅処理 ---
 			blinkCounter++;
@@ -1562,24 +1417,10 @@ void SceneMain::render()
 
 
 			// 5. フォント設定
-			//vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 25));
 			vnFont::setFontSize(38, 25);
-
 
 			// 「移動：」は常に白
 			vnFont::print(baseX, baseY - 20, GAME_COLOR_YELLOW, L"移動：");
-			//// 「W」は押していたら黄色
-			//vnFont::print(baseX + 35, baseY - 10, wPressed ? GAME_COLOR_GOLD : GAME_COLOR_WHITE, L"\nW");
-
-			//// 「A」は押していたら黄色
-			//vnFont::print(baseX + 15, baseY + 20, aPressed ? GAME_COLOR_GOLD : GAME_COLOR_WHITE, L"\nA");
-
-			//// 「S」は押していたら黄色
-			//vnFont::print(baseX + 35, baseY + 20, sPressed ? GAME_COLOR_GOLD : GAME_COLOR_WHITE, L"\nS");
-
-			//// 「D」は押していたら黄色
-			//vnFont::print(baseX + 55, baseY + 20, dPressed ? GAME_COLOR_GOLD : GAME_COLOR_WHITE, L"\nD");
-
 			pImageW->setPos(baseX + 75, baseY + 35);
 			pImageW->setColor(wPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
@@ -1603,17 +1444,11 @@ void SceneMain::render()
 		{
 			// --- HPバーの表示 ---
 			setHPbarRender(true);
-			//float hpRatio = (float)pPlayerTest->getCurrentHp() / pPlayerTest->getMaxHp();
 			float hpRatio = (float)m_pNewPlayer->GetCurrentHp() / m_pNewPlayer->GetMaxHp();
-			//float maxW = 450.0f;
-			//float barLeftEdge = 90.0f; // 初期化で決めた左端の位置
-
 			// スケール適用
 			pHpBarFront->setScaleX(hpRatio);
-
 			// 座標補正：左端(barLeftEdge)に固定しつつ、今の幅の半分だけ右にずらした位置を中心にする
 			float currentPosX = barLeftEdgeHp + (barWidthHp * hpRatio * 0.5f);
-
 			pHpBarFront->setPos(currentPosX, heigtYHp); // Y座標もアイコンに合わせて40に調整
 		}
 
@@ -1635,163 +1470,102 @@ void SceneMain::render()
 
 		}
 
+		// --- スキルバーの表示更新 ---
 		{
-			// --- スキルバーの表示更新 ---
-			SetSkillUIRender(true);
-			float currentCoolTime = (float)m_pNewPlayer->GetAreaAttackCoolTime();
-			float maxCoolTime = (float)m_pNewPlayer->GetAreaAttackMaxCoolTime();
-
-			// 安全に割り算を行うためのチェック
-			float areaRatio = 0.0f;
-			if (maxCoolTime > 0.0f)
-			{
-				// 例：残り10秒/最大10秒 = 1.0  → 1.0 - 1.0 = 0.0 (空っぽ)
-				// 例：残り 3秒/最大10秒 = 0.3  → 1.0 - 0.3 = 0.7 (7割溜まった)
-				// 例：残り 0秒/最大10秒 = 0.0  → 1.0 - 0.0 = 1.0 (満タン！)
-				areaRatio = 1.0f - (currentCoolTime / maxCoolTime);
-			}
-			if (areaRatio > 1.0f)
-			{
-				areaRatio = 1.0f;
-			}
-			if (areaRatio >= 1.0f)
-			{
-				pAreaSkillIcon->setAlpha(1.0f);
-				if (!m_bIsAreaSkillMaxPrev)
-				{
-					m_bIsAreaSkillMaxPrev = true;
-
-					//アイコンを拡大する
-					m_areaSkillIconScale = 1.5f;
-					m_areaSkillIargetScale = 1.0f;
-				}
-				m_areaSkillIconScale += (m_areaSkillIargetScale - m_areaSkillIconScale) * 0.05f;
-			}
-			else
-			{
-				pAreaSkillIcon->setAlpha(0.7f);
-				m_bIsAreaSkillMaxPrev = false;
-				m_areaSkillIconScale = 1.0f;
-				m_areaSkillIargetScale = 1.0f;
-			}
-			pAreaSkillIcon->setScale(m_areaSkillIconScale);
-			pAreaAtkBtnFront->setScaleX(areaRatio);
-			float currentPosX = barLeftEdgeAreaSkill + (maxWAreaSkill * areaRatio * 0.5f);
-			pAreaAtkBtnFront->setPos(currentPosX, heightYAreaSkill);
-
-
+			//範囲攻撃スキルバー、アイコン
+			UpdateSkillBar(
+				m_pNewPlayer->GetAreaAttackCoolTime(),
+				m_pNewPlayer->GetAreaAttackMaxCoolTime(),
+				pAreaSkillIcon,
+				pAreaAtkBtnFront,
+				m_bIsAreaSkillMaxPrev,
+				m_areaSkillIconScale,
+				m_areaSkillTargetScale,
+				barLeftEdgeAreaSkill,
+				maxWAreaSkill,
+				heightYAreaSkill
+			);
+			//引き寄せスキルバー、アイコン
+			UpdateSkillBar(
+				m_pNewPlayer->GetPullAttackCoolTime(),
+				m_pNewPlayer->GetPullAttackMaxCoolTime(),
+				pPullSkillIcon,
+				pPullBtnFront,
+				m_bIsPullSkillMaxPrev,
+				m_pullSkillIconScale,
+				m_pullSkillTargetScale,
+				barLeftEdgeAreaSkill,
+				maxWAreaSkill,
+				heightYPullSkill
+			);
 		}
+
+		//=============================
+		// ボス出現演出
+		//=============================
+
+		// FinalWaveになった最初の1回だけ表示開始
+		if (waveManager->GetFinalWave() && !m_isBossAppearanceTriggered)
 		{
-			// --- スキルバーの表示更新 ---
-			SetSkillUIRender(true);
-			float currentCoolTime = (float)m_pNewPlayer->GetPullAttackCoolTime();
-			float maxCoolTime = (float)m_pNewPlayer->GetPullAttackMaxCoolTime();
-
-			// 安全に割り算を行うためのチェック
-			float pullRatio = 0.0f;
-			if (maxCoolTime > 0.0f)
-			{
-				// 例：残り10秒/最大10秒 = 1.0  → 1.0 - 1.0 = 0.0 (空っぽ)
-				// 例：残り 3秒/最大10秒 = 0.3  → 1.0 - 0.3 = 0.7 (7割溜まった)
-				// 例：残り 0秒/最大10秒 = 0.0  → 1.0 - 0.0 = 1.0 (満タン！)
-				pullRatio = 1.0f - (currentCoolTime / maxCoolTime);
-			}
-			if (pullRatio > 1.0f)
-			{
-				pullRatio = 1.0f;
-			}
-			if (pullRatio >= 1.0f)
-			{
-				pPullSkillIcon->setAlpha(1.0f);
-				if (!m_bIsPullSkillMaxPrev)
-				{
-					m_bIsPullSkillMaxPrev = true;
-
-					//アイコンを拡大する
-					m_pullSkillIconScale = 1.5f;
-					m_pullSkillIargetScale = 1.0f;
-				}
-				m_pullSkillIconScale += (m_pullSkillIargetScale - m_pullSkillIconScale) * 0.05f;
-			}
-			else
-			{
-				pPullSkillIcon->setAlpha(0.7f);
-				m_bIsPullSkillMaxPrev = false;
-				m_pullSkillIconScale = 1.0f;
-				m_pullSkillIconScale = 1.0f;
-			}
-			pPullSkillIcon->setScale(m_pullSkillIconScale);
-			pPullBtnFront->setScaleX(pullRatio);
-			float currentPosX = barLeftEdgeAreaSkill + (maxWAreaSkill * pullRatio * 0.5f);
-			pPullBtnFront->setPos(currentPosX, heightYPullSkill);
-
-
+			m_isBossAppearanceTriggered = true;
+			m_showBossText = true;
+			m_bossTextTimer = 2.0f;
 		}
-		// ボス登場の文字表示
+
+		// 表示中のみ更新・描画
+		if (m_showBossText)
 		{
-			// 1. FinalWave になった「最初の1回」だけトリガーを引く
-			if (waveManager->GetFinalWave() && !m_isBossAppearanceTriggered)
+			float dt = vnScene::getDeltaTime();
+			m_bossTextTimer -= dt;
+
+			// 表示時間終了
+			if (m_bossTextTimer <= 0.0f)
 			{
-				m_isBossAppearanceTriggered = true; // 二度とこのif文に入らないようにする
-				m_showBossText = true;              // 表示フラグをON
-				m_bossTextTimer = 2.0f;             // 表示したい時間（秒）
+				m_showBossText = false;
 			}
 
-			// 2. 表示フラグがONの間だけ、更新と描画を行う
-			if (m_showBossText)
+			//=============================
+			// 拡大アニメーション
+			//=============================
+
+			float bossButtonScale = 1.5f; // 最終倍率
+
+			if (m_bossTextTimer > 1.5f)
 			{
-				float dt = vnScene::getDeltaTime(); // 60FPS固定の場合の例（実際のデルタタイムがあればそれに差し替えてください）
-				m_bossTextTimer -= dt;
+				// 表示開始から0.5秒間だけ拡大する
+				float progressTime = 2.0f - m_bossTextTimer;
+				float rate = progressTime / 0.5f;
 
-				if (m_bossTextTimer <= 0.0f)
-				{
-					m_showBossText = false; // 時間切れで非表示
-				}
-
-				// --- 【ここから追加・変更】スケール（大きさ）の動的計算 ---
-				// 最初（残り3.0秒）から、2.5秒になるまでの「0.5秒間」で拡大させる例
-				float bossButtonScale = 1.5f; // 最終的な大きさの目標値
-
-				// 演出開始直後の0.5秒間だけ処理する
-				if (m_bossTextTimer > 1.5f)
-				{
-					// 経過時間を 0.0 ～ 0.5 の範囲で計算
-					float progressTime = 2.0f - m_bossTextTimer;
-
-					// 0.0 ～ 1.0 の割合（線形補間用）に変換
-					float rate = progressTime / 0.5f;
-
-					// 小さい状態(0.2倍) から 目標の大きさ(1.5倍) までスムーズに大きくする
-					bossButtonScale = 0.2f + (1.5f - 0.2f) * rate;
-				}
-				// --------------------------------------------------------
-
-				// 現在のフォントサイズを計算（ここからは共通）
-				float currentFontSize = 50.0f * bossButtonScale;
-				vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), (int)currentFontSize));
-
-				// 「～ボス出現～」の文字数（6文字）に合わせて位置調整の係数を変更
-				// (6文字 * 0.5) / 2 = 1.5f
-				float textWidth = currentFontSize * 1.5f;
-				float textHeight = currentFontSize * 0.5f;
-
-				// 画面中央（650, 350）に配置
-				//float tx = (vnMainFrame::screenWidth/2)-100 - textWidth;
-				//float ty = (vnMainFrame::screenHeight/2)-50 - textHeight;
-				float actualTextWidth = currentFontSize * 3.1f; // 6文字分全体の横幅の目安
-				float actualTextHeight = currentFontSize * 0.5f; // 文字の高さの目安（上下中央用）
-
-				// 2. 画面の完全な中心から、文字の「半分のサイズ」を引くことで、文字の中心を画面中心に一致させる
-				float tx = (vnMainFrame::screenWidth / 2.0f) - (actualTextWidth );
-				float ty = (vnMainFrame::screenHeight / 2.0f)-50 - (actualTextHeight);
-				// 影のずらし量
-				float off = 4.0f;
-
-				// 影と本体を描画
-				vnFont::print(tx + off, ty + off, shadowCol, L"～ボス出現～");
-				vnFont::print(tx, ty, GAME_COLOR_RED, L"～ボス出現～");
+				// 0.2倍 → 1.5倍
+				bossButtonScale = 0.2f + (1.5f - 0.2f) * rate;
 			}
 
+			//=============================
+			// フォント設定
+			//=============================
+
+			float currentFontSize = 50.0f * bossButtonScale;
+			vnFont::setTextFormat(
+				vnFont::create(vnFont::getFontName(38), (int)currentFontSize));
+
+			// 文字サイズから描画位置を計算
+			float textWidth = currentFontSize * 1.5f;
+			float textHeight = currentFontSize * 0.5f;
+
+			float actualTextWidth = currentFontSize * 3.1f;
+			float actualTextHeight = currentFontSize * 0.5f;
+
+			float tx = (vnMainFrame::screenWidth / 2.0f) - actualTextWidth;
+			float ty = (vnMainFrame::screenHeight / 2.0f) - 50 - actualTextHeight;
+
+			//=============================
+			// 描画
+			//=============================
+
+			float off = 4.0f; // 影のずらし量
+
+			vnFont::print(tx + off, ty + off, shadowCol, L"～ボス出現～");
+			vnFont::print(tx, ty, GAME_COLOR_RED, L"～ボス出現～");
 		}
 
 	}
@@ -1900,6 +1674,66 @@ void SceneMain::render()
 	vnScene::render();
 }
 
+//=====================================================================
+// スキルなどのバー関数（Update）
+//=====================================================================
+void SceneMain::UpdateSkillBar(
+	float currentCoolTime,
+	float maxCoolTime,
+	vnSprite* pSkillIcon,
+	vnSprite* pSkillBar,
+	bool& isSkillMaxPrev,
+	float& skillIconScale,
+	float& skillTargetScale,
+	float barLeftEdge,
+	float maxWidth,
+	float heightY
+)
+{
+	SetSkillUIRender(true);
+
+	// 安全に割り算を行うためのチェック
+	float skillRatio = 0.0f;
+	if (maxCoolTime > 0.0f)
+	{
+		// 例：残り10秒/最大10秒 = 1.0  → 1.0 - 1.0 = 0.0 (空っぽ)
+		// 例：残り 3秒/最大10秒 = 0.3  → 1.0 - 0.3 = 0.7 (7割溜まった)
+		// 例：残り 0秒/最大10秒 = 0.0  → 1.0 - 0.0 = 1.0 (満タン！)
+		skillRatio = 1.0f - (currentCoolTime / maxCoolTime);
+	}
+	if (skillRatio > 1.0f)
+	{
+		skillRatio = 1.0f;
+	}
+	if (skillRatio >= 1.0f)
+	{
+		if (!isSkillMaxPrev)
+		{
+			isSkillMaxPrev = true;
+
+			//アイコンを拡大する
+			skillIconScale = 1.5f;
+			skillTargetScale = 1.0f;
+		}
+		skillIconScale += (skillTargetScale - skillIconScale) * 0.05f;
+	}
+	else
+	{
+		isSkillMaxPrev = false;
+		skillIconScale = 1.0f;
+		skillTargetScale = 1.0f;
+	}
+	pSkillIcon->setScale(skillIconScale);
+	pSkillBar->setScaleX(skillRatio);
+	float currentPosX = barLeftEdge + (maxWidth * skillRatio * 0.5f);
+	pSkillBar->setPos(currentPosX, heightY);
+
+}
+
+
+
+
+
 //フェンスの外に出ないようにする関数
 void SceneMain::InFence(vnCharacter* pObject)
 {
@@ -1915,6 +1749,9 @@ void SceneMain::InFence(vnCharacter* pObject)
 		pObject->setPosition(&newPos);
 	}
 }
+//=====================================================================
+// 弾の反射用
+//=====================================================================
 bool SceneMain::CheckFenceReflection(vnCharacter* pObject)
 {
 	XMVECTOR vPos = *pObject->getPosition();
@@ -3208,129 +3045,5 @@ void SceneMain::UpdateBlocksCollision()
 
 void SceneMain::DebugDraw() 
 {
-	//vnFont::print(200, 400, L"needExp %.f", m_pExpManager->GetNeedExp());
-	//vnFont::print(200, 450, L"currentExp %.f", m_pExpManager->GetCurrentExp());
-	//vnFont::print(200, 400, L"spawnNum %d", m_spawnNum);
-
-	//vnFont::print(200, 450, L"activeCount %d", m_activeCount);
-
-	//vnFont::print(200, 500, L"m_leaderCount %d", m_leaderCount);
-
-	//// enemyPoolの全個体を監視（!enemy->GetActive() の continue を外す）
-	//for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
-	//{
-	//	NewEnemyClass* enemy = enemyPool->GetEnemies()[i];
-	//
-	//	// 1. アクティブ状態を文字列にする
-	//	const wchar_t* activeStr = enemy->GetActive() ? L"ALIVE" : L"DEAD ";
-	//
-	//	// 2. ステートに応じた文字列の判定
-	//	const wchar_t* stateStr = L"UNKNOWN";
-	//	switch (enemy->GetState())
-	//	{
-	//	case NewEnemyClass::eState::Idel:      stateStr = L"IDLE";      break;
-	//	case NewEnemyClass::eState::Panic:     stateStr = L"PANIC";     break;
-	//	case NewEnemyClass::eState::Charge:    stateStr = L"CHARGE";    break;
-	//	case NewEnemyClass::eState::KnockBack: stateStr = L"KNOCKBACK"; break;
-	//	}
-	//
-	//	// 3. 画面に表示
-	//	// 生死状態(activeStr)も一緒に出すことで、
-	//	// 「DEADなのにPANICになっている個体」がいないかチェック
-	//	vnFont::print(20, 100 + (static_cast<int>(i) * 25), L"[%s] Enemy[%d] State: %s",
-	//		activeStr, i, stateStr);
-	//}
-	//for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
-	//{
-	//	NewEnemyClass* enemy = enemyPool->GetEnemies()[i];
-
-	//	// 1. そもそもここに登録されている敵は、自分がリーダーだと認識できているか？
-	//	if (enemy->GetIsLeader())
-	//	{
-	//		// 2. 核心：モデルのポインタが空（nullptr）になっていないか？
-	//		if (enemy->GetModel() == nullptr)
-	//		{
-	//			// もし画面にこれが表示されたら「データはあるが、3Dモデルのインスタンス自体が作られていない」のが原因です！
-	//			vnFont::print(300, 100 + (static_cast<int>(i) * 25), L"Enemy[%d]: Model is NULL!", i);
-	//		}
-	//		else
-	//		{
-	//			// モデルはあるなら座標を表示
-	//			vnFont::print(300, 100 + (static_cast<int>(i) * 25), L"X %.f,Y%.f,Z%.f",
-	//				enemy->GetModel()->getPositionX(),
-	//				enemy->GetModel()->getPositionY(),
-	//				enemy->GetModel()->getPositionZ());
-	//		}
-	//	}
-	//}
-	
-	//for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
-	//{
-	//	NewEnemyClass* enemy = enemyPool->GetEnemies()[i];
-	//
-	//	// 1. アクティブ状態（生存か死んでいるか）
-	//	const wchar_t* activeStr = enemy->GetActive() ? L"ALIVE" : L"DEAD ";
-	//
-	//	// 2. ボスかザコかの文字列判定
-	//	const wchar_t* typeStr = enemy->GetIsBoss() ? L"★BOSS★" : L"Zako   ";
-	//
-	//	// 3. 画面に表示
-	//	vnFont::print(400, 100 + (static_cast<int>(i) * 25), L"[%s] Enemy[%03d] : %s",
-	//		activeStr, i, typeStr);
-	//}
-//	vnFont::print(400, 70, L"[PLAYER HP] : %.1f", m_pNewPlayer->GetCurrentHp());
-//
-//	for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
-//	{
-//		NewEnemyClass* enemy = enemyPool->GetEnemies()[i];
-//
-//
-//		// ----------------------------------------------------------------
-//		// 2. もしボスなら、そのボスが持っている maxBossMeleeFear も横に表示する
-//		// ----------------------------------------------------------------
-//// ループ内では「ボスが見つかったらそこに固定で出す」か、一度変数に受ける
-//		if (enemy->GetIsBoss())
-//		{
-//			if (enemy->GetGroupData())
-//			{
-//				// 座標を (800, 100) など、絶対に被らない右側に強制固定
-//				vnFont::print(800, 100, L"[BOSS FOUND] Damage(Fear): %.2f",
-//					enemy->GetGroupData()->maxBossMeleeFear);
-//			}
-//			else
-//			{
-//				// もし GroupData が NULL ならこっちが出る
-//				vnFont::print(800, 100, L"[BOSS FOUND] BUT GroupData is NULL!");
-//			}
-//		}
-//	}
-	//vnFont::print(10.0f, 500, L"X %.f,Y%.f,Z%.f",
-	//	m_pBullet->GetModel()->getPositionX(),
-	//	m_pBullet->GetModel()->getPositionY(),
-	//	m_pBullet->GetModel()->getPositionZ());
-	
-	
-	//vnFont::print(10, 600, L"HitWall: %s", m_pBullet->GetIsHitWall() ? L"true" : L"false");
-	
-	
-	//vnFont::print(10.0f, 500, GAME_COLOR_YELLOW,L"X %.f,Y%.f,Z%.f",
-	//	vnCamera::getPositionX(),
-	//	vnCamera::getPositionY(),
-	//	vnCamera::getPositionZ());
-	
-	//vnFont::print(10.0f, 600, L"radius %.f,phi%.f,theta%.f",
-	//	vnCamera::get(),
-	//	vnCamera::getPositionY(),
-	//	vnCamera::getPositionZ());
-	
-	
-	
-	//// ループが終わった後に、フラグを更新する
-	//// 前のフレームで当たっていなくて、今当たった場合だけ反射させる、といった制御ができる
-	//if (isHittingAnyBlock && !m_pBullet->GetIsHitWall()) {
-	//	//m_pBullet->Reflect(); // 反射関数を呼ぶ
-	//}
-	//m_pBullet->SetIsHitWall(isHittingAnyBlock);
-
 
 }
