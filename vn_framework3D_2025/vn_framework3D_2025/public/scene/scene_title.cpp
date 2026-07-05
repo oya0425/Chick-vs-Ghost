@@ -364,19 +364,6 @@ void SceneTitle::terminate()
     //作成したフォント用の情報を確保しておく変数を削除
     delete[] textFormat_score;
 
-    //if (pSound != NULL)
-    //{
-    //    for (int i = 0; i < fileNum; i++)
-    //    {
-    //        if (pSound[i] == NULL)continue;
-    //        pSound[i]->stop();
-    // 
-    //        delete pSound[i];
-    //        pSound[i] = NULL;
-    //    }
-    //    delete[] pSound;
-    //    pSound = NULL;
-    //}
     int uifileNum = sizeof(ui_Title) / (sizeof(WCHAR) * FILE_PATH_MAX);
 
     for (int i = 0; i < uifileNum; i++)

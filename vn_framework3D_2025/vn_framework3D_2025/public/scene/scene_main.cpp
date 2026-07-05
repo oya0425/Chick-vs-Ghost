@@ -1567,6 +1567,20 @@ void SceneMain::render()
 			vnFont::print(tx + off, ty + off, shadowCol, L"～ボス出現～");
 			vnFont::print(tx, ty, GAME_COLOR_RED, L"～ボス出現～");
 		}
+		//ボスの撃破必要カウント
+		if (waveManager->GetFinalWave())
+		{
+			vnFont::setFontSize(38, 50);
+
+			float off = 4.0f; // 影のずらし量
+			unsigned int shadowCol = 0xFF000000;
+			// 影も offsetY を足して一緒に動かす
+			vnFont::print(950.0f + off, 200 + off, shadowCol, L"残り：%d",waveManager->GetKillBossCountTarget());
+			vnFont::print(950.0f, 200 , GAME_COLOR_RED, L"残り：%d", waveManager->GetKillBossCountTarget());
+
+
+		}
+
 
 	}
 	break;
@@ -2225,10 +2239,6 @@ void SceneMain::UpdatePlayer(float deltaTime)
 	else {
 		pDustEmitter->setEmit(false, 0);
 	}
-	//vnFont::print(10.0f, 200.0f, L"movePlayer : % 3f,% 3f,% 3f",
-	//	XMVectorGetX(movePlayer),
-	//	XMVectorGetY(movePlayer),
-	//	XMVectorGetZ(movePlayer));
 	OnCollider(m_pNewPlayer->GetModel(), pGround, 1.0f, m_pNewPlayer->GetRigidbody());
 	if (m_pNewPlayer->GetModel()->getPositionY() < -30.0f) {
 		//プレイヤーが一定以上落下したら

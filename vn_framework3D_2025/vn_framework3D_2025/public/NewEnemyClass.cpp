@@ -1051,7 +1051,7 @@ void NewEnemyClass::UpdateEnemyMessage(float deltaTime)
                 // 2. 現在の状態を保存しておく（次のフレームの比較用）
                 m_wasLeaderEscaping = data->isLeaderEscaping;
 
-                // --- あとはいつもの表示ロジック ---
+                // --- 表示 ---
                 if (data->isLeaderEscaping)
                 {
                     m_areaAtkMessage.SetState(eShowUISelect::Text1);

@@ -88,6 +88,8 @@ void NewPlayerClass::Update(float deltaTime)
 	//3.スキル・攻撃処理
 	UpdateSkills(deltaTime);
 
+
+
 	//4.キャラクターの向きとアニメーション
 	UpdateVisuals(vInput, deltaTime);
 
@@ -399,7 +401,7 @@ void NewPlayerClass::UpdateAreaAttackSkill(float deltaTime)
 			// 半径を更新
 			m_currentRadius = m_defaultRadius + (m_maxAttackRadius - m_defaultRadius) * t;
 			XMVECTOR ropecenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
-			DWORD debugColor = m_isExpanding ? GAME_COLOR_RED : GAME_COLOR_LIME; // 攻撃中は赤くする
+			DWORD debugColor = m_isExpanding ? GAME_COLOR_SILVER : GAME_COLOR_LIME; // 攻撃中は赤くする
 			vnDebugDraw::Sphere(ropecenter, m_currentRadius, debugColor);
 
 			// 1秒経過（最大サイズに到達）したらリセット
@@ -439,20 +441,29 @@ void NewPlayerClass::UpdatePullSkill(float deltaTime)
 	switch (m_pullState)
 	{
 	case eSkillState::READY:
+	{
 		//入力判定
+		XMVECTOR ropecenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
+		vnDebugDraw::DrawSuctionEffect(ropecenter, m_pullRadius, m_pullDuration, GAME_COLOR_LIGHT_BLUE,false,0);
+		//vnDebugDraw::DrawSuctionEffect(ropecenter, m_pullRadius, m_pullDuration, GAME_COLOR_LIGHT_BLUE,false,2);
+		vnDebugDraw::DrawSuctionLines(ropecenter, m_pullRadius, m_pullDuration, GAME_COLOR_LIGHT_BLUE, GAME_COLOR_WHITE,false);
+
 		if (vnKeyboard::trg(DIK_Q))
 		{
 			//引き寄せ攻撃時に音を鳴らす
 			m_sound->PlaySE(SE_PULL_ATTACK);
-			
+
 			m_pullState = eSkillState::ACTIVE;
 			m_pullTimer = m_pullDuration;
 
 		}
 		break;
 
+	}
+
 	case eSkillState::ACTIVE:
 		m_pullTimer -= deltaTime;
+
 		if (m_pullTimer <= 0)
 		{
 
@@ -462,6 +473,14 @@ void NewPlayerClass::UpdatePullSkill(float deltaTime)
 			Common::StartCameraShake(3.5f, 3.5f, 1.0f);
 
 		}
+		else
+		{
+			XMVECTOR ropecenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
+			//vnDebugDraw::DrawSuctionLines(ropecenter, m_pullRadius, m_pullDuration, GAME_COLOR_BLACK, GAME_COLOR_WHITE,true);
+			vnDebugDraw::DrawSuctionEffect(ropecenter, m_pullRadius, m_pullTimer, GAME_COLOR_BLUE,true,0);
+			vnDebugDraw::DrawSuctionEffect(ropecenter, m_pullRadius, m_pullTimer, GAME_COLOR_CYAN,true,3);
+		}
+
 		break;
 	case eSkillState::COOLDOWN:
 		m_pullCooldownTimer -= deltaTime;
@@ -476,12 +495,12 @@ void NewPlayerClass::UpdatePullSkill(float deltaTime)
 		break;
 	}
 	// --- デバッグ表示 ---
-	// スキル発動中(ACTIVE)は青、それ以外(準備完了中など)は薄い色にするなど
-	XMVECTOR pullCenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
-	DWORD debugColor = (m_pullState == eSkillState::ACTIVE) ? GAME_COLOR_MAGENTA : 0x4400FFFF; // 発動中は水色、待機中は半透明
+	//// スキル発動中(ACTIVE)は青、それ以外(準備完了中など)は薄い色にするなど
+	//XMVECTOR pullCenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
+	//DWORD debugColor = (m_pullState == eSkillState::ACTIVE) ? GAME_COLOR_MAGENTA : 0x4400FFFF; // 発動中は水色、待機中は半透明
 
-	// 引き寄せ範囲（m_pullRadius）を表示
-	vnDebugDraw::Sphere(pullCenter, m_pullRadius, debugColor);
+	//// 引き寄せ範囲（m_pullRadius）を表示
+	//vnDebugDraw::Sphere(pullCenter, m_pullRadius, debugColor);
 }
 
 

@@ -4,7 +4,7 @@
 namespace
 {
 	constexpr int canSelectCount = 3;	//選択肢の数
-	constexpr int expOffset = 1;		//レベルアップで増える量を増やす（N倍）
+	constexpr int expOffset = 1.2;		//レベルアップで増える量を増やす（N倍）
 
 }
 
@@ -17,10 +17,13 @@ static const ExperienceManager::UpgradeUIData MASTER_DATA[] =
 	//スキルのレベル
 	//スキルの最大レベル(一応保険としての最大)
 
-    { L"移動速度",     L"%アップ", L"プレイヤーの移動が速くなるぞ！",
-	{10.0f* expOffset, 15.0f* expOffset, 10.0f* expOffset, 15.0f* expOffset, 10.0f* expOffset},
+ //   { L"移動速度",     L"%アップ", L"プレイヤーの移動が速くなるぞ！",
+	//{10.0f* expOffset, 15.0f* expOffset, 10.0f* expOffset, 15.0f* expOffset, 10.0f* expOffset},
+	//0, 1, 50},
+	{ L"移動速度",     L"%アップ", L"プレイヤーの移動が速くなるぞ！",
+	{10.0f, 15.0f , 10.0f , 15.0f , 10.0f },
 	0, 1, 50},
-	
+
 	{ L"攻撃範囲",     L"%アップ", L"攻撃範囲が大きくなるぞ！",
 	{10.0f* expOffset, 15.0f * expOffset, 20.0f * expOffset, 25.0f * expOffset, 20.0f * expOffset}, 1, 0, 50},
 

@@ -6,6 +6,7 @@
 //--------------------------------------------------------------//
 #pragma once
 
+
 //ポリゴン頂点構造体
 struct vnVertex3D_Line
 {
@@ -37,6 +38,7 @@ protected:
 	static D3D12_INPUT_ELEMENT_DESC inputElementDescs[];	//頂点要素
 	static ID3D12PipelineState* pPipelineState;				//パイプラインステート
 
+
 public:
 	//[システム管理関数
 	static bool initialize();
@@ -51,5 +53,15 @@ public:
 	static void Axis(float length = 5.0f);
 	static void Box(const XMVECTOR& center,const XMVECTOR& size, DWORD color=0xffffffff);
 	static void Sphere(const XMVECTOR& center, float radius, DWORD color);
+	//引き寄せ攻撃の表示、リングの種類０～４まで
+	static void DrawSuctionEffect(const XMVECTOR& center, float radius,float progress, DWORD color,bool isActive, int ringSelect);//
+	static void DrawSuctionLines(const XMVECTOR& center, float radius, float progress, DWORD color1, DWORD color2, bool isActive);
+	static void CalculateSuctionLinePoints(
+		const XMVECTOR& center, float radius, float normalizedTime,
+		XMVECTOR& outStart, XMVECTOR& outEnd);
+	
+	//ランダム関数
+    static float GetRandomFloat();
+
 
 };

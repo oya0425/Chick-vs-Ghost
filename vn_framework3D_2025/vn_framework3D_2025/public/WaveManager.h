@@ -39,6 +39,9 @@ public:
     int GetCurrentWave() const;                         //現在のWAVE数
     int GetKillTargetCount()const { return m_killTarget; }//必要撃破数
 
+
+    int GetKillBossCountTarget()const { return m_killBossCountTarget - m_killedCount; } //ボスの残り撃破数
+
     int GetNextKillTargetCount()const { return m_nextKillTarget; }
 
     //--WAVE切り替え用
@@ -98,6 +101,8 @@ private:
 
     int m_killTarget;        // 必要撃破数
     int m_killedCount;       // 現在撃破数
+
+    int m_killBossCountTarget = 5;
 
     float m_waveTimer = 0;            //WAVE中の時間
     float m_waveTimeLimit=20;         //WAVEクリアまでの時間
