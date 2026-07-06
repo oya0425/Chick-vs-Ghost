@@ -569,12 +569,12 @@ void vnDebugDraw::DrawSuctionEffect(const XMVECTOR& center, float radius, float 
 		effectTimer += vnScene::getDeltaTime() * 1.0f;
 	}
 	//表示位置（高さ）調整
-	int offsetY = 2;
+	int offsetY =2;
 
 #if SUCTION_EFFECT_MODE == 0
 	//横で回転
 	// ケツの数値を変更で回転の速さ変更
-	float rotationAngle = effectTimer * XM_2PI * 0.7f;
+	float rotationAngle = effectTimer * XM_2PI * 0.3f;
 
 	for (int r = 0; r < ringCount; r++)
 	{
@@ -595,8 +595,31 @@ void vnDebugDraw::DrawSuctionEffect(const XMVECTOR& center, float radius, float 
 			XMVECTOR start = ringCenter + XMVectorSet(cosf(angle1) * currentRadius, 0.0f, sinf(angle1) * currentRadius, 0.0f);
 			XMVECTOR end = ringCenter + XMVectorSet(cosf(angle2) * currentRadius, 0.0f, sinf(angle2) * currentRadius, 0.0f);
 			vnDebugDraw::Line(&start, &end, color);
+
+			XMVECTOR startH = ringCenter + XMVectorSet(cosf(angle1) * currentRadius, 0.0f, sinf(angle1) * currentRadius, 0.0f);
+			XMVECTOR endH = ringCenter + XMVectorSet(cosf(angle2) * currentRadius, 0.0f, sinf(angle2) * currentRadius, 0.0f);
+			vnDebugDraw::Line(&startH, &endH, color);
+
 		}
+		if (r == 0)
+		{
+			const int segmentsC = 32;	//円のセグメント
+			float stepC = XM_2PI / segmentsC;
+			for (int i = 0; i < segmentsC; i++)
+			{
+				float angle1 = (i * stepC) + currentRotation;
+				float angle2 = ((i + 1) * stepC) + currentRotation;
+
+				XMVECTOR startH = ringCenter + XMVectorSet(cosf(angle1) * currentRadius, 0.0f, sinf(angle1) * currentRadius, 0.0f);
+				XMVECTOR endH = ringCenter + XMVectorSet(cosf(angle2) * currentRadius, 0.0f, sinf(angle2) * currentRadius, 0.0f);
+				vnDebugDraw::Line(&startH, &endH, color);
+
+			}
+		}
+
 	}
+
+
 #elif SUCTION_EFFECT_MODE == 1
 
 	//縦横でぐるぐる回る円

@@ -51,7 +51,6 @@ private:
 
 	};
 
-
 	// --- 定数 (constexpr) ---
 	static constexpr float COMBO_BASE_TIME = 3.0f;
 	static constexpr float COMBO_MIN_TIME = 1.0f;
@@ -161,6 +160,18 @@ private:
 	
 	vnSprite* pImageE;	//スキルボタン範囲攻撃
 	vnSprite* pImageQ;	//引き寄せ攻撃
+
+
+	// --- スキル獲得選択ボタン ---
+	bool m_isOnOneButton = false;
+	bool m_isOnTwoButton = false;
+	bool m_isOnThreeButton = false;
+	bool m_isOnSelectButton[3] = { false };
+
+	float m_SelectButtonScale[3] = { 1.0f };
+	float m_OneButtonScale = 1.0f;
+	float m_TwoButtonScale = 1.0f;
+	float m_ThreeButtonScale = 1.0f;
 
 
 	// --- ボス登場時に出す文字 ---
@@ -278,6 +289,19 @@ private:
 
 	//？マークと吹き出しの設定
 	EnemyPool::UIQuestionExplain CreateQuestionUI(const WCHAR* text, DWORD color, float offsetSize);
+
+
+	// --- ボタン ---
+	bool UpdateUpgradeButton(
+		float x,
+		float y,
+		vnSprite* pFrame,
+		vnSprite* pBg,
+		vnSprite* pMain,
+		bool& isOnButton,
+		float& buttonScale);
+		
+	bool OnButton(float x, float y);
 
 
 	// --- 衝突判定・計算系 ---

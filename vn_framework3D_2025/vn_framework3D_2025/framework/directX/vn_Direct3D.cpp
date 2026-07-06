@@ -513,7 +513,7 @@ void vnDirect3D::beginRender(void)
 	pCmdList->ClearRenderTargetView(hRTV[rtvIndex], vnMainFrame::clearColor, 0, NULL);
 	//深度バッファのクリア
 	pCmdList->ClearDepthStencilView(hDSV, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, NULL);
-
+	
 }
 
 void vnDirect3D::beginRender2(void)

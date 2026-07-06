@@ -37,12 +37,12 @@ namespace {
 	//constexpr float mainImgX = 110.0f;
 	//constexpr float mainImgY = 110.0f;
 
-	constexpr float freamImgX = 1050.0f*0.9f;
-	constexpr float freamImgY = 150.0f*0.9f;
-	constexpr float backGroundImgX = 1020.0f*0.9f;
-	constexpr float backGroundImgY = 120.0f*0.9f;
-	constexpr float mainImgX = 110.0f*0.9f;
-	constexpr float mainImgY = 110.0f*0.9f;
+	constexpr float freamImgW = 1050.0f*0.9f;
+	constexpr float freamImgH = 150.0f*0.9f;
+	constexpr float backGroundImgW = 1020.0f*0.9f;
+	constexpr float backGroundImgH = 120.0f*0.9f;
+	constexpr float mainImgW = 110.0f*0.9f;
+	constexpr float mainImgH = 110.0f*0.9f;
 
 	// --- HPバー ---
 	constexpr float barLeftEdgeHp = 90.0f;
@@ -797,9 +797,9 @@ void SceneMain::InitializeUpgradeUI()
 	{
 		const auto& resource = upgradeUIResources[i];
 
-		m_pUpgradeUI->SetFreamImg(i, new vnSprite(uiHidePosX, uiHidePosY, freamImgX, freamImgY, resource.framePath));
-		m_pUpgradeUI->SetBackGroundImg(i, new vnSprite(uiHidePosX, uiHidePosY, backGroundImgX, backGroundImgY, resource.backGroundPath));
-		m_pUpgradeUI->SetMainImg(i, new vnSprite(uiHidePosX, uiHidePosY, mainImgX, mainImgY, resource.mainPath));
+		m_pUpgradeUI->SetFreamImg(i, new vnSprite(uiHidePosX, uiHidePosY, freamImgW, freamImgH, resource.framePath));
+		m_pUpgradeUI->SetBackGroundImg(i, new vnSprite(uiHidePosX, uiHidePosY, backGroundImgW, backGroundImgH, resource.backGroundPath));
+		m_pUpgradeUI->SetMainImg(i, new vnSprite(uiHidePosX, uiHidePosY, mainImgW, mainImgH, resource.mainPath));
 
 		registerObject(m_pUpgradeUI->GetFreamImg(i));
 		registerObject(m_pUpgradeUI->GetBackGroundImg(i));
@@ -2878,9 +2878,26 @@ void SceneMain::UpdateLevelUp()
 	if (!m_pUpgradeUI->GetIsClosingUI()) // UIが消去演出中でなければ
 	{
 		int selectedIndex = -1;
-		if (vnKeyboard::trg(DIK_1)) selectedIndex = 0;
-		if (vnKeyboard::trg(DIK_2)) selectedIndex = 1;
-		if (vnKeyboard::trg(DIK_3)) selectedIndex = 2;
+		//if (vnKeyboard::trg(DIK_1)) selectedIndex = 0;
+		//if (vnKeyboard::trg(DIK_2)) selectedIndex = 1;
+		//if (vnKeyboard::trg(DIK_3)) selectedIndex = 2;
+
+		//選択肢の画像をマウスカーソルを持って来てクリック
+		for (int i = 0; i < 3; i++)
+		{
+			if (UpdateUpgradeButton(
+				m_pUpgradeUI->GetFreamImg(i)->getPosX(),
+				m_pUpgradeUI->GetFreamImg(i)->getPosY(),
+				m_pUpgradeUI->GetFreamImg(i),
+				m_pUpgradeUI->GetBackGroundImg(i),
+				m_pUpgradeUI->GetMainImg(i),
+				m_isOnSelectButton[i],
+				m_SelectButtonScale[i]
+			))
+			{
+				selectedIndex = i;
+			}
+		}
 
 		if (selectedIndex != -1)
 		{
@@ -2928,6 +2945,68 @@ void SceneMain::UpdateLevelUp()
 		}
 	}
 
+}
+
+//ボタン当たり判定
+bool SceneMain::OnButton(float x, float y)
+{
+	int mx = vnMouse::getX();
+	int my = vnMouse::getY();
+	
+		
+	if (mx >= x - freamImgW / 2 && mx <= x + freamImgW / 2 &&
+		my >= y - freamImgH / 2 && my <= y + freamImgH / 2) // 中心座標からの判定
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+//ボタン処理（ボタン押したときにtrue）
+bool SceneMain::UpdateUpgradeButton(
+	float x,
+	float y,
+	vnSprite* pFrame,
+	vnSprite* pBg,
+	vnSprite* pMain,
+	bool& isOnButton,
+	float& buttonScale)
+{
+	if (OnButton(x, y))
+	{
+		if (!isOnButton)
+		{
+			soundManager->PlaySE(SE_TITLE_CURSOR);
+		}
+		isOnButton = true;
+		buttonScale += (1.2f - buttonScale) * 0.2f;
+
+		//pFrame->setColor(V_GAME_COLOR_BLACK);
+
+		if (vnMouse::trgL())
+		{
+			return true; // クリックされた！
+		}
+	}
+	else
+	{
+		isOnButton = false;
+		buttonScale += (1.0f - buttonScale) * 0.2f;
+		//pFrame->setColor(V_GAME_COLOR_YELLOW);
+	}
+
+	// 3つのスプライト全てに同じスケールを適用（これで一体化して動く）
+	pFrame->setScale(buttonScale);
+	pBg->setScale(buttonScale);
+	pMain->setScale(buttonScale);
+
+	// 座標も追従させる必要がある場合（演出で動かすなら）
+	// pFrame->setPos(x, y); ...など
+
+	return false;
 }
 
 

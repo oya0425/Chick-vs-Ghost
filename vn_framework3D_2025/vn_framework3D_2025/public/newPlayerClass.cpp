@@ -444,7 +444,7 @@ void NewPlayerClass::UpdatePullSkill(float deltaTime)
 	{
 		//“ü—Í”»’è
 		XMVECTOR ropecenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
-		vnDebugDraw::DrawSuctionEffect(ropecenter, m_pullRadius, m_pullDuration, GAME_COLOR_LIGHT_BLUE,false,0);
+		vnDebugDraw::DrawSuctionEffect(ropecenter, m_pullRadius, m_pullDuration, GAME_COLOR_ELECTRIC_PURPLE,false,0);
 		//vnDebugDraw::DrawSuctionEffect(ropecenter, m_pullRadius, m_pullDuration, GAME_COLOR_LIGHT_BLUE,false,2);
 		vnDebugDraw::DrawSuctionLines(ropecenter, m_pullRadius, m_pullDuration, GAME_COLOR_LIGHT_BLUE, GAME_COLOR_WHITE,false);
 
