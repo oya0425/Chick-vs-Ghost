@@ -613,7 +613,6 @@ void vnDebugDraw::DrawSuctionEffect(const XMVECTOR& center, float radius, float 
 				XMVECTOR startH = ringCenter + XMVectorSet(cosf(angle1) * currentRadius, 0.0f, sinf(angle1) * currentRadius, 0.0f);
 				XMVECTOR endH = ringCenter + XMVectorSet(cosf(angle2) * currentRadius, 0.0f, sinf(angle2) * currentRadius, 0.0f);
 				vnDebugDraw::Line(&startH, &endH, color);
-
 			}
 		}
 
