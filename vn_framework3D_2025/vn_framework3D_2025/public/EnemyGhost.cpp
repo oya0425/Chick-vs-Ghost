@@ -123,16 +123,26 @@ void EnemyGhost::OnRun(float deltaTime, float distance, const XMVECTOR& toPlayer
             //仲間から自分へと離れる向きのベクトルを計算（自分-相手）
             XMVECTOR diff = enemyPos - leaderPos;
 
-            //仲間との実距離を計算
-            float d = XMVectorGetX(XMVector3Length(diff));
+            // 【最適化】まずはルートを計算せず、2乗の距離を取得
+            float dSq = XMVectorGetX(XMVector3LengthSq(diff));
 
-            //距離が検知範囲ないで、かつ完全に重なっていない（0.001f）
-            if (d < maxDist && d>0.001f)
+            // 比較用の境界値もあらかじめ2乗しておく
+            float maxDistSq = maxDist * maxDist;
+            float minDistSq = minDist * minDist;
+
+            // 距離が検知範囲内で、かつ完全に重なっていない（0.001fの2乗 = 0.000001f）
+            // ※まずは2乗同士で高速に判定をパスさせる
+            if (dSq < maxDistSq && dSq > 0.000001f)
             {
+                // ここから先は正規化や線形補間で「生の実距離 d」が必要になるため、
+                // 判定を通過したこのタイミングで初めてルートを計算する（無駄な計算を削減）
+                float d = sqrtf(dSq);
+
                 float weight = 0.0f;        //斥力の強さを格納する変数
 
-                //危険距離（minDist）より近いなら、斥力を最大（1.0）にする
-                if (d <= minDist)
+                // 危険距離（minDist）より近いなら、斥力を最大（1.0）にする
+                // ※すでにdSqがあるので、ここも2乗で比較して高速化
+                if (dSq <= minDistSq)
                 {
                     weight = 1.0f;
                 }
@@ -164,8 +174,6 @@ void EnemyGhost::OnRun(float deltaTime, float distance, const XMVECTOR& toPlayer
 
                 //通常の仲間から離れる斥力を、重みに合わせて面の入力に加算する
                 vInput += separationDir * weight * 1.5f;
-
-
             }
         }
 
@@ -173,27 +181,38 @@ void EnemyGhost::OnRun(float deltaTime, float distance, const XMVECTOR& toPlayer
         if (GetIsLeader()) //自身がリーダー個体である場合
         {
             float R = GetFenceRadius(); //現在のステージの壁の半径を獲得
-            float currentDist = XMVectorGetX(XMVector3Length(enemyPos));    //ステージの中心からの距離を計算
 
+            // ステージの中心からの「2乗の距離」を計算
+            float currentDistSq = XMVectorGetX(XMVector3LengthSq(enemyPos));
 
-            //自身の位置が壁の回避開始ライン（80%）を超えてる場合
-            if (currentDist > (R * avoidStartRatio))
+            // 回避開始ラインの距離をあらかじめ計算し、2乗しておく
+            float avoidStartDist = R * avoidStartRatio;
+            float avoidStartDistSq = avoidStartDist * avoidStartDist;
+
+            // 自身の位置が壁の回避開始ラインを超えてる場合（2乗同士で判定）
+            if (currentDistSq > avoidStartDistSq)
             {
+                // 判定を通った場合のみ、線形補間の重み計算のためにルート（生の実距離）を取る
+                float currentDist = sqrtf(currentDistSq);
+
                 //ステージの中心へ向かう方向を計算（-enemyPos）して正規化
                 XMVECTOR toCenter = XMVector3Normalize(-enemyPos);
 
                 //壁に近づくほど強くなる（0.0～1.0）重みを計算
-                float weight = (currentDist - (R * avoidStartRatio)) / (R * avoidRangeRatio);
-                if (weight > 1.0f)weight = 1.0f;    //重みが１を超えないようにクランプ
+                float weight = (currentDist - avoidStartDist) / (R * avoidRangeRatio);
+                if (weight > 1.0f) weight = 1.0f;    //重みが１を超えないようにクランプ
 
                 //Lerp（線形補間）を使い、現在の移動方向と中心へ戻る方向を混ぜ合わせる（壁際では中心方向を優先）
                 vInput = XMVectorLerp(vInput, toCenter, weight * 0.8f);
-
-
             }
         }
-
     }
+
+
+
+
+    //~========================================
+
     // --- 滑らかな方向転換 ---
     //入力（進みたい方向）の長さが十分にある場合
     if (XMVectorGetX(XMVector3LengthSq(vInput)) > 0.001f)
@@ -244,7 +263,63 @@ void EnemyGhost::OnDead()
 void EnemyGhost::OnFollow(float deltaTime)
 {
 
-    //リーダーが決めたモードを群れで共有
+    ////リーダーが決めたモードを群れで共有
+    //auto mode = m_pMyLeader->GetGroupData()->mode;
+    //if (mode == eGroupMode::Panic)
+    //{
+    //    m_panicDirTimer = 0.0f;
+    //    m_panicRecoveryTime = 5.0f; //パニック状態から復帰する時間の設定
+    //    GetModel()->SetAllPartsDiffuse(m_defaultOtherColor, 1.0f);   //パニック状態になると色が戻る
+    //    SetGroupID(-1);
+    //    m_pMyLeader = nullptr;
+    //    SetState(eState::Panic);    //リーダーがいなくなるとパニック開始
+    //    return;
+
+    //}
+    //else if (mode == eGroupMode::Charge)
+    //{
+    //    //特攻状態では色はそのまま残しておく
+    //    //１割の確率で特攻（10%以下）
+    //    SetState(eState::Charge);
+    //    GetModel()->SetAllPartsDiffuse(V_GAME_COLOR_WHITE, 0.1f);
+    //    m_chargeMessage.SetState(NewEnemyClass::eShowUISelect::Text1);
+    //    m_isCharge = true;
+    //    m_pMyLeader = nullptr;
+    //    return;
+
+    //}
+    ////2.モーション再生
+    //GetModel()->setMotion(motion_run_Ghost);
+    //GetModel()->execute(motionSpeed, false, false);
+
+    ////3.リーダーへの方向と距離を計算
+    //XMVECTOR leaderPos = *m_pMyLeader->GetModel()->getPosition();
+    //XMVECTOR myPos = *GetModel()->getPosition();
+    //XMVECTOR toLeader = leaderPos - myPos;
+
+    ////Yを無視して平面距離で計算
+    //toLeader = XMVectorSetY(toLeader, 0);
+    //float dist = XMVectorGetX(XMVector3Length(toLeader));
+
+    ////4.移動処理
+    ////自分の停止距離（m_myStopDist）より遠ければ近づく
+    //if (dist > m_baseFollowDist+m_myStopDist)
+    //{
+    //    XMVECTOR vDir = XMVector3Normalize(toLeader);
+    //    ApplyMovement(deltaTime, vDir);
+
+    //}
+    //else
+    //{
+    //    //停止距離内なら、その場で止まる
+    //    GetRigidbody().SetBaseVelocity(XMVectorZero());
+    //    //身体をリーダーに向かせる
+    //    XMVECTOR vDir = XMVector3Normalize(toLeader);
+    //    float rotY = atan2f(XMVectorGetX(vDir), XMVectorGetZ(vDir));
+    //    GetModel()->setRotationY(rotY);
+    //}
+
+//リーダーが決めたモードを群れで共有
     auto mode = m_pMyLeader->GetGroupData()->mode;
     if (mode == eGroupMode::Panic)
     {
@@ -255,7 +330,6 @@ void EnemyGhost::OnFollow(float deltaTime)
         m_pMyLeader = nullptr;
         SetState(eState::Panic);    //リーダーがいなくなるとパニック開始
         return;
-
     }
     else if (mode == eGroupMode::Charge)
     {
@@ -267,8 +341,8 @@ void EnemyGhost::OnFollow(float deltaTime)
         m_isCharge = true;
         m_pMyLeader = nullptr;
         return;
-
     }
+
     //2.モーション再生
     GetModel()->setMotion(motion_run_Ghost);
     GetModel()->execute(motionSpeed, false, false);
@@ -280,15 +354,20 @@ void EnemyGhost::OnFollow(float deltaTime)
 
     //Yを無視して平面距離で計算
     toLeader = XMVectorSetY(toLeader, 0);
-    float dist = XMVectorGetX(XMVector3Length(toLeader));
+
+    // 【最適化】ルート（平方根）を消すため、2乗の長さを取得
+    float distSq = XMVectorGetX(XMVector3LengthSq(toLeader));
 
     //4.移動処理
-    //自分の停止距離（m_myStopDist）より遠ければ近づく
-    if (dist > m_baseFollowDist+m_myStopDist)
+    // 比較対象の距離もあらかじめ2乗しておく
+    float targetDist = m_baseFollowDist + m_myStopDist;
+    float targetDistSq = targetDist * targetDist;
+
+    // 2乗同士で距離を比較（仕様・挙動は元のコードと全く同じ）
+    if (distSq > targetDistSq)
     {
         XMVECTOR vDir = XMVector3Normalize(toLeader);
         ApplyMovement(deltaTime, vDir);
-
     }
     else
     {
@@ -299,7 +378,6 @@ void EnemyGhost::OnFollow(float deltaTime)
         float rotY = atan2f(XMVectorGetX(vDir), XMVectorGetZ(vDir));
         GetModel()->setRotationY(rotY);
     }
-
 
 }
 void EnemyGhost::OnPanic(float deltaTime)

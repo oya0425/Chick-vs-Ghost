@@ -107,79 +107,74 @@ void UpgradeSelectionUI::SettingUI(
 
 void UpgradeSelectionUI::UpdateUI()
 {
+	// UIアニメーションが無効なら更新しない
 	if (!m_isAnimation) return;
 
-	// =================================================================
-	// フェーズ1: 「レベルアップ！」ロゴの表示演出
-	// =================================================================
-	if (m_uiPhase == UIPhase::LogoFadeIn)
+	switch (m_uiPhase)
 	{
-		// 1. ロゴのスケールを滑らかに拡大（0.0f から 1.0f へ）
-		m_logoScale += (1.0f - m_logoScale) * 0.1f;
+	//=====================================================
+	// ロゴ表示演出
+	//=====================================================
+	case UIPhase::LogoFadeIn:
+		UpdateLogo();
+		break;
+	
+	//=====================================================
+	// 選択肢表示
+	//=====================================================
+	case UIPhase::SlotsSlideIn:
+		UpdateHeader();// ヘッダーの更新・描画
+		UpdateSlots(); // 選択肢UIの更新・描画
+		break;
 
-		// 2. スケールを元にフォントサイズを計算
-		float baseFontSize = 172.0f;
-		float currentFontSize = baseFontSize * m_logoScale;
+	case UIPhase::Closing:
+		UpdateHeader();// ヘッダーを画面外へ移動
+		UpdateSlots(); // 選択肢を画面外へ移動
 
-		if (currentFontSize > 1.0f) {
-			vnFont::setTextFormat(vnFont::create(vnFont::getFontName(31), (int)currentFontSize));
-		}
-
-		// 3. 座標の中心補正計算
-		float textWidth = currentFontSize * 2.5f;   // 5文字分に相当する幅を引く
-		float textHeight = currentFontSize * 0.5f;  // 高さの半分を引く
-
-		float tx = 640.0f - textWidth;
-		float ty = 360.0f - textHeight;
-
-		// 4. 文字の描画（影と本体）
-		float off = 5.0f * m_logoScale;
-		vnFont::print(tx + off, ty + off, GAME_COLOR_BLACK, L"LEVEL UP !");
-		//vnFont::print(tx, ty, GAME_COLOR_GOLD, L"LEVEL UP !");
-		vnFont::print(tx, ty, GAME_COLOR_GOLD_LIGHT, L"LEVEL UP !");
-
-		// 5. 最大サイズに達したらフェーズ移行
-		if (m_logoScale >= 0.99f)
+		// 全てのUIが画面外へ移動したら終了処理
+		if (IsClosingFinished())
 		{
-			m_logoScale = 1.0f;
-			m_uiPhase = UIPhase::SlotsSlideIn;
+			FinishClosing();
+			
 		}
-
-		return; // ロゴ演出中は下の処理をさせずに抜ける
+		break;
 	}
 
-	// =================================================================
-	// フェーズ2 & 3: 「強化項目テキスト」と「3つの選択肢」の処理
-	// =================================================================
+}
+void UpgradeSelectionUI::UpdateLogo()
+{
+	// ロゴのスケールを滑らかに拡大
+	m_logoScale += (1.0f - m_logoScale) * 0.1f;
 
-	// ヘッダーテキストの移動
-	m_headerY += (m_headerTargetY - m_headerY) * 0.1f;
+	float baseFontSize = 172.0f;
+	float currentFontSize = baseFontSize * m_logoScale;
 
-	// 画面内にいる時だけ描画
-	if (m_headerY > -50.0f)
+	if (currentFontSize > 1.0f)
 	{
-		float off = 3.0f;
-		vnFont::setFontSize(31, 30);
-		vnFont::print(420+off, (int)m_headerY+off, GAME_COLOR_BLACK, L"強化する項目を選択してください");
-		vnFont::print(420, (int)m_headerY, GAME_COLOR_WHITE, L"強化する項目を選択してください");
+		vnFont::setTextFormat(
+			vnFont::create(vnFont::getFontName(31), (int)currentFontSize)
+		);
 	}
 
-	// 画面外チェック用のフラグ（最初は true にしておき、画面内に何かあれば false にする）
-	bool allOutOfScreen = true;
+	float textWidth = currentFontSize * 2.5f;
+	float textHeight = currentFontSize * 0.5f;
 
-	// 【修正ポイント】終了演出中（Closing）の時だけ、ヘッダーが残っているかをチェックする
-	if (m_uiPhase == UIPhase::Closing)
+	float tx = 640.0f - textWidth;
+	float ty = 360.0f - textHeight;
+
+	float off = 5.0f * m_logoScale;
+	vnFont::print(tx + off, ty + off, GAME_COLOR_BLACK, L"LEVEL UP !");
+	vnFont::print(tx, ty, GAME_COLOR_GOLD_LIGHT, L"LEVEL UP !");
+
+	if (m_logoScale >= 0.99f)
 	{
-		if (m_headerY > -100.0f) {
-			allOutOfScreen = false; // まだヘッダーが画面内（上部）にあるなら終了させない
-		}
-	}
-	else
-	{
-		// 通常表示中（SlotsSlideIn）は、強制的にフラグを false にして勝手に終了するのを防ぐ
-		allOutOfScreen = false;
+		m_logoScale = 1.0f;
+		m_uiPhase = UIPhase::SlotsSlideIn;
 	}
 
+}
+void UpgradeSelectionUI::UpdateSlots()
+{
 	// スロットの更新と描画
 	vnFont::setFontSize(31, 25);
 	for (int i = 0; i < m_displaySlots.size(); i++)
@@ -203,17 +198,13 @@ void UpgradeSelectionUI::UpdateUI()
 			vnFont::print(550, slot.currentY + textOffset, GAME_COLOR_RED, L"(%ls)",
 				slot.explanation);
 		}
-
-		// 終了演出中（Closing）かつ、スロットがまだ画面内に残っているかチェック
-		if (slot.currentY > -500) {
-			if (m_uiPhase == UIPhase::Closing) {
-				allOutOfScreen = false;
-			}
-		}
 	}
 
-	// ヘッダーもスロットも、すべて完全に画面外へ移動し終えたら終了
-	if (allOutOfScreen && m_displaySlots.size() > 0 && m_uiPhase == UIPhase::Closing)
+
+}
+void UpgradeSelectionUI::FinishClosing()
+{
+	if (m_displaySlots.size() > 0 && m_uiPhase == UIPhase::Closing)
 	{
 		for (auto& slot : m_displaySlots) {
 			slot.freamImg->setRenderEnable(false);
@@ -224,6 +215,45 @@ void UpgradeSelectionUI::UpdateUI()
 		m_isClosingUI = true;
 	}
 }
+void UpgradeSelectionUI::UpdateHeader()
+{
+	// ヘッダーの移動
+	m_headerY += (m_headerTargetY - m_headerY) * 0.1f;
+
+	// 描画
+	if (m_headerY > -50.0f)
+	{
+		float off = 3.0f;
+		vnFont::setFontSize(31, 30);
+		vnFont::print(420 + off, (int)m_headerY + off,
+			GAME_COLOR_BLACK,
+			L"強化する項目を選択してください");
+
+		vnFont::print(420, (int)m_headerY,
+			GAME_COLOR_WHITE,
+			L"強化する項目を選択してください");
+	}
+}
+bool UpgradeSelectionUI::IsClosingFinished()
+{
+	// ヘッダーがまだ画面内なら終了していない
+	if (m_headerY > -100.0f)
+	{
+		return false;
+	}
+
+	// スロットがまだ画面内なら終了していない
+	for (const auto& slot : m_displaySlots)
+	{
+		if (slot.currentY > -500.0f)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 
 void UpgradeSelectionUI::ResetPhase()
 {
@@ -297,4 +327,18 @@ vnSprite* UpgradeSelectionUI::GetFreamImg(int index)
 vnSprite* UpgradeSelectionUI::GetMainImg(int index)
 {
 	return m_slots[index].mainImg;
+}
+vnSprite* UpgradeSelectionUI::GetDisplayBackGroundImg(int index)
+{
+	return m_displaySlots[index].backGroundImg;
+}
+
+vnSprite* UpgradeSelectionUI::GetDisplayFrameImg(int index)
+{
+	return m_displaySlots[index].freamImg;
+}
+
+vnSprite* UpgradeSelectionUI::GetDisplayMainImg(int index)
+{
+	return m_displaySlots[index].mainImg;
 }

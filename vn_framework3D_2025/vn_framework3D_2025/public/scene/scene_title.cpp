@@ -14,11 +14,12 @@ WCHAR seFile_Title[][FILE_PATH_MAX] =
 //タイトル画面の背景（ルールとか）
 WCHAR ui_Title[][FILE_PATH_MAX] =
 {
-    L"data/image/タイトル画面.png",
-    L"data/image/説明１.png",
-    L"data/image/説明２.png",
-    L"data/image/説明３.png",
-    L"data/image/説明４.png",
+    L"data/image/タイトル画面 - コピー.png",
+    //L"data/image/タイトル画面.bmp",
+    L"data/image/説明1.png",
+    L"data/image/説明2.png",
+    L"data/image/説明3.png",
+    L"data/image/説明4.png",
 
 
 };

@@ -46,6 +46,10 @@ public:
 	vnSprite* GetFreamImg(int index);
 	vnSprite* GetMainImg(int index);
 
+	vnSprite* GetDisplayBackGroundImg(int index);
+	vnSprite* GetDisplayFrameImg(int index);
+	vnSprite* GetDisplayMainImg(int index);
+
 	//レベルアップ時に出すUIをセッティング
 	// (「強化項目（速度など）」,%アップ,10.0などの数値,強化する値の配列番号,アイコン番号,スキルのレベル,最大レベル)
 	void SettingUI(
@@ -90,4 +94,13 @@ private:
 	bool m_isAnimLvFinish = false;				//レベルアップ終了時に上に上がるようにする
 	float m_animTimer	  = 0;					//上昇する時間
 	bool m_isClosingUI = false;
+
+
+
+	// --- 役割分け関数 ---
+	void UpdateLogo();
+	void UpdateSlots();
+	void FinishClosing();
+	void UpdateHeader();
+	bool IsClosingFinished();
 };

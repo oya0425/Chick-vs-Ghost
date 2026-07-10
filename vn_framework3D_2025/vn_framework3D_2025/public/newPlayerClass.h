@@ -201,13 +201,13 @@ private:
 
 	// --- 範囲攻撃用 ---
 	eSkillState m_areaAttackState = eSkillState::READY;
-	bool  m_isHaveAreaAtkSkill		  = false;			//スキル獲得済みか？
+	bool  m_isHaveAreaAtkSkill		  = true;			//スキル獲得済みか？
 	bool  m_isExpanding				  = false;		// 半径拡大中か？
 	float m_currentRadius			  = 1.0f;			// 現在の半径
 	float m_expandTimer				  = 0.0f;			// 拡大用タイマー
 	//float m_maxAttackRadius		      = 2.0f;		// 最大半径
 	float m_maxAttackRadius		      = 20.0f;		    // 最大半径(随時更新)(20)
-	const float m_defaultAttackRadius = 10.0f;			//攻撃範囲のデフォルトのサイズ
+	const float m_defaultAttackRadius = 30.0f;			//攻撃範囲のデフォルトのサイズ
 	const float m_defaultRadius		  = 1.0f;			// 通常時の半径（size.x/2の値に合わせて調整）普通の当たり判定
 	float m_areaAtkCoolTimer		  = 0.0f;			//現在のクールタイム
 	const float m_areaAtkCoolTimeMax  = 5.0;			//最大のクールタイム
@@ -217,9 +217,9 @@ private:
 
 	// --- 引き寄せ攻撃 ---
 	eSkillState m_pullState			= eSkillState::READY;	//現在の状態
-	bool  m_isHavePullSkill			= true;				//スキル獲得済みか？
+	bool  m_isHavePullSkill			= false;				//スキル獲得済みか？
 	const float m_defaultPullRadius = 10.0f;				//デフォルトの引き寄せ範囲
-	float m_pullRadius				= 10.0f;			    //引き寄せ範囲
+	float m_pullRadius				= 20.0f;			    //引き寄せ範囲
 	float m_pullTimer				= 0.0f;				    //吸引時間の計測用
 	float m_pullCooldownTimer		= 0.0f;				    //クールタイムの計測用
 

@@ -115,7 +115,7 @@ private:
 
     int m_spawnLimit;        // “¯oŒ»ãŒÀ
     int m_aliveCount;        // Œ»İ¶‘¶”
-    int m_configMaxSimultaneous = 300;   //Å‰‚Ì“G‚ÌÅ‘å”
+    int m_configMaxSimultaneous = 1000;   //Å‰‚Ì“G‚ÌÅ‘å”
 
     float m_respawnInterval; // —N‚«ŠÔŠu
     float m_respawnTimer;    // —N‚«ƒ^ƒCƒ}[

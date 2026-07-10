@@ -1575,8 +1575,8 @@ void SceneMain::render()
 			float off = 4.0f; // 影のずらし量
 			unsigned int shadowCol = 0xFF000000;
 			// 影も offsetY を足して一緒に動かす
-			vnFont::print(950.0f + off, 200 + off, shadowCol, L"残り：%d",waveManager->GetKillBossCountTarget());
-			vnFont::print(950.0f, 200 , GAME_COLOR_RED, L"残り：%d", waveManager->GetKillBossCountTarget());
+			vnFont::print(950.0f + off, 120 + off, shadowCol, L"残り：%d",waveManager->GetKillBossCountTarget());
+			vnFont::print(950.0f, 120 , GAME_COLOR_RED, L"残り：%d", waveManager->GetKillBossCountTarget());
 
 
 		}
@@ -2181,7 +2181,7 @@ void SceneMain::UpdatePlay(float deltaTime)
 	//5.グローバルな更新（フェンスの拡大、カメラ追従、タイマー加算）
 	UpdateGlobalSystems(deltaTime);
 
-	//レベルアップチェック
+	//レベルアップチェック//毎フレーム呼ばれるのを防ぐ
 	if (m_pExpManager && m_pExpManager->GetLevelUpStock() > 0)
 	{
 		m_gameState = LevelUp;
@@ -2373,8 +2373,7 @@ void SceneMain::UpdateEnemies(float deltaTime)
 		// ------------------------------------
 		XMVECTOR enemyPos = *enemy->GetModel()->getPosition();
 		XMVECTOR toPlayerVec = *m_pNewPlayer->GetModel()->getPosition() - enemyPos;
-		float dist = XMVectorGetX(XMVector3Length(toPlayerVec));
-
+		float dist = XMVectorGetX(XMVector3LengthSq(toPlayerVec));
 		// 敵に「今は吸い込み中か？」を判断させる
 		enemy->CheckPullTrigger(m_pNewPlayer->IsPulling(), m_pNewPlayer->GetPullRadius(), dist);
 
@@ -2885,18 +2884,21 @@ void SceneMain::UpdateLevelUp()
 		//選択肢の画像をマウスカーソルを持って来てクリック
 		for (int i = 0; i < 3; i++)
 		{
+
 			if (UpdateUpgradeButton(
-				m_pUpgradeUI->GetFreamImg(i)->getPosX(),
-				m_pUpgradeUI->GetFreamImg(i)->getPosY(),
-				m_pUpgradeUI->GetFreamImg(i),
-				m_pUpgradeUI->GetBackGroundImg(i),
-				m_pUpgradeUI->GetMainImg(i),
+				m_pUpgradeUI->GetDisplayFrameImg(i)->getPosX(),
+				m_pUpgradeUI->GetDisplayFrameImg(i)->getPosY(),
+				m_pUpgradeUI->GetDisplayFrameImg(i),
+				m_pUpgradeUI->GetDisplayBackGroundImg(i),
+				m_pUpgradeUI->GetDisplayMainImg(i),
 				m_isOnSelectButton[i],
 				m_SelectButtonScale[i]
 			))
 			{
+
 				selectedIndex = i;
 			}
+
 		}
 
 		if (selectedIndex != -1)

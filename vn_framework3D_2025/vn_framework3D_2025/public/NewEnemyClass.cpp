@@ -434,13 +434,13 @@ void NewEnemyClass::UpdateAttracted(float deltaTime, XMVECTOR toPlayer, float di
 //   引き寄せ状態に入ったかどうか
 // ---------------------------------------------------------------------------------
 
-void NewEnemyClass::CheckPullTrigger(bool isPlayerPulling, float pullRadius, float distance)
+void NewEnemyClass::CheckPullTrigger(bool isPlayerPulling, float pullRadius, float distanceSq)
 {
     // 状態チェック：死亡、ノックバック、または既に引き寄せ中なら早期リターン
     if (m_state == Dead || m_state == KnockBack || m_state == Attracted) return;
-
+    float radiusSq = pullRadius * pullRadius;
     // 引き寄せ範囲外、またはプレイヤーが引いていない場合
-    if (!isPlayerPulling || distance > pullRadius)
+    if (!isPlayerPulling || distanceSq > radiusSq)
     {
         m_isPullChecked = false; // 判定フラグをリセット
         return;
@@ -582,6 +582,7 @@ void NewEnemyClass::UpdateKnockback(float deltaTime)
     // 上昇中
     if (m_isRising)
     {
+        //目標の高さまで上がり、到達すると落ちる
         if (currentY >= m_targetHeight)
         {
             m_isRising = false;
