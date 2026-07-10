@@ -78,6 +78,8 @@ bool vnMainFrame::initialize(void* hWnd, void* hInst, int width, int height)
 	vnLight::initialize();
 
 	vnDebugDraw::initialize();
+	
+	vnResourceLoader::initialize();
 
 	vnObject::initializeCommon();
 
@@ -99,6 +101,8 @@ void vnMainFrame::terminate()
 	vnSprite::terminateCommon();
 
 	vnObject::terminateCommon();
+
+	vnResourceLoader::terminate();
 
 	vnDebugDraw::terminate();
 

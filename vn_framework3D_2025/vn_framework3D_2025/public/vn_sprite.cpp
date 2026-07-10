@@ -6,6 +6,7 @@
 //--------------------------------------------------------------//
 #include "../framework.h"
 #include "../framework/vn_environment.h"
+#define USE_RESOURCE_LOADER (1)
 
 //頂点要素
 D3D12_INPUT_ELEMENT_DESC vnSprite::inputElementDescs[] =
@@ -154,6 +155,18 @@ vnSprite::vnSprite(float x, float y, float width, float height, const WCHAR* tex
 	texbuff = NULL;
 	basicDescHeap = NULL;
 
+#if USE_RESOURCE_LOADER
+	DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
+	vnResourceLoader::load(texture_file, &texbuff, &format);
+
+	if (texbuff)
+	{
+		texbuff->SetName(L"vnSprite::texbuff");
+	}
+
+#else
+
+
 	//WICテクスチャのロード
 	TexMetadata metadata = {};
 	ScratchImage scratchImg = {};
@@ -198,6 +211,7 @@ vnSprite::vnSprite(float x, float y, float width, float height, const WCHAR* tex
 			(UINT)img->slicePitch
 		);
 	}
+#endif
 
 	{
 		//デスクリプタヒープ
@@ -210,7 +224,11 @@ vnSprite::vnSprite(float x, float y, float width, float height, const WCHAR* tex
 
 		//テクスチャビュー作成
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+#if USE_RESOURCE_LOADER
+		srvDesc.Format = format;
+#else
 		srvDesc.Format = metadata.format;
+#endif
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = 1;
@@ -312,10 +330,20 @@ vnSprite::vnSprite(float x, float y, float width, float height, const WCHAR* tex
 //デストラクタ
 vnSprite::~vnSprite()
 {
+	//SAFE_RELEASE(basicDescHeap);
+	//SAFE_RELEASE(texbuff);
+	//SAFE_RELEASE(vertBuff);
+	//texbuff = NULL;
+
 	SAFE_RELEASE(basicDescHeap);
+#if USE_RESOURCE_LOADER
+	vnResourceLoader::release(texbuff);
+#else
 	SAFE_RELEASE(texbuff);
+#endif
 	SAFE_RELEASE(vertBuff);
 	texbuff = NULL;
+
 }
 
 //処理関数

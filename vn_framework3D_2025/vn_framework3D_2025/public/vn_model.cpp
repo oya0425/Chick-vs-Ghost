@@ -7,6 +7,8 @@
 #include "../framework.h"
 #include "../framework/vn_environment.h"
 
+#define USE_RESOURCE_LOADER (1)
+
 extern HWND hWnd;
 
 vnModel::vnModel(const WCHAR *folder, const WCHAR *file) : vnObject()
@@ -69,6 +71,19 @@ vnModel::vnModel(const WCHAR *folder, const WCHAR *file) : vnObject()
 			size_t ret;
 			mbstowcs_s(&ret, texname, 256, pMaterialData[i].Texture, strlen(pMaterialData[i].Texture));
 			swprintf_s(path, L"%s%s", folder, texname);
+			//swprintf_s(path, L"%s%s", folder, pMaterialData[i].Texture);
+
+#if USE_RESOURCE_LOADER
+			DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
+			vnResourceLoader::load(path, &pMaterials[i].texbuff, &format);
+
+			if (pMaterials[i].texbuff)
+			{
+				pMaterials[i].texbuff->SetName(L"vnModel::texbuff");
+			}
+
+#else
+
 
 			//テクスチャの拡張子
 			const char *ext = strchr(pMaterialData[i].Texture, '.');
@@ -129,6 +144,8 @@ vnModel::vnModel(const WCHAR *folder, const WCHAR *file) : vnObject()
 					);
 				}
 			}
+#endif
+
 		}
 
 		{
@@ -310,19 +327,38 @@ vnModel::vnModel(const WCHAR *folder, const WCHAR *file) : vnObject()
 
 vnModel::~vnModel()
 {
+	//SAFE_RELEASE(pIndexBuffer);
+	//SAFE_RELEASE(pVertexBuffer);
+	//if (pModelData)
+	//{
+	//	for(int i=0; i<(int)pModelData->MaterialNum; i++)
+	//	{
+	//		SAFE_RELEASE(pMaterials[i].constBuff);
+	//		SAFE_RELEASE(pMaterials[i].texbuff);
+	//		SAFE_RELEASE(pMaterials[i].basicDescHeap);
+	//	}
+	//	delete[] pMaterials;
+	//	delete[] (BYTE*)pModelData;
+	//}
 	SAFE_RELEASE(pIndexBuffer);
 	SAFE_RELEASE(pVertexBuffer);
 	if (pModelData)
 	{
-		for(int i=0; i<(int)pModelData->MaterialNum; i++)
+		for (int i = 0; i < (int)pModelData->MaterialNum; i++)
 		{
 			SAFE_RELEASE(pMaterials[i].constBuff);
+#if USE_RESOURCE_LOADER
+			vnResourceLoader::release(pMaterials[i].texbuff);
+#else
 			SAFE_RELEASE(pMaterials[i].texbuff);
+#endif
 			SAFE_RELEASE(pMaterials[i].basicDescHeap);
 		}
 		delete[] pMaterials;
-		delete[] (BYTE*)pModelData;
+
+		delete[](BYTE*)pModelData;
 	}
+
 }
 
 void vnModel::execute()

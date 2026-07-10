@@ -144,6 +144,7 @@
     <ClInclude Include="framework\vn_light.h" />
     <ClInclude Include="framework\vn_mainframe.h" />
     <ClInclude Include="framework\vn_mouse.h" />
+    <ClInclude Include="framework\vn_resourceLoader.h" />
     <ClInclude Include="framework\vn_sound.h" />
     <ClInclude Include="public\BlockManager.h" />
     <ClInclude Include="public\Bullet.h" />
@@ -194,6 +195,7 @@
     <ClCompile Include="framework\vn_light.cpp" />
     <ClCompile Include="framework\vn_mainframe.cpp" />
     <ClCompile Include="framework\vn_mouse.cpp" />
+    <ClCompile Include="framework\vn_resourceLoader.cpp" />
     <ClCompile Include="framework\vn_sound.cpp" />
     <ClCompile Include="public\BlockManager.cpp" />
     <ClCompile Include="public\Bullet.cpp" />

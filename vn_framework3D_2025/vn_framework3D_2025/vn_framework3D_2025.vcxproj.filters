@@ -201,6 +201,9 @@
     <ClInclude Include="public\SoundManager.h">
       <Filter>public\MainScript\Sound</Filter>
     </ClInclude>
+    <ClInclude Include="framework\vn_resourceLoader.h">
+      <Filter>framework</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vn_framework3D_2025.cpp">
@@ -340,6 +343,9 @@
     </ClCompile>
     <ClCompile Include="public\SoundManager.cpp">
       <Filter>public\MainScript\Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="framework\vn_resourceLoader.cpp">
+      <Filter>framework</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

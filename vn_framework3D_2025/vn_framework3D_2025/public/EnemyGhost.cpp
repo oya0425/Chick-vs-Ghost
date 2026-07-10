@@ -456,6 +456,7 @@ void EnemyGhost::MoveAlongPath(float deltaTime, float distance)
     // Y軸（高さ）の差を無視して距離判定（これ重要！）
     toTarget = XMVectorSetY(toTarget, 0);
     float distToTarget = XMVectorGetX(XMVector3Length(toTarget));
+    float distToTargetSq = XMVectorGetX(XMVector3LengthSq(toTarget));
 
     // --- A. 到着済み、または待機中の処理 ---
     if (m_isReachingTarget)
@@ -532,7 +533,7 @@ void EnemyGhost::MoveAlongPath(float deltaTime, float distance)
     // --- B. 移動中の処理 ---
     else
     {
-        if (distToTarget < 1.5f) // 少し余裕を持って到着判定
+        if (distToTargetSq < 1.5f*1.5f) // 少し余裕を持って到着判定
         {
             m_isReachingTarget = true;
             m_patrolWaitTimer = 1.0f + (rand() / (float)RAND_MAX) * 1.0f; // 1~3秒のランダム待機
@@ -543,7 +544,7 @@ void EnemyGhost::MoveAlongPath(float deltaTime, float distance)
             XMVECTOR vInput = XMVector3Normalize(toTarget);
 
             // --------------------------------------------------------
-            // 2. 【追加】リーダー同士の距離確保（分離ロジック）
+            // 2. リーダー同士の距離確保（分離ロジック）
             // --------------------------------------------------------
             // 逃走の時と同じく、一番近いリーダーを探す
             NewEnemyClass* closestLeader = EnemyPool::GetInstance().FindClosestLeader(this, m_leaderSeparateRadius);
@@ -553,11 +554,17 @@ void EnemyGhost::MoveAlongPath(float deltaTime, float distance)
                 XMVECTOR leaderPos = *closestLeader->GetModel()->getPosition();
                 XMVECTOR diff = enemyPos - leaderPos; // 相手から自分へのベクトル
                 diff = XMVectorSetY(diff, 0);         // 高さ無視
-                float d = XMVectorGetX(XMVector3Length(diff));
+                //float d = XMVectorGetX(XMVector3Length(diff));
+                float dSq = XMVectorGetX(XMVector3LengthSq(diff));
+                // 比較用の上限値を2乗にする
+                float maxDistSq = m_leaderSeparateRadius * m_leaderSeparateRadius;
 
                 // 範囲内に仲間がいたら斥力を計算
-                if (d < m_leaderSeparateRadius && d > 0.001f)
+                if (dSq < maxDistSq && dSq > 0.000001f)
                 {
+                    // 判定を通過した時だけ、後半の線形補間のためにルートを計算する
+                    float d = sqrtf(dSq);
+
                     float maxDist = m_leaderSeparateRadius * 1.5f;
                     float minDist = m_leaderSeparateRadius * 0.5f;
                     float weight = 0.0f;
@@ -568,19 +575,15 @@ void EnemyGhost::MoveAlongPath(float deltaTime, float distance)
 
                     XMVECTOR separationDir = XMVector3Normalize(diff);
 
-                    // 挟まり回避（今進みたい方向 vInput と 避けたい方向 separationDir を比較）
+                    // 挟まり回避
                     float dot = XMVectorGetX(XMVector3Dot(vInput, separationDir));
                     if (dot < -0.7f)
                     {
-                        // 垂直に逃げる力を加える
                         XMVECTOR sideDir = XMVector3Cross(separationDir, XMVectorSet(0, 1, 0, 0));
-                        vInput += sideDir * weight * 1.0f; // 徘徊なので少し控えめ(1.0f)
+                        vInput += sideDir * weight * 1.0f;
                     }
 
-                    // 仲間に背を向ける力を合成（徘徊なので 0.8f 程度でマイルドに）
                     vInput += separationDir * weight * 0.8f;
-
-                    // 合成した結果を再度正規化
                     vInput = XMVector3Normalize(vInput);
                 }
             }
@@ -654,22 +657,29 @@ void EnemyGhost::StartEscapeTransition(bool can)
 XMVECTOR EnemyGhost::GetInFence(XMVECTOR vInput, XMVECTOR myPos)
 {
     float R = GetFenceRadius(); //現在のステージの壁の半径を獲得
-    float currentDist = XMVectorGetX(XMVector3Length(myPos));    //ステージの中心からの距離を計算
 
+    // ステージの中心からの「2乗の距離」を計算（ルートを消す）
+    float currentDistSq = XMVectorGetX(XMVector3LengthSq(myPos));
 
-    //自身の位置が壁の回避開始ライン（80%）を超えてる場合
-    if (currentDist > (R * avoidStartRatio))
+    // 回避開始ラインの距離をあらかじめ計算し、2乗しておく
+    float avoidStartDist = R * avoidStartRatio;
+    float avoidStartDistSq = avoidStartDist * avoidStartDist;
+
+    // 自身の位置が壁の回避開始ラインを超えてる場合（2乗同士で高速判定）
+    if (currentDistSq > avoidStartDistSq)
     {
-        //ステージの中心へ向かう方向を計算（-enemyPos）して正規化
+        // 判定を通った場合のみ、線形補間の重み計算のためにルートを取る
+        float currentDist = sqrtf(currentDistSq);
+
+        //ステージの中心へ向かう方向を計算（-myPos）して正規化
         XMVECTOR toCenter = XMVector3Normalize(-myPos);
 
         //壁に近づくほど強くなる（0.0～1.0）重みを計算
-        float weight = (currentDist - (R * avoidStartRatio)) / (R * avoidRangeRatio);
-        if (weight > 1.0f)weight = 1.0f;    //重みが１を超えないようにクランプ
+        float weight = (currentDist - avoidStartDist) / (R * avoidRangeRatio);
+        if (weight > 1.0f) weight = 1.0f;    //重みが１を超えないようにクランプ
 
-        //Lerp（線形補間）を使い、現在の移動方向と中心へ戻る方向を混ぜ合わせる（壁際では中心方向を優先）
+        //Lerp（線形補間）を使い、現在の移動方向と中心へ戻る方向を混ぜ合わせる
         return XMVectorLerp(vInput, toCenter, weight * 0.8f);
-
     }
     return vInput;
 

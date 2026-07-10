@@ -74,7 +74,7 @@ NewEnemyClass::~NewEnemyClass()
 
 // static変数の実体化
 const NewEnemyClass::EnemyData NewEnemyClass::MasterTable[] = {
-    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    300/*150/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
+    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    1000/*150/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMon/", L"MushroomMon.bone", 0 , 1.5f, {1.0f, 1.0f,1.0f}},
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMonster/", L"MushroomMonster.bone", 150 , 5.0f, {1.0f, 1.0f, 1.0f}},
 };
@@ -642,11 +642,13 @@ bool NewEnemyClass::InPlayerArea(float escapeStartDist,float escapeStopDist)//�
 
     float distance =
         XMVectorGetX(XMVector3Length(diff));
+    float distanceSq = XMVectorGetX(XMVector3LengthSq(diff));
 
     //--１.逃走中
     if (m_isEscaping)
     {
-        if (distance > escapeStopDist)
+        float stopDistSq = escapeStopDist * escapeStopDist;
+        if (distanceSq > stopDistSq)
         {
             m_isEscaping = false;
         }
@@ -654,7 +656,8 @@ bool NewEnemyClass::InPlayerArea(float escapeStartDist,float escapeStopDist)//�
     //--２.待機中
     else
     {
-        if (distance < escapeStartDist)
+        float startDistSq = escapeStartDist * escapeStartDist;
+        if (distanceSq < startDistSq)
         {
 
             m_isEscaping = true;
