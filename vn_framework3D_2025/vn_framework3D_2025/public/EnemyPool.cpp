@@ -420,26 +420,44 @@ void EnemyPool::Spawn(const XMVECTOR& position, int currentWave, int maxWave)
     }
     else if (currentWave == maxWave)
     {
-        NewEnemyClass* enemy = GetInactiveBoss();
-        if (enemy)
+        //NewEnemyClass* enemy = GetInactiveBoss();
+        //if (enemy)
+        //{
+        //    enemy->Spawn(position);
+        //    m_spawnTimer = SPAWN_INTERVAL;
+
+        //}
+        //else {
+        //    // 念のため描画を消す
+        //    for (auto e : GetEnemies())
+        //    {
+        //        if (!e->GetActive())
+        //        {
+        //            e->GetModel()->setRenderEnable(false);
+        //            for (int i = 0; i < e->GetModel()->getPartsNum(); i++)
+        //            {
+        //                e->GetModel()->getParts(i)->setRenderEnable(false);
+        //            }
+        //        }
+        //    }
+        //}
+        NewEnemyClass* boss = GetInactiveBoss();
+        if (boss)
+        {
+            boss->Spawn(position);
+
+            m_spawnTimer = SPAWN_INTERVAL;
+            return; // ボスを出したフレームはここで抜ける
+        }
+
+        // 2. ボスが既に出ている場合は、特攻ザコを補充する
+        // (SceneMain側で「20体未満の時だけ」このSpawnが呼ばれる想定)
+        NewEnemyClass* enemy = GetInactiveFinalWaveEnemy();
+        if (enemy && !enemy->GetIsBoss())
         {
             enemy->Spawn(position);
-            m_spawnTimer = SPAWN_INTERVAL;
 
-        }
-        else {
-            // 念のため描画を消す
-            for (auto e : GetEnemies())
-            {
-                if (!e->GetActive())
-                {
-                    e->GetModel()->setRenderEnable(false);
-                    for (int i = 0; i < e->GetModel()->getPartsNum(); i++)
-                    {
-                        e->GetModel()->getParts(i)->setRenderEnable(false);
-                    }
-                }
-            }
+            m_spawnTimer = SPAWN_INTERVAL;
         }
     }
 }
@@ -456,6 +474,18 @@ NewEnemyClass* EnemyPool::GetInactiveEnemy()
     }
     return nullptr;
 }
+NewEnemyClass* EnemyPool::GetInactiveFinalWaveEnemy()
+{
+    for (auto e : _enemies)
+    {
+        if ((!e->GetActive() && e->IsUnlocked()) && e->GetState() == NewEnemyClass::eState::Idel&&!e->GetIsLeader())
+        {
+            return e;
+        }
+    }
+    return nullptr;
+}
+
 // --- ボス専用の非アクティブ取得 ---
 NewEnemyClass* EnemyPool::GetInactiveBoss()
 {
@@ -647,11 +677,16 @@ void EnemyPool::SetBossData()
     {
         //近接耐性（ボス用に変更（プレイヤーにダメージを与える：通常は特攻状態になる確率アップ））
         m_bossGroupData->meleeFear += data->meleeFear*10.0f;
-        m_bossGroupData->rangeFear += data->rangeFear*1.2f;
+        m_bossGroupData->rangeFear += data->rangeFear*0.6f;
         if (pullData <= data->pullResistance)
         {
             pullData = data->pullResistance;
         }
+
+    }
+    if (m_bossGroupData->rangeFear > m_bossGroupData->maxBossRangeFear)
+    {
+        m_bossGroupData->rangeFear = m_bossGroupData->maxBossRangeFear;
     }
     if (m_bossGroupData->meleeFear > m_bossGroupData->maxBossMeleeFear)
     {

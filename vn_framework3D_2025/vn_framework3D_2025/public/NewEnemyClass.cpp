@@ -9,8 +9,7 @@ namespace
     constexpr float ghostSize = 2.5f;
 
     // --- 状態遷移の確率 (0.0f ~ 1.0f) ---
-    constexpr float chargeProbability = 0.3f; // 特攻になる確率
-    constexpr float wallJumpChance = 0.3f; // 壁でジャンプする確率
+    constexpr float chargeProbability = 0.05f; // 特攻になる確率
 
     // --- ノックバック演出 (回転分岐) ---
     constexpr float rotationThreshold1 = 0.33f;
@@ -38,13 +37,13 @@ namespace
 
     // --- リーダー・群れ設定 ---
     constexpr float leaderScaleMultiplier   = 2.0f;     // リーダーの大きさの倍率
-    constexpr float leaderSpeedBoost        = 4.0f;     // リーダー専用速度
+    constexpr float leaderSpeedBoost        = 3.0f;     // リーダー専用速度
     constexpr float leaderSenseRadius       = 10.0f;    // プレイヤーを感知して逃げ始める距離
     constexpr float leaderStopRetreatRadius = 20.0f;    // プレイヤーから十分に離れて逃げやめる距離
-    constexpr float leaderRepelRadius       = 20.0f;    // リーダー同士が重ならないように反発する距離（排他範囲）
+    constexpr float leaderRepelRadius       = 50.0f;    // リーダー同士が重ならないように反発する距離（排他範囲）
 
     constexpr float followerStopDistBase    = 5.0f;    // リーダーに対して停止する基本距離
-    constexpr float followerSpeedBoost      = 1.5f;    // 一般個体の速度倍率
+    constexpr float followerSpeedBoost      = leaderSpeedBoost*0.8;    // 一般個体の速度倍率
     constexpr float followerSearchRadius    = 100.0f;  // リーダーを探し出す索敵範囲
     constexpr int   stopDistRandomRange     = 50;      // 停止距離にバラつきを出すための乱数範囲（0～4.9f）
 
@@ -74,7 +73,7 @@ NewEnemyClass::~NewEnemyClass()
 
 // static変数の実体化
 const NewEnemyClass::EnemyData NewEnemyClass::MasterTable[] = {
-    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    1000/*150/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
+    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    800/*150/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMon/", L"MushroomMon.bone", 0 , 1.5f, {1.0f, 1.0f,1.0f}},
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMonster/", L"MushroomMonster.bone", 150 , 5.0f, {1.0f, 1.0f, 1.0f}},
 };
@@ -144,7 +143,8 @@ void NewEnemyClass::Spawn(const XMVECTOR& pos)
 {
     //if (isActive)return;
     GetModel()->setRenderEnable(true);
-    
+    m_pMyLeader = nullptr;
+
     for (int i = 0; i < GetModel()->getPartsNum(); i++)
     {
         GetModel()->getParts(i)->setRenderEnable(true);
@@ -173,14 +173,64 @@ void NewEnemyClass::Spawn(const XMVECTOR& pos)
         data->isLeaderAlive = true;
         m_onceStartUI = false;
         CheckEvolutionOnSpawn();
-        data->mode= eGroupMode::Normal;
-        data->oldMode= eGroupMode::Normal;
+        if (GetIsBoss())
+        {
+            data->mode = eGroupMode::Charge;
+            data->oldMode = eGroupMode::Charge;
+        }
+        else
+        {
+            data->mode = eGroupMode::Normal;
+            data->oldMode = eGroupMode::Normal;
+        }
 
     }
     else
     {
         m_panicRecoveryStartTime = 0.5f;
     }
+
+    SetMark(m_pChargeMark, false);
+    SetMark(m_pPanicMark, false);
+
+
+
+}
+void NewEnemyClass::Spawn(const XMVECTOR& pos,bool isFinal)
+{
+    //if (isActive)return;
+    GetModel()->setRenderEnable(true);
+    m_pMyLeader = nullptr;
+    for (int i = 0; i < GetModel()->getPartsNum(); i++)
+    {
+        GetModel()->getParts(i)->setRenderEnable(true);
+    }
+
+    GetModel()->setPosition(&pos);
+    GetModel()->setRotation(0, 0, 0);
+    m_kbData.active = false;
+    m_isActive = true;
+    auto& rb = GetRigidbody();
+    rb.SetVerticalVelocity(0.0f);
+    rb.SetIsGround(false);
+    rb.SetIsUseGravity(true);
+    m_isCharge = true;
+
+    if (isFinal)
+    {
+        m_state = eState::Charge;
+    }
+    else
+    {
+        m_state = eState::Idel; // 待機状態に戻す
+    }
+
+
+
+    // --- 調整用変数初期化(不具合防止用) ---
+    m_isPullChecked = false;    //引き寄せで全員が同じ判定にならないようにする
+
+    m_panicRecoveryStartTime = 0.5f;
 
     SetMark(m_pChargeMark, false);
     SetMark(m_pPanicMark, false);
@@ -351,6 +401,30 @@ void NewEnemyClass::UpdateState(
     case Patrol:
         OnPatrol(deltaTime, distance);
         break;
+    }
+
+    if (GetIsBoss())
+    {
+        GroupData* data = GetGroupData();
+
+        const WCHAR* text = L"";
+
+        switch (data->mode)
+        {
+        case eGroupMode::Normal:
+            text = L"Normal";
+            break;
+
+        case eGroupMode::Panic:
+            text = L"Panic";
+            break;
+
+        case eGroupMode::Charge:
+            text = L"Charge";
+            break;
+        }
+
+        vnFont::print(300, 300, text);
     }
 }
 
@@ -719,7 +793,7 @@ void NewEnemyClass::ApplyMovement(float deltaTime, const XMVECTOR moveDir)
 
 #pragma region 範囲攻撃耐性が基礎速度アップ
     // 学習データをもとに足す基礎速度を取る
-    float rangeFear = data ? data->rangeFear : 0.0f;
+    float rangeFear = data ? data->rangeFear*1.2 : 0.0f;
 
     //群のそれぞれに応じたベース倍率の決定
     float roleMultiplier = GetIsLeader() ? m_leaderSpeedMultiplier : m_otherSpeedMultiplier;
@@ -939,9 +1013,9 @@ void NewEnemyClass::SettingOther()
     //通常個体の速度設定
     float speedVariance = (90 + (rand() % 21)) / 100.0f;
     m_otherSpeedMultiplier *= speedVariance;
-    //m_otherSpeedMultiplier = followerSpeedBoost;
+    m_otherSpeedMultiplier = followerSpeedBoost;
 
-    m_defalutOtherSpeedMultiplier = m_otherSpeedMultiplier;
+    //m_defalutOtherSpeedMultiplier = m_otherSpeedMultiplier;
 }
 
 // --- ボスのセッティング ---
@@ -960,7 +1034,7 @@ void NewEnemyClass::SettingBoss(GroupData* groupData)
     m_leaderSeparateRadius = leaderRepelRadius;
 
     //プレイヤーを感知する距離
-    m_leaderEscapeRadius = leaderSenseRadius;
+    m_leaderEscapeRadius = leaderSenseRadius*3;
 
     //プレイヤーからの止まる距離
     m_leaderRetreatStopRadius = leaderStopRetreatRadius;

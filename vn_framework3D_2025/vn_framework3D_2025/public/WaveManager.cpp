@@ -143,6 +143,14 @@ void WaveManager::SetupWave()
     int stepLimit = 25;
     m_spawnLimit = startLimit + (m_currentWave - 1) * stepLimit;
 
+
+    //int startLimit = m_configMaxSimultaneous;
+    //int targetLimit = 1000;
+
+    //int stepLimit = (targetLimit - startLimit) / 3;
+
+    //m_spawnLimit = startLimit + (m_currentWave - 1) * stepLimit;
+    
     // 安全装置：もし在庫（150）を超えそうならカットする
     //if (m_spawnLimit > 150) m_spawnLimit = 150;
 

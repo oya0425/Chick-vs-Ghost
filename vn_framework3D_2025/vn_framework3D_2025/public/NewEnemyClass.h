@@ -183,6 +183,7 @@ public:
 
 	// --- 出現・削除 ---
 	void Spawn(const XMVECTOR& pos);//生成
+	void Spawn(const XMVECTOR& pos,bool isFinal);//生成
 	void DeSpawn();					//無効化（プールに戻す）
 
 	// --- 更新 ---
@@ -411,7 +412,7 @@ protected:
 	//==================================================
 	float m_leaderSeparateRadius = 1.0f;		//リーダー同氏の反発距離
 	float m_leaderEscapeRadius = 1.0f;			//プレイヤーから逃げる距離
-	float m_leaderRetreatStopRadius = 1.0f;	//プレイヤーから十分に離れて逃げやめる距離
+	float m_leaderRetreatStopRadius = 1.0f;		//プレイヤーから十分に離れて逃げやめる距離
 
 	//==================================================
 	// パトロール

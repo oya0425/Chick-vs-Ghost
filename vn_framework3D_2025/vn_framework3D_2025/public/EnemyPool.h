@@ -79,6 +79,8 @@ public:
 	// --- 非アクティブ敵取得 ---
 	NewEnemyClass* GetInactiveEnemy();
 	NewEnemyClass* GetInactiveBoss();	//ボスだけ取ってくる
+	NewEnemyClass* GetInactiveFinalWaveEnemy();	//最終WAVEの時にリーダー以外を取ってくる
+
 
 	// --- アクティブ数取得 ---
 	int GetActiveCount()const;

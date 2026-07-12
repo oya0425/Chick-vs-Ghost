@@ -109,6 +109,13 @@ namespace {
 	constexpr float defualtTheta  = 92.688f;
 	constexpr float defualtPhi	  = 0.7f;
 
+
+	//
+	constexpr float defualtDamage = 4.0f;
+
+	//
+	constexpr float finalChargeEnemyNum = 3;	//最終WAVEの特攻状態で出てくる敵の数を増やす倍率（ボスの近接耐性に掛ける）
+
 	//経験値のマネージャーが画像の番号を持ってるからそれを見て画像を入れる
 	// 1.フレーム
 	// 2.後ろの背景
@@ -185,6 +192,7 @@ void SceneMain::SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData&
 	registerObject(enemy->GetChargeMark());
 	registerObject(enemy->GetPanicMark());
 
+	//ボスの設定
 	if (isLeader && isBoss)
 	{
 		EnemyPool::GetInstance().GetBossGroupData() = std::make_unique<NewEnemyClass::GroupData>();
@@ -203,6 +211,7 @@ void SceneMain::SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData&
 	}
 	else
 	{
+		//リーダーの設定
 		if (isLeader)
 		{
 			EnemyPool::GetInstance().GetLatestGroupData().push_back(
@@ -229,6 +238,7 @@ void SceneMain::SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData&
 			enemy->SettingLeader(group);
 			enemy->SetFenceRadius(FenceRadius);
 		}
+		//その他の敵の設定
 		else
 		{
 			enemy->SettingOther();
@@ -537,10 +547,12 @@ void SceneMain::InitializeField()
 
 	// --- ブロックマネージャー ---
 	m_pBlockManager = new BlockManager();
+	//通常ブロックを生成
 	for (int i = 0; i < BlockManager::GetMaxBlocksNum(); i++)
 	{
 		TerrainBlock* pBlock = new TerrainBlock();
 		pBlock->SetModel(new vnCharacter(L"data/model/Block/", L"Block.bone"));
+		pBlock->SetIsMagma(false);
 
 		registerObject(pBlock->GetModel());
 		for (int j = 0; j < pBlock->GetModel()->getPartsNum(); j++)
@@ -556,6 +568,28 @@ void SceneMain::InitializeField()
 
 		m_pBlockManager->AddBlock(pBlock);
 	}
+	//マグマブロックの生成
+	for (int i = 0; i < BlockManager::GetMaxBlocksNum(); i++)
+	{
+		TerrainBlock* pBlock = new TerrainBlock();
+		pBlock->SetModel(new vnCharacter(L"data/model/magma/", L"magma.bone"));
+
+		pBlock->SetIsMagma(true);
+		registerObject(pBlock->GetModel());
+		for (int j = 0; j < pBlock->GetModel()->getPartsNum(); j++)
+		{
+			registerObject(pBlock->GetModel()->getParts(j));
+		}
+
+		pBlock->GetModel()->setRenderEnable(false);
+		for (int j = 0; j < pBlock->GetModel()->getPartsNum(); j++)
+		{
+			pBlock->GetModel()->getParts(j)->setRenderEnable(false);
+		}
+
+		m_pBlockManager->AddMagmaBlock(pBlock);
+	}
+
 
 	// --- ウェーブマネージャー ---
 	waveManager = new WaveManager();
@@ -2102,7 +2136,7 @@ void SceneMain::UpdateIdel()
 		soundManager->PlaySE(SE_ENTER);
 
 		waveManager->Init();   //ここでWave開始
-		m_pBlockManager->RespawnBlocks(waveManager->GetCurrentWave(), FenceRadius);
+		m_pBlockManager->RespawnBlocks(waveManager->GetCurrentWave(), FenceRadius, waveManager->GetFinalWave());
 
 	}
 
@@ -2305,14 +2339,19 @@ void SceneMain::SpawnEnemies(float deltaTime)
 	waveManager->Update(deltaTime);
 	//int totalCount = (int)enemyPool->GetEnemies().size();
 	m_activeCount = enemyPool->GetActiveCount();
-	if (m_activeCount < waveManager->GetMaxSpawnLimit() && waveManager->GetState() == WaveManager::WaveState::InProgress)
+	bool isBossWave = (waveManager->GetCurrentWave() == waveManager->GetMaxWave());
+
+	//最終WAVEの時は近接耐性分だけ特攻状態の敵が出てくる
+	int maxLimit = isBossWave ? ((int)enemyPool->GetBossGroupData().get()->meleeFear+1)*finalChargeEnemyNum: waveManager->GetMaxSpawnLimit();
+
+	if (m_activeCount < maxLimit && waveManager->GetState() == WaveManager::WaveState::InProgress)
 	{
-		m_spawnNum = waveManager->GetMaxSpawnLimit() - m_activeCount;
+		m_spawnNum = maxLimit - m_activeCount;
 
 		for (int i = 0; i < m_spawnNum; i++)
 		{
 			// ウェーブの残り出現枠がある時だけスポーン
-			if (waveManager->CanSpawn())
+			if (isBossWave||waveManager->CanSpawn())
 			{
 				float minRadius = 1.0f;
 				float maxRadius = FenceRadius * 3; // フェンスの8割まで
@@ -2330,8 +2369,9 @@ void SceneMain::SpawnEnemies(float deltaTime)
 				XMVECTOR pos = XMVectorSet(x, y, z, 0.0f);
 				enemyPool->Spawn(pos, waveManager->GetCurrentWave(), waveManager->GetMaxWave());
 				//enemyPool->Spawn(pos);
-				waveManager->OnEnemySpawned(); // カウントを増やす
-
+				if (!isBossWave) {
+					waveManager->OnEnemySpawned(); // 通常Waveのみカウントを進める
+				}
 
 			}
 		}
@@ -2474,7 +2514,7 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				{
 					if (!m_pNewPlayer->IsAreaAttack())
 					{
-						m_pNewPlayer->Damage(5.0f);
+						m_pNewPlayer->Damage(defualtDamage);
 					}
 					//if (m_pNewPlayer->IsPulling())
 					//{
@@ -2510,7 +2550,22 @@ void SceneMain::UpdateEnemies(float deltaTime)
 					enemy->OnDie(source);
 				}
 				enemy->SetIsHitPlayer(true);
-				waveManager->OnEnemyKilled();
+				
+				//waveManager->OnEnemyKilled();
+				bool isBossWave = (waveManager->GetCurrentWave() == waveManager->GetMaxWave());
+				//最終WAVEのみボスを倒したときにのみカウントを増やす
+				if (isBossWave)
+				{
+					if (enemy->GetIsBoss())
+					{
+						waveManager->OnEnemyKilled(); 
+					}
+				}
+				else
+				{
+					// 通常WAVEの場合：ザコを倒したら普通にカウントを進める（既存のロジック）
+					waveManager->OnEnemyKilled();
+				}
 			}
 			else
 			{
@@ -2520,6 +2575,9 @@ void SceneMain::UpdateEnemies(float deltaTime)
 
 			}
 
+			//==================================================
+			// 弾と当たった時
+			//==================================================
 			auto dirEtoB = colliderStoS(enemy, m_pBullet);
 
 			if (dirEtoB != None)
@@ -2538,6 +2596,8 @@ void SceneMain::UpdateEnemies(float deltaTime)
 
 				enemy->SetIsHitPlayer(true);
 				waveManager->OnEnemyKilled();
+
+
 			}
 			else
 			{
@@ -2661,7 +2721,7 @@ void SceneMain::AddCombo(NewEnemyClass* enemy)
 	m_comboTimer = m_currentComboLimit;
 	m_comboScale = 1.5f; // 一瞬で1.5倍の大きさに跳ねさせる！(コンボの文字)
 	m_killCounter++; // 回復用カウンターを増やす
-	if (m_comboCount %100==0)
+	if (m_comboCount %200==0)
 	{
 		//==================================
 		// コンボ100ごとにレベルアップ
@@ -2677,11 +2737,11 @@ void SceneMain::AddCombo(NewEnemyClass* enemy)
 		//リーダーの時と、その他がパニック状態の時にもらえる経験値が増える
 		if (enemy->GetIsLeader())
 		{
-			expAmount *= 1.5f;
+			expAmount *= 3.0f;
 		}
 		else if (!enemy->GetIsLeader() && enemy->GetState() == NewEnemyClass::eState::Panic)
 		{
-			expAmount *= 1.2f;
+			expAmount *= 1.5f;
 
 		}
 
@@ -2766,7 +2826,7 @@ void SceneMain::UpdateWaveTransition()
 
 
 			isWaveClear = false;
-			m_pBlockManager->RespawnBlocks(waveManager->GetCurrentWave(), FenceRadius);
+			m_pBlockManager->RespawnBlocks(waveManager->GetCurrentWave(), FenceRadius,waveManager->GetFinalWave());
 			
 			//最終ステージ（ボス登場）
 			if (waveManager->GetFinalWave())
@@ -3021,6 +3081,7 @@ bool SceneMain::UpdateUpgradeButton(
 //----------------------------------------
 void SceneMain::UpdateGameOver()
 {
+	soundManager->StopSE(SE_GRILL);
 
 	soundManager->PlayBGM(BGM_GAMEOVER);
 	if (vnKeyboard::trg(DIK_RETURN) || vnMouse::trgR())
@@ -3042,6 +3103,7 @@ void SceneMain::UpdateGameOver()
 //----------------------------------------
 void SceneMain::UpdateGameClear()
 {
+	soundManager->StopSE(SE_GRILL);
 
 	soundManager->PlayBGM(BGM_GAMECLEAR);
 
@@ -3060,7 +3122,7 @@ void SceneMain::UpdateGameClear()
 void SceneMain::CleanUpScene()
 {
 	pDustEmitter->setEmit(false, 0);
-	
+
 	//敵を全て消す
 	for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
 	{
@@ -3088,13 +3150,80 @@ void SceneMain::UpdateBlocksCollision()
 {
 	// --- 地形との当たり判定（ブロック） ---
 	// プレイヤー vs ブロック
-	for (auto* block : m_pBlockManager->GetAllBlocks()) {
-		// ブロックが表示（有効）なときだけ判定
-		//if (block->GetModel()->getRenderEnable()) {
-		colliderCtoC(m_pNewPlayer, block);
-		colliderCtoC(block, m_pNewPlayer);
-		//}
+	//for (auto* block : m_pBlockManager->GetAllActiveBlocks()) {
+
+	//	// 1. 衝突判定と押し戻しを1回ずつ実行し、当たったかどうかのフラグを取る
+	//	// (プレイヤーからブロック、ブロックからプレイヤーの双方の押し戻し結果を記録)
+	//	bool isHit1 = colliderCtoC(m_pNewPlayer, block);
+	//	bool isHit2 = colliderCtoC(block, m_pNewPlayer);
+
+	//	// 2. どちらか一方ででも衝突が検知されていたら「当たっている」とみなす
+	//	bool isColliding = isHit1 || isHit2;
+
+	//	// マグマのブロックに触れているならダメージ
+	//	if (block->GetIsMagma() && isColliding)
+	//	{
+	//		soundManager->PlaySEing(SE_ENEMY_CHARGE);
+	//		m_pNewPlayer->Damage(defualtDamage * 0.05f);
+	//	}
+	//	else
+	//	{
+	//		soundManager->StopSE(SE_ENEMY_CHARGE);
+	//	}
+	//}
+
+	bool isTouchingMagma = false;
+
+	for (auto* block : m_pBlockManager->GetAllActiveBlocks()) {
+
+		// --- 音・ダメージ用の「少し広げた」判定チェック ---
+		bool isNearMagma = false;
+		if (block->GetIsMagma()) {
+			// 1. 判定を少しだけ広げるためのマージン（サイズを1%〜2%大きくするイメージ）
+			// 0.02f の値はゲームのスケールに合わせて調整してください（1cm〜2cm相当）
+			XMVECTOR margin = XMVectorSet(0.02f, 0.02f, 0.02f, 0.0f);
+			XMVECTOR range = XMVectorAdd(
+				XMVectorAdd(m_pNewPlayer->GetCollision().GetSize() * 0.5f, margin),
+				block->GetCollision().GetSize() * 0.5f
+			);
+
+			float rx = XMVectorGetX(range);
+			float ry = XMVectorGetY(range);
+			float rz = XMVectorGetZ(range);
+
+			XMVECTOR center1 = XMVectorAdd(*m_pNewPlayer->GetModel()->getPosition(), m_pNewPlayer->GetCollision().GetCenter());
+			XMVECTOR center2 = XMVectorAdd(*block->GetModel()->getPosition(), block->GetCollision().GetCenter());
+			XMVECTOR dif = XMVectorAbs(center1 - center2);
+
+			// 2. 押し戻す前の「隣接しているか」の純粋なフラグを取る
+			if (XMVectorGetX(dif) < rx && XMVectorGetY(dif) < ry && XMVectorGetZ(dif) < rz) {
+				isNearMagma = true;
+			}
+		}
+
+		// --- 通常の衝突判定と押し戻し ---
+		bool isHit1 = colliderCtoC(m_pNewPlayer, block);
+		bool isHit2 = colliderCtoC(block, m_pNewPlayer);
+		bool isColliding = isHit1 || isHit2;
+
+		// 通常の衝突、マグマ接触
+		if (block->GetIsMagma() && (isColliding || isNearMagma))
+		{
+			m_pNewPlayer->Damage(defualtDamage * 0.05f);
+			isTouchingMagma = true;
+		}
 	}
+
+	// 全てのブロックをチェックし終わった後に、音の管理をする
+	if (isTouchingMagma)
+	{
+		soundManager->PlaySEing(SE_GRILL);
+	}
+	else
+	{
+		soundManager->StopSE(SE_GRILL);
+	}
+
 
 	// 敵 vs ブロック
 	for (auto* enemy : enemyPool->GetEnemies()) {
@@ -3102,7 +3231,7 @@ void SceneMain::UpdateBlocksCollision()
 		if (enemy->IsAttracted()) {
 			continue;
 		}
-		for (auto* block : m_pBlockManager->GetAllBlocks()) {
+		for (auto* block : m_pBlockManager->GetAllActiveBlocks()) {
 			if (colliderCtoC(enemy, block)) {
 				// 当たった敵にはフラグを立てる
 				enemy->SetWallHit(true);
@@ -3117,7 +3246,7 @@ void SceneMain::UpdateBlocksCollision()
 		}
 	}
 
-	for (auto* block : m_pBlockManager->GetAllBlocks()) {
+	for (auto* block : m_pBlockManager->GetAllActiveBlocks()) {
 		if (colliderCtoC(m_pBullet, block)) {
 			m_pBullet->SetIsHitWall(true);
 			break; // 何か一つに当たっていればOK
@@ -3136,9 +3265,5 @@ void SceneMain::UpdateBlocksCollision()
 
 void SceneMain::DebugDraw() 
 {
-
-	// 2. 変数の値（float）を文字列に整形（%.0f で小数点以下を非表示、整数として表示）
-	vnFont::print(370,550,L"EXP: %.0f / %.0f", m_pExpManager->GetCurrentExp(), m_pExpManager->GetNeedExp());
-
 
 }

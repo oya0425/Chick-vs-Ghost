@@ -211,6 +211,7 @@ public:
 
 	//•`‰æó‘Ô‚Ìİ’è
 	void setRenderEnable(bool flag);
+	bool getRenderEnable();
 
 	//Àsó‘Ô‚Ìæ“¾
 	bool isExecuteEnable();

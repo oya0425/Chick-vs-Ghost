@@ -24,7 +24,7 @@ enum SE_ID
 	SE_ENEMY_CHARGE,	//特攻状態時に鳴らすSE
 	SE_ENEMY_PANIC,		//パニック時に鳴らすSE
 	SE_JUMP,			//ジャンプ時に鳴らすSE
-
+	SE_GRILL,			//溶岩に当たってるときの音
 
 
 	//タイトル画面で使用
@@ -50,8 +50,9 @@ public:
 	void StopBGM(BGM_ID id);
 
 	void PlaySE(SE_ID id);
+	void PlaySEing(SE_ID id);//効果音がなっていたら終わるまで鳴らさない
 
-
+	void StopSE(SE_ID id);	//効果音を消す
 
 
 

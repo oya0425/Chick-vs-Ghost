@@ -26,6 +26,7 @@ WCHAR seFile_Main[][FILE_PATH_MAX] =
 	L"data/sound/特攻状態変化.wav",				 //特攻状態時に鳴らすSE
 	L"data/sound/パニック状態変化.wav",		     //パニック時に鳴らすSE
 	L"data/sound/Jump.wav",					     //ジャンプ時に鳴らすSE
+	L"data/sound/目玉焼きを焼く.wav",			 //溶岩に当たってる時に鳴らすSE
 
 	//タイトル画面で使用
 	L"data/sound/maou_se_battle03.wav",		//STARTボタン押したときの音
@@ -62,6 +63,7 @@ SoundManager::SoundManager()
 	pSE[SE_ENEMY_CHARGE]->setVolume(2);
 	pSE[SE_ENEMY_PANIC]->setVolume(2);
 	pSE[SE_JUMP]->setVolume(1.5f);
+	pSE[SE_GRILL]->setVolume(20.5f);
 
 	pSE[SE_TITLE_CHANGEPAGE]->setVolume(2);
 
@@ -113,7 +115,19 @@ void SoundManager::StopBGM(BGM_ID id)
 
 void SoundManager::PlaySE(SE_ID id)
 {
+	//if (pSE[id]->isPlaying())return;
 	pSE[id]->play();
+}
+
+void SoundManager::PlaySEing(SE_ID id)
+{
+	if (pSE[id]->isPlaying())return;
+	pSE[id]->play();
+}
+void SoundManager::StopSE(SE_ID id)
+{
+	if (!pSE[id]->isPlaying())return;
+	pSE[id]->stop();
 }
 
 

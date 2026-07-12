@@ -599,6 +599,10 @@ void vnObject::setRenderEnable(bool flag)
 {
 	renderEnable = flag;
 }
+bool vnObject::getRenderEnable()
+{
+	return renderEnable;
+}
 
 //Àsó‘Ô‚Ìæ“¾
 bool vnObject::isExecuteEnable()

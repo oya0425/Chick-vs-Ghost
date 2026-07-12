@@ -7,10 +7,40 @@
 #pragma once
 
 #include "vn_object.h"
+//リソースの最大数
+#define RESOURCE_LOADER_MAX	(256)
+
 
 class vnModel : public vnObject
 {
 protected:
+	//使いまわすように作成
+	class cModelResource
+	{
+	public:
+		WCHAR           path[256];
+		int             refCount;       // 参照カウント（0になったら本当に解放）
+
+		// 全員で使い回す重いデータ
+		vnModelData* pModelData;
+		ID3D12Resource* pVertexBuffer;
+		ID3D12Resource* pIndexBuffer;
+		D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+		D3D12_INDEX_BUFFER_VIEW  indexBufferView;
+		// (必要に応じてマテリアルの共通部分も)
+
+		void init() {
+			memset(path, 0, sizeof(path));
+			refCount = 0;
+			pModelData = NULL;
+			pVertexBuffer = NULL;
+			pIndexBuffer = NULL;
+		}
+	};
+	static cModelResource	modelResourceLoader[RESOURCE_LOADER_MAX];
+
+
+
 	struct stMaterial
 	{
 		//カラー
@@ -38,6 +68,9 @@ protected:
 	//インデックスバッファ
 	ID3D12Resource* pIndexBuffer;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
+private:
+	bool isResourceOwner;
+
 
 public:
 	//コンストラクタ

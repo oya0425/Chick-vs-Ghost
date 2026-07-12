@@ -9,7 +9,415 @@
 
 #define USE_RESOURCE_LOADER (1)
 
+
+vnModel::cModelResource vnModel::modelResourceLoader[RESOURCE_LOADER_MAX] = {}; 
+
 extern HWND hWnd;
+#if USE_RESOURCE_LOADER
+vnModel::vnModel(const WCHAR* folder, const WCHAR* file) : vnObject()
+{
+	HRESULT hr;
+
+	// 【修正点①】デフォルトは「自分がリソースの所有者(1体目)」として初期化
+	isResourceOwner = true;
+
+	pModelData = NULL;
+	pMaterials = NULL;
+	pVertexBuffer = NULL;
+	pIndexBuffer = NULL;
+
+	// vnmファイルのロード用パス作成
+	WCHAR path[256];
+	swprintf_s(path, L"%s%s", folder, file);
+
+
+	// =================================================================
+	// 【修正点②】バグ回避のための設計変更
+	// ファイルロード処理とマテリアル生成は、メモリの安全性を保証するため
+	// 1体目・2体目に関わらず、すべての個体が毎回必ず安全に実行します。
+	// (共有の検索判定は、後半の頂点/インデックスバッファ作成直前で行います)
+	// =================================================================
+
+	FILE* fp = NULL;
+	long size = 0;
+
+	if ((_wfopen_s(&fp, path, L"rb")) != 0)
+	{
+		WCHAR text[256];
+		swprintf_s(text, L"cannot open file \"%s\"", path);
+		vnFont::output(text);
+		MessageBox(hWnd, text, L"vnModel Construct Error", MB_OK);
+		assert(false);
+		return;
+	}
+	fseek(fp, 0, SEEK_END);
+	size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+
+	// 各自が自分のインスタンス用に安全なCPUバッファを確保
+	pModelData = (vnModelData*)new BYTE[size];
+	fread(pModelData, size, 1, fp);
+	fclose(fp);
+
+	// バージョンチェック
+	if (pModelData->Version < vnMODEL_DATA_LATEST_VER)
+	{
+		WCHAR text[256];
+		swprintf_s(text, L"this file version is obsolete : \"%s\"", path);
+		vnFont::output(text);
+		MessageBox(hWnd, text, L"vnModel Construct Error", MB_OK);
+		assert(false);
+		return;
+	}
+
+	// -------------------------------------------------------------
+	// マテリアルの作成 (各自が自分の pModelData から安全に読み出す)
+	// -------------------------------------------------------------
+	vnModel_MaterialData* pMaterialData = reinterpret_cast<vnModel_MaterialData*>(reinterpret_cast<__int64>(pModelData) + pModelData->MaterialAccess);
+	pMaterials = new stMaterial[pModelData->MaterialNum];
+
+	for (int i = 0; i < (int)pModelData->MaterialNum; i++)
+	{
+		TexMetadata metadata = {};
+		ScratchImage scratchImg = {};
+
+		pMaterials[i].texbuff = NULL;
+		pMaterials[i].basicDescHeap = NULL;
+		if (pMaterialData[i].Texture[0])
+		{
+			WCHAR texname[256];
+			size_t ret;
+			mbstowcs_s(&ret, texname, 256, pMaterialData[i].Texture, strlen(pMaterialData[i].Texture));
+			swprintf_s(path, L"%s%s", folder, texname);
+
+#if USE_RESOURCE_LOADER
+			DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
+			vnResourceLoader::load(path, &pMaterials[i].texbuff, &format);
+
+			if (pMaterials[i].texbuff)
+			{
+				pMaterials[i].texbuff->SetName(L"vnModel::texbuff");
+			}
+#else
+			// テクスチャの拡張子
+			const char* ext = strchr(pMaterialData[i].Texture, '.');
+
+			// テクスチャの読み込み
+			if (ext != NULL)
+			{
+				WCHAR texname[256];
+				size_t ret;
+				mbstowcs_s(&ret, texname, 256, pMaterialData[i].Texture, strlen(pMaterialData[i].Texture));
+				swprintf_s(path, L"%s%s", folder, texname);
+				if (strcmp(ext, ".tga") == 0 || strcmp(ext, ".TGA") == 0)
+				{
+					hr = LoadFromTGAFile(path, TGA_FLAGS_NONE, &metadata, scratchImg);
+				}
+				else
+				{
+					hr = LoadFromWICFile(path, WIC_FLAGS_NONE, &metadata, scratchImg);
+				}
+				if (hr == S_OK)
+				{
+					const Image* img = scratchImg.GetImage(0, 0, 0);
+
+					D3D12_HEAP_PROPERTIES texHeapProp = {};
+					texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;
+					texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+					texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+					texHeapProp.CreationNodeMask = 0;
+					texHeapProp.VisibleNodeMask = 0;
+
+					D3D12_RESOURCE_DESC resDesc = {};
+					resDesc.Format = metadata.format;
+					resDesc.Width = metadata.width;
+					resDesc.Height = (UINT)metadata.height;
+					resDesc.DepthOrArraySize = (UINT16)metadata.arraySize;
+					resDesc.SampleDesc.Count = 1;
+					resDesc.SampleDesc.Quality = 0;
+					resDesc.MipLevels = (UINT16)metadata.mipLevels;
+					resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);
+					resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+					resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+					hr = vnDirect3D::getDevice()->CreateCommittedResource(
+						&texHeapProp,
+						D3D12_HEAP_FLAG_NONE,
+						&resDesc,
+						D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+						nullptr,
+						IID_PPV_ARGS(&pMaterials[i].texbuff)
+					);
+					pMaterials[i].texbuff->SetName(L"vnModel::texbuff");
+
+					hr = pMaterials[i].texbuff->WriteToSubresource(0,
+						NULL,
+						img->pixels,
+						(UINT)img->rowPitch,
+						(UINT)img->slicePitch
+					);
+				}
+			}
+#endif
+		}
+
+		{
+			D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
+			descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+			descHeapDesc.NodeMask = 0;
+			descHeapDesc.NumDescriptors = 2;
+			descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+			hr = vnDirect3D::getDevice()->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&pMaterials[i].basicDescHeap));
+			if (hr != S_OK)
+			{
+				assert(hr == S_OK);
+			}
+
+			// 定数バッファ
+			D3D12_HEAP_PROPERTIES constHeapProp = {};
+			constHeapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
+			constHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+			constHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+			constHeapProp.CreationNodeMask = 1;
+			constHeapProp.VisibleNodeMask = 1;
+
+			D3D12_RESOURCE_DESC constDesc = {};
+			constDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+			constDesc.Width = ((sizeof(stConstantBuffer) + 0xff) & ~0xff);
+			constDesc.Height = 1;
+			constDesc.DepthOrArraySize = 1;
+			constDesc.MipLevels = 1;
+			constDesc.Format = DXGI_FORMAT_UNKNOWN;
+			constDesc.SampleDesc.Count = 1;
+			constDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+			constDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+			hr = vnDirect3D::getDevice()->CreateCommittedResource(
+				&constHeapProp,
+				D3D12_HEAP_FLAG_NONE,
+				&constDesc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				IID_PPV_ARGS(&pMaterials[i].constBuff)
+			);
+			if (hr != S_OK)
+			{
+				assert(hr == S_OK);
+			}
+			pMaterials[i].constBuff->SetName(L"vnModel::constBuff");
+
+			D3D12_CPU_DESCRIPTOR_HANDLE basicHeapHandle = pMaterials[i].basicDescHeap->GetCPUDescriptorHandleForHeapStart();
+
+			// シェーダリソースビューの作成
+			if (pMaterials[i].texbuff != NULL)
+			{
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+				// 各自が作成した独立した texbuff から確実にフォーマットを取得（metadata破綻対策）
+				srvDesc.Format = pMaterials[i].texbuff->GetDesc().Format;
+
+				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+				srvDesc.Texture2D.MipLevels = 1;
+
+				vnDirect3D::getDevice()->CreateShaderResourceView(pMaterials[i].texbuff,
+					&srvDesc,
+					basicHeapHandle
+				);
+			}
+			else
+			{
+				vnDirect3D::getDevice()->CreateShaderResourceView(vnDirect3D::getWhiteTexture(),
+					vnDirect3D::getWhiteTextueViewDesc(),
+					basicHeapHandle
+				);
+			}
+			basicHeapHandle.ptr += vnDirect3D::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+			cbvDesc.BufferLocation = pMaterials[i].constBuff->GetGPUVirtualAddress();
+			cbvDesc.SizeInBytes = (UINT)pMaterials[i].constBuff->GetDesc().Width;
+
+			// 定数バッファビューの作成
+			vnDirect3D::getDevice()->CreateConstantBufferView(&cbvDesc, basicHeapHandle);
+
+			hr = pMaterials[i].constBuff->Map(0, NULL, (void**)&pMaterials[i].pConstBuffer);
+		}
+
+		// マテリアルカラー
+		pMaterials[i].Diffuse = XMVectorSet(pMaterialData[i].Diffuse[0], pMaterialData[i].Diffuse[1], pMaterialData[i].Diffuse[2], pMaterialData[i].Diffuse[3]);
+		pMaterials[i].Ambient = XMVectorSet(pMaterialData[i].Ambient[0], pMaterialData[i].Ambient[1], pMaterialData[i].Ambient[2], pMaterialData[i].Ambient[3]);
+		pMaterials[i].Specular = XMVectorSet(pMaterialData[i].Specular[0], pMaterialData[i].Specular[1], pMaterialData[i].Specular[2], pMaterialData[i].Specular[3]);
+	}
+
+	// =================================================================
+	// 【ここからバッファの共有処理】
+	// 安全なマテリアル構築が完了したのち、大元のVRAMバッファを検索してフックする
+	// =================================================================
+	int targetIndex = -1;
+	int emptyIndex = -1;
+
+	// フルパスをもう一度設定
+	swprintf_s(path, L"%s%s", folder, file);
+
+	for (int i = 0; i < RESOURCE_LOADER_MAX; i++)
+	{
+		if (modelResourceLoader[i].refCount > 0 && wcscmp(modelResourceLoader[i].path, path) == 0) {
+			targetIndex = i; // 先に生成された共通のVRAMバッファを発見！
+			break;
+		}
+		if (emptyIndex == -1 && modelResourceLoader[i].refCount == 0) {
+			emptyIndex = i;
+		}
+	}
+
+	if (targetIndex != -1)
+	{
+		// -------------------------------------------------------------
+		// ◆ 2体目以降（大元のVRAMポインタをコピーして使い回す）
+		// -------------------------------------------------------------
+		modelResourceLoader[targetIndex].refCount++;
+		isResourceOwner = false; // 自分は所有者ではないので後半のバッファ新規作成をスキップ
+
+		// 大元のポインタを自分の変数にコピー（共通化）
+		pVertexBuffer = modelResourceLoader[targetIndex].pVertexBuffer;
+		pIndexBuffer = modelResourceLoader[targetIndex].pIndexBuffer;
+		vertexBufferView = modelResourceLoader[targetIndex].vertexBufferView;
+		indexBufferView = modelResourceLoader[targetIndex].indexBufferView;
+	}
+	else
+	{
+		// -------------------------------------------------------------
+		// ◆ 1体目（最初の作成者。ここで大元の共通VRAMバッファを作る準備をする）
+		// -------------------------------------------------------------
+		assert(emptyIndex != -1 && "vnModel Resource Loader is FULL!");
+		targetIndex = emptyIndex;
+		isResourceOwner = true;
+	}
+	// 前半の分岐で「新規ロード（1体目）」だった場合のみ実行する条件式
+	if (isResourceOwner)
+	{
+		// -------------------------------------------------------------
+		// ◆ 頂点バッファの作成（1体目のみ実行）
+		// -------------------------------------------------------------
+		{
+			const UINT vertexBufferSize = sizeof(vnVertex3D) * pModelData->VertexNum;
+
+			D3D12_HEAP_PROPERTIES heapprop = {};
+			heapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+			heapprop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+			heapprop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+			D3D12_RESOURCE_DESC resdesc = {};
+			resdesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+			resdesc.Width = vertexBufferSize;
+			resdesc.Height = 1;
+			resdesc.DepthOrArraySize = 1;
+			resdesc.MipLevels = 1;
+			resdesc.Format = DXGI_FORMAT_UNKNOWN;
+			resdesc.SampleDesc.Count = 1;
+			resdesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+			resdesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+			// ここで生成される pVertexBuffer が、このモデル（パーツ）の「大元の共通ポインタ」になります！
+			hr = vnDirect3D::getDevice()->CreateCommittedResource(
+				&heapprop,
+				D3D12_HEAP_FLAG_NONE,
+				&resdesc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				NULL,
+				IID_PPV_ARGS(&pVertexBuffer)
+			);
+			if (hr != S_OK)
+			{
+				assert(hr == S_OK);
+			}
+			pVertexBuffer->SetName(L"vnModel::pVertexBuffer");
+
+			//頂点データのコピー
+			vnVertex3D* pVertexDataBegin = reinterpret_cast<vnVertex3D*>(reinterpret_cast<__int64>(pModelData) + pModelData->VertexAccess);
+			vnVertex3D* pMappedMem = NULL;
+			hr = pVertexBuffer->Map(0, NULL, (void**)&pMappedMem);
+			memcpy(pMappedMem, pVertexDataBegin, vertexBufferSize);
+			pVertexBuffer->Unmap(0, nullptr);
+
+			//頂点バッファビューを作成
+			vertexBufferView.BufferLocation = pVertexBuffer->GetGPUVirtualAddress();
+			vertexBufferView.StrideInBytes = sizeof(vnVertex3D);
+			vertexBufferView.SizeInBytes = vertexBufferSize;
+
+
+		}
+
+		// -------------------------------------------------------------
+			// ◆ インデックスバッファの作成（1体目のみ実行）
+			// -------------------------------------------------------------
+		{
+			const UINT indexBufferSize = ((pModelData->VertexNum <= 0xffff) ? sizeof(WORD) : sizeof(DWORD)) * pModelData->IndexNum;
+
+			D3D12_HEAP_PROPERTIES heapprop = {};
+			heapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+			heapprop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+			heapprop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+			D3D12_RESOURCE_DESC resdesc = {};
+			resdesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+			resdesc.Width = indexBufferSize;
+			resdesc.Height = 1;
+			resdesc.DepthOrArraySize = 1;
+			resdesc.MipLevels = 1;
+			resdesc.Format = DXGI_FORMAT_UNKNOWN;
+			resdesc.SampleDesc.Count = 1;
+			resdesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+			resdesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+			// ここで生成される pIndexBuffer が、全員で使い回す共通のポインタになります！
+			hr = vnDirect3D::getDevice()->CreateCommittedResource(
+				&heapprop,
+				D3D12_HEAP_FLAG_NONE,
+				&resdesc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				IID_PPV_ARGS(&pIndexBuffer)
+			);
+			if (hr != S_OK)
+			{
+				assert(hr == S_OK);
+			}
+			pIndexBuffer->SetName(L"vnModel::pIndexBuffer");
+
+			//インデックスデータのコピー
+			void* pIndexDataBegin = reinterpret_cast<void*>(reinterpret_cast<__int64>(pModelData) + pModelData->IndexAccess);
+			void* pMappedMem = NULL;
+			pIndexBuffer->Map(0, nullptr, (void**)&pMappedMem);
+			memcpy(pMappedMem, pIndexDataBegin, indexBufferSize);
+			pIndexBuffer->Unmap(0, nullptr);
+
+			//インデックスバッファビューを作成
+			indexBufferView.BufferLocation = pIndexBuffer->GetGPUVirtualAddress();
+			indexBufferView.Format = (pModelData->VertexNum <= 0xffff) ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
+			indexBufferView.SizeInBytes = indexBufferSize;
+
+		}
+
+		// =================================================================
+				// 【★超重要】1体目が作ったすべての共通ポインタを管理配列（メモ帳）に最終登録！
+				// =================================================================
+		wcscpy_s(modelResourceLoader[targetIndex].path, path);
+		modelResourceLoader[targetIndex].refCount = 1;
+
+		// ★【削除】各自が安全に new/delete するため、ローダーでの共有管理からは外します
+		// modelResourceLoader[targetIndex].pModelData = pModelData; 
+
+		modelResourceLoader[targetIndex].pVertexBuffer = pVertexBuffer;
+		modelResourceLoader[targetIndex].pIndexBuffer = pIndexBuffer; // ←これでバッチリポインタが保存されます！
+		modelResourceLoader[targetIndex].vertexBufferView = vertexBufferView;
+		modelResourceLoader[targetIndex].indexBufferView = indexBufferView;
+	}
+
+}
+
+#else
+
 
 vnModel::vnModel(const WCHAR *folder, const WCHAR *file) : vnObject()
 {
@@ -256,7 +664,7 @@ vnModel::vnModel(const WCHAR *folder, const WCHAR *file) : vnObject()
 			&resdesc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			NULL,
-			IID_PPV_ARGS(&pVertexBuffer)
+			IID_PPV_ARGS(&pVertexBuffer)//これを１体目のやつと残りを共通にする。新しいコンストラクタでやる
 		);
 		if (hr != S_OK)
 		{
@@ -303,7 +711,7 @@ vnModel::vnModel(const WCHAR *folder, const WCHAR *file) : vnObject()
 			&resdesc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
-			IID_PPV_ARGS(&pIndexBuffer)
+			IID_PPV_ARGS(&pIndexBuffer)//これを１体目のやつと残りを共通にする。新しいコンストラクタでやる
 		);
 		if (hr != S_OK)
 		{
@@ -325,6 +733,13 @@ vnModel::vnModel(const WCHAR *folder, const WCHAR *file) : vnObject()
 	}
 }
 
+
+#endif
+
+
+
+
+
 vnModel::~vnModel()
 {
 	//SAFE_RELEASE(pIndexBuffer);
@@ -340,25 +755,71 @@ vnModel::~vnModel()
 	//	delete[] pMaterials;
 	//	delete[] (BYTE*)pModelData;
 	//}
-	SAFE_RELEASE(pIndexBuffer);
-	SAFE_RELEASE(pVertexBuffer);
-	if (pModelData)
-	{
-		for (int i = 0; i < (int)pModelData->MaterialNum; i++)
-		{
-			SAFE_RELEASE(pMaterials[i].constBuff);
+//	SAFE_RELEASE(pIndexBuffer);
+//	SAFE_RELEASE(pVertexBuffer);
+//	if (pModelData)
+//	{
+//		for (int i = 0; i < (int)pModelData->MaterialNum; i++)
+//		{
+//			SAFE_RELEASE(pMaterials[i].constBuff);
+//#if USE_RESOURCE_LOADER
+//			vnResourceLoader::release(pMaterials[i].texbuff);
+//#else
+//			SAFE_RELEASE(pMaterials[i].texbuff);
+//#endif
+//			SAFE_RELEASE(pMaterials[i].basicDescHeap);
+//		}
+//		delete[] pMaterials;
+//
+//		delete[](BYTE*)pModelData;
+//	}
+//
+
+// 1. マテリアル・定数バッファ等の解放（個体ごとに必ず毎回走る）
+	if (pMaterials) {
+		UINT materialNum = (pModelData) ? pModelData->MaterialNum : 0;
+		for (int i = 0; i < (int)materialNum; i++) {
+			if (pMaterials[i].constBuff) {
+				pMaterials[i].constBuff->Unmap(0, NULL);
+				pMaterials[i].constBuff->Release();
+			}
+			if (pMaterials[i].basicDescHeap) pMaterials[i].basicDescHeap->Release();
+			if (pMaterials[i].texbuff) {
 #if USE_RESOURCE_LOADER
-			vnResourceLoader::release(pMaterials[i].texbuff);
+				vnResourceLoader::release(pMaterials[i].texbuff);
 #else
-			SAFE_RELEASE(pMaterials[i].texbuff);
+				pMaterials[i].texbuff->Release();
 #endif
-			SAFE_RELEASE(pMaterials[i].basicDescHeap);
+			}
 		}
 		delete[] pMaterials;
-
-		delete[](BYTE*)pModelData;
 	}
 
+	// 2. 自分のCPUモデルデータの解放（各自が個別に持っているので毎回安全に消してOK）
+	if (pModelData) {
+		delete[](BYTE*)pModelData;
+		pModelData = NULL;
+	}
+
+	// 3. 【共通VRAMポインタの解放】参照カウントを減らし、0になったら大元を完全解放
+	for (int i = 0; i < RESOURCE_LOADER_MAX; i++)
+	{
+		// 自分の使っている頂点バッファと一致するスロットを探す
+		if (modelResourceLoader[i].refCount > 0 && modelResourceLoader[i].pVertexBuffer == pVertexBuffer)
+		{
+			modelResourceLoader[i].refCount--;
+
+			// ステージ上からこのモデル（パーツ）が完全に1体もいなくなった瞬間だけVRAMから消去
+			if (modelResourceLoader[i].refCount == 0)
+			{
+				if (modelResourceLoader[i].pVertexBuffer) modelResourceLoader[i].pVertexBuffer->Release();
+				if (modelResourceLoader[i].pIndexBuffer)  modelResourceLoader[i].pIndexBuffer->Release();
+
+				modelResourceLoader[i].init(); // 管理スロットを綺麗に空ける
+			}
+			break;
+		}
+	}
 }
 
 void vnModel::execute()

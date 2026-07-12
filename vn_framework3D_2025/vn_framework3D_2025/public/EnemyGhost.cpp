@@ -355,7 +355,7 @@ void EnemyGhost::OnFollow(float deltaTime)
     //Yを無視して平面距離で計算
     toLeader = XMVectorSetY(toLeader, 0);
 
-    // 【最適化】ルート（平方根）を消すため、2乗の長さを取得
+    // ルート（平方根）を消すため、2乗の長さを取得
     float distSq = XMVectorGetX(XMVector3LengthSq(toLeader));
 
     //4.移動処理
