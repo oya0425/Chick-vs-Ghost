@@ -25,6 +25,7 @@ struct vnModelData
 	UINT MeshAccess;
 	UINT VertexAccess;
 	UINT IndexAccess;
+	 
 
 	UINT Align[4];
 };

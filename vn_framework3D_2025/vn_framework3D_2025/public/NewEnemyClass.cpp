@@ -73,7 +73,7 @@ NewEnemyClass::~NewEnemyClass()
 
 // static変数の実体化
 const NewEnemyClass::EnemyData NewEnemyClass::MasterTable[] = {
-    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    800/*150/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
+    { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    1000/*150/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMon/", L"MushroomMon.bone", 0 , 1.5f, {1.0f, 1.0f,1.0f}},
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMonster/", L"MushroomMonster.bone", 150 , 5.0f, {1.0f, 1.0f, 1.0f}},
 };
@@ -403,29 +403,7 @@ void NewEnemyClass::UpdateState(
         break;
     }
 
-    if (GetIsBoss())
-    {
-        GroupData* data = GetGroupData();
 
-        const WCHAR* text = L"";
-
-        switch (data->mode)
-        {
-        case eGroupMode::Normal:
-            text = L"Normal";
-            break;
-
-        case eGroupMode::Panic:
-            text = L"Panic";
-            break;
-
-        case eGroupMode::Charge:
-            text = L"Charge";
-            break;
-        }
-
-        vnFont::print(300, 300, text);
-    }
 }
 
 // プレイヤーと当たった時にノックバック状態にする

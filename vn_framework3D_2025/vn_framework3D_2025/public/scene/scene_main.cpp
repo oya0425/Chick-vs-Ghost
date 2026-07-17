@@ -114,7 +114,7 @@ namespace {
 	constexpr float defualtDamage = 4.0f;
 
 	//
-	constexpr float finalChargeEnemyNum = 3;	//最終WAVEの特攻状態で出てくる敵の数を増やす倍率（ボスの近接耐性に掛ける）
+	constexpr float finalChargeEnemyNum = 2;	//最終WAVEの特攻状態で出てくる敵の数を増やす倍率（ボスの近接耐性に掛ける）
 
 	//経験値のマネージャーが画像の番号を持ってるからそれを見て画像を入れる
 	// 1.フレーム
@@ -862,7 +862,7 @@ void SceneMain::InitializeSound()
 }
 
 
-//==============================================================================
+//初期化==============================================================================
 
 
 
@@ -1132,12 +1132,6 @@ void SceneMain::terminate()
 //処理関数
 void SceneMain::execute()
 {
-	//if (!pSound[0]->isPlaying())
-	//{
-	//	pSound[0]->play(true);
-
-	//}
-
 
 	float dt = vnScene::getDeltaTime();
 	switch (m_gameState)
@@ -1359,8 +1353,8 @@ void SceneMain::render()
 			};
 
 		printShadow(opX, opY + 70, GAME_COLOR_WHITE, L"移動      : W, A, S, D");
-		printShadow(opX, opY + 120, GAME_COLOR_WHITE, L"カメラ    : MOUSE");
-		printShadow(opX, opY + 170, GAME_COLOR_WHITE, L"ズーム    : WHEEL");
+		printShadow(opX, opY + 120, GAME_COLOR_WHITE, L"ジャンプ    : MOUSE");
+		//printShadow(opX, opY + 170, GAME_COLOR_WHITE, L"ズーム    : WHEEL");
 
 
 		// --- 3. 右側：ルール説明 ---
@@ -1376,7 +1370,7 @@ void SceneMain::render()
 
 		printShadow(ruleX, ruleY + 60, GAME_COLOR_WHITE, L"・敵を倒してWaveを生き残れ");
 		printShadow(ruleX, ruleY + 110, GAME_COLOR_WHITE, L"・コンボを繋ぐとHPが回復！");
-		printShadow(ruleX, ruleY + 160, GAME_COLOR_WHITE, L"・Waveが進むほど敵は速く、");
+		printShadow(ruleX, ruleY + 160, GAME_COLOR_WHITE, L"・Waveが進むほど");
 		printShadow(ruleX, ruleY + 200, GAME_COLOR_WHITE, L"  リングは広くなるぞ");
 		printShadow(ruleX, ruleY + 260, 0xFFFF0000, L"※HPが0になるとゲームオーバー");
 
