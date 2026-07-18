@@ -31,6 +31,7 @@ private:
 	};
 	enum GameState 
 	{ 
+		Opening,
 		IdelPlay,
 		Play,
 		LevelUp,
@@ -251,6 +252,9 @@ private:
 	// --- その他 ---
 	void UpdateWaveTransition();	//Waveクリア待ち・次Waveへの遷移
 	void UpdateBlocksCollision();	//ブロックとの当たり判定（プレイヤー、敵）
+
+	void HandleBackgroundFade(bool isFadeOut, float& scale, float speed);	//黒い画像を拡大縮小
+
 
 	void DebugDraw();				//デバッグ表示
 

@@ -10,6 +10,10 @@
 // --- メンバ変数 ---
 namespace {
 	constexpr float playerModelScale = 1.2f;
+	constexpr float blackBackSpeed = 0.1f;	//黒い背景の拡大縮小する速度
+
+
+	
 
 	constexpr float underRespawnPos=-5.0f;
 	constexpr float enemyMax = 1;
@@ -355,7 +359,7 @@ void SceneMain::RegisterCharacter(vnCharacter* character)
 //変数の初期化
 void SceneMain::InitializeVariables()
 {
-	m_gameState = IdelPlay;
+	m_gameState = Opening;
 
 	radius = defualtRadius;
 	theta = defualtTheta;
@@ -374,10 +378,12 @@ void SceneMain::InitializeVariables()
 	totalClearTime = 0.0f;
 	isTimerActive = false;
 
-	backGroundBlackScale = 0.0f;
+	backGroundBlackScale = 1.0f;
 	isGameFinish = false;
 
 	FenceRadius = defalutFenceRadius;
+
+
 }
 
 //プレイヤーの初期化
@@ -542,6 +548,7 @@ void SceneMain::InitializeField()
 
 	// --- 地面 ---
 	pGround = new vnModel(L"data/model/Ground/", L"Ground.vnm");
+	//pGround = new vnModel(L"data/model/magma/", L"magma.vnm");
 	pGround->setScale(30.0f, 0.5f, 30.0f);
 	registerObject(pGround);
 
@@ -1136,6 +1143,13 @@ void SceneMain::execute()
 	float dt = vnScene::getDeltaTime();
 	switch (m_gameState)
 	{
+	case Opening:
+		//--カメラの初期位置設定
+		StartCameraRote();
+
+		HandleBackgroundFade(false, backGroundBlackScale,blackBackSpeed);
+
+		break;
 	case IdelPlay:
 	{
 		soundManager->PlayBGM(BGM_GAME);
@@ -1188,6 +1202,9 @@ void SceneMain::execute()
 		
 		break;
 	case TimeStop:
+		break;
+	case GameFinish:
+		HandleBackgroundFade(true, backGroundBlackScale, blackBackSpeed/2);
 		break;
 	}
 
@@ -1692,21 +1709,21 @@ void SceneMain::render()
 		}
 	case GameFinish:
 		{
-		 if (isGameFinish)
-		 {
-			pBackGroundBlack->setRenderEnable(true);
-			backGroundBlackScale += (1.1f - backGroundBlackScale) * 0.05f;
-			pBackGroundBlack->setScale(backGroundBlackScale);
-			if (backGroundBlackScale >= 1)
-			{
-				for (auto& enemy : enemyPool->GetEnemies())
-				{
-					enemy->ReStartEnemy();
-				}
-				enemyPool->ReStartEnemyGroupData();
-				switchScene(TITEL);
-			}
-		 }
+		 //if (isGameFinish)
+		 //{
+			//pBackGroundBlack->setRenderEnable(true);
+			//backGroundBlackScale += (1.1f - backGroundBlackScale) * 0.05f;
+			//pBackGroundBlack->setScale(backGroundBlackScale);
+			//if (backGroundBlackScale >= 1)
+			//{
+			//	for (auto& enemy : enemyPool->GetEnemies())
+			//	{
+			//		enemy->ReStartEnemy();
+			//	}
+			//	enemyPool->ReStartEnemyGroupData();
+			//	switchScene(TITEL);
+			//}
+		 //}
 		}
 	}
 	//--プレイヤーのHP
@@ -1715,6 +1732,56 @@ void SceneMain::render()
 
 	vnScene::render();
 }
+
+
+
+//黒い画像を拡大・縮小する
+// 拡大縮小とシーン遷移を一括管理する関数
+void SceneMain::HandleBackgroundFade(bool isFadeOut, float& scale, float speed = 0.05f)
+{
+	pBackGroundBlack->setRenderEnable(true);
+
+	if (isFadeOut)
+	{
+		// 【拡大（終了時）】目標値: 1.1f
+		scale += (1.1f - scale) * speed;
+		pBackGroundBlack->setScale(scale);
+
+		// 画面を覆い尽くしたらタイトルへ
+		if (scale >= 1.0f)
+		{
+			// 敵のリセット処理
+			for (auto& enemy : enemyPool->GetEnemies())
+			{
+				enemy->ReStartEnemy();
+			}
+			enemyPool->ReStartEnemyGroupData();
+
+			switchScene(TITEL); // タイトルシーンへ遷移
+		}
+	}
+	else
+	{
+		// 【縮小（開始時）】目標値: 0.0f
+		scale += (0.0f - scale) * speed;
+		pBackGroundBlack->setScale(scale);
+
+		// 消え去ったらゲームスタート（プレイ状態）へ
+		if (scale <= 0.01f)
+		{
+			scale = 0.0f;
+			pBackGroundBlack->setScale(scale);
+			pBackGroundBlack->setRenderEnable(false); // 完全に非表示にする
+
+			m_gameState=IdelPlay; // ゲーム本編（プレイ状態）へ遷移
+		}
+	}
+}
+
+
+
+
+
 
 //=====================================================================
 // スキルなどのバー関数（Update）
@@ -2121,8 +2188,7 @@ void SceneMain::SetSkillUIRender(bool on)
 
 void SceneMain::UpdateIdel()
 {
-	//--カメラの初期位置設定
-	StartCameraRote();
+	//ボタン押してゲームスタート
 	if (vnMouse::onR() || vnKeyboard::on(DIK_RETURN))
 	{
 		m_gameState = Play;
