@@ -402,6 +402,9 @@ void SceneMain::InitializePlayer()
 	registerObject(m_pNewPlayer->GetMeteorModel());
 	registerObject(m_pNewPlayer->GetUpKaraModel());
 
+	m_pGameOverPlayer = new vnSprite(-1000, 200, 128, 128, L"data/image/プレイヤーゲームオーバー.png");
+	registerObject(m_pGameOverPlayer);
+
 	// --- 弾 ---
 	m_pBullet = new Bullet();
 	m_pBullet->SetModel(new vnCharacter(L"data/model/Brid/KaraUp/", L"KaraUp.bone"));
@@ -692,14 +695,15 @@ void SceneMain::InitializeUI()
 	pComboWord->setColor(V_GAME_COLOR_RED);
 	registerObject(pComboWord);
 
-	// --- 文字用背景 ---
+	// --- 文字用背景(左側にある操作説明の後ろにある背景)---
 	m_pUIBackGroundBlack[0] = new vnSprite(1280 - 1120, 720.0f - 450.0f, 256 * 1.2f, 512 * 0.7, L"BackGroundBlack.png");
 	m_pUIBackGroundBlack[0]->setColor(V_GAME_COLOR_BLACK);
 	m_pUIBackGroundBlack[0]->setAlpha(0.6f);
 	registerObject(m_pUIBackGroundBlack[0]);
 	m_pUIBackGroundBlack[0]->setRenderEnable(true);
 
-	m_pUIBackGroundBlack[1] = new vnSprite(1280 - 170, 720.0f - 140.0f, 256 * 1.2f, 512 * 0.4, L"BackGroundBlack.png");
+	//右下側にあるメッセージの表示の背景
+	m_pUIBackGroundBlack[1] = new vnSprite(1280 - 170, 720.0f - 110.0f, 256 * 1.2f, 512 * 0.3, L"BackGroundBlack.png");
 	m_pUIBackGroundBlack[1]->setColor(V_GAME_COLOR_BLACK);
 	m_pUIBackGroundBlack[1]->setAlpha(0.6f);
 	registerObject(m_pUIBackGroundBlack[1]);
@@ -924,6 +928,9 @@ void SceneMain::terminate()
 		delete m_pNewPlayer;
 		m_pNewPlayer = nullptr; 
 	}
+	deleteObject(m_pGameOverPlayer);
+	m_pGameOverPlayer = nullptr;
+
 
 	// --- ポーズ中の棒グラフ ---
 	auto& meleebar = enemyPool->GetMeleeBar();
@@ -1465,7 +1472,7 @@ void SceneMain::render()
 			vnFont::setFontSize(38, 25);
 
 			// 「移動：」は常に白
-			vnFont::print(baseX, baseY - 20, GAME_COLOR_YELLOW, L"移動：");
+			vnFont::print(baseX-25, baseY +20 , GAME_COLOR_YELLOW, L"移動：");
 			pImageW->setPos(baseX + 75, baseY + 35);
 			pImageW->setColor(wPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
@@ -1483,6 +1490,8 @@ void SceneMain::render()
 			
 			pImageQ->setPos(baseX + 55.5f, baseY + 242.5f);
 			pImageQ->setColor(qPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
+
+			vnFont::print(baseX-25, baseY-25 , GAME_COLOR_YELLOW, L" Tab：群れ情報");
 
 		}
 
@@ -1706,24 +1715,6 @@ void SceneMain::render()
 
 		break;
 
-		}
-	case GameFinish:
-		{
-		 //if (isGameFinish)
-		 //{
-			//pBackGroundBlack->setRenderEnable(true);
-			//backGroundBlackScale += (1.1f - backGroundBlackScale) * 0.05f;
-			//pBackGroundBlack->setScale(backGroundBlackScale);
-			//if (backGroundBlackScale >= 1)
-			//{
-			//	for (auto& enemy : enemyPool->GetEnemies())
-			//	{
-			//		enemy->ReStartEnemy();
-			//	}
-			//	enemyPool->ReStartEnemyGroupData();
-			//	switchScene(TITEL);
-			//}
-		 //}
 		}
 	}
 	//--プレイヤーのHP
@@ -2338,7 +2329,6 @@ void SceneMain::UpdatePlayer(float deltaTime)
 		//プレイヤーが一定以上落下したら
 		m_pNewPlayer->GetModel()->setPosition(0.0f, 1.0f, 0.0f);
 	}
-
 
 	InFence(m_pNewPlayer->GetModel());
 
@@ -3142,8 +3132,25 @@ bool SceneMain::UpdateUpgradeButton(
 void SceneMain::UpdateGameOver()
 {
 	soundManager->StopSE(SE_GRILL);
-
 	soundManager->PlayBGM(BGM_GAMEOVER);
+	
+	//=====================================================
+	// プレイヤーのモデルを隠し、画像を表示する
+	//=====================================================
+	for (int i = 0; i < m_pNewPlayer->GetModel()->getPartsNum(); i++)
+	{
+		m_pNewPlayer->GetModel()->getParts(i)->setRenderEnable(false);
+	}
+	m_pNewPlayer->GetUpKaraModel()->setRenderEnable(false);
+
+	float x, y;
+	if (vnFont::CalculateScreenPosition(*m_pNewPlayer->GetModel()->getPosition(), &x, &y))
+	{
+		m_pGameOverPlayer->setPos(x, y);
+	}
+
+	//=====================================================
+
 	if (vnKeyboard::trg(DIK_RETURN) || vnMouse::trgR())
 	{
 		soundManager->PlaySE(SE_ENTER);
@@ -3164,8 +3171,27 @@ void SceneMain::UpdateGameOver()
 void SceneMain::UpdateGameClear()
 {
 	soundManager->StopSE(SE_GRILL);
-
 	soundManager->PlayBGM(BGM_GAMECLEAR);
+	//レベルアップ時と同様にジャンプさせる
+	m_pNewPlayer->UpdateLevelUp();
+
+	m_levelUpCameraTargetTheta =
+		m_pNewPlayer->GetModel()->getRotationY()
+		+ XM_PI
+		+ XM_PIDIV2;
+	Common::UpdateCameraLevelUp(
+		m_pNewPlayer->GetModel()->getPosition(),
+		m_levelUpCameraTargetTheta,
+		vnScene::getDeltaTime(),
+		m_phi,
+		m_radius,
+		m_theta);
+
+
+	OnCollider(m_pNewPlayer->GetModel(), pGround, 1.0f, m_pNewPlayer->GetRigidbody());
+
+	InFence(m_pNewPlayer->GetModel());
+
 
 	if (vnKeyboard::trg(DIK_RETURN)||vnMouse::trgR())
 	{

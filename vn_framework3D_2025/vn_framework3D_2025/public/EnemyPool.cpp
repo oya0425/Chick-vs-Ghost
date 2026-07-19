@@ -310,7 +310,7 @@ void EnemyPool::AddEnemy(NewEnemyClass* enemy)
 // --- 全敵更新 ---
 void EnemyPool::Update(float deltaTime)
 {
-    DebugSetting();
+    //DebugSetting();
 
     for (auto e : _enemies)
     {
@@ -739,7 +739,6 @@ void EnemyPool::DebugSetting()
     vnFont::print(x, y + linePitch * 3, col3, L"%s ３．全てオフ", (m_displayMode == eDisplayMode::AllOff ? L"▶" : L"　"));
     vnFont::print(x, y + linePitch * 4, col4, L"%s ４．全てオン", (m_displayMode == eDisplayMode::AllOn ? L"▶" : L"　"));
 
-    vnFont::print(x, y - linePitch * 2, GAME_COLOR_WHITE, L" Tab．群れ情報");
 
 }
 // 状態の定義（関数ポインタやクラス等で管理）

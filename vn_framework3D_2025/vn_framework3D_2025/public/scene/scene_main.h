@@ -72,6 +72,8 @@ private:
 	vnEmitter* pDustEmitter;	// 移動時の土埃
 	vnEmitter* pEmitter;		// 撃破エフェクト用
 
+	vnSprite* m_pGameOverPlayer;
+
 	Bullet* m_pBullet;
 	bool isHittingAnyBlock = false;
 
@@ -161,6 +163,7 @@ private:
 	
 	vnSprite* pImageE;	//スキルボタン範囲攻撃
 	vnSprite* pImageQ;	//引き寄せ攻撃
+
 
 
 	// --- スキル獲得選択ボタン ---
