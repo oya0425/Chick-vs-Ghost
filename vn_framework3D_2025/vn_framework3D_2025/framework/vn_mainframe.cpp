@@ -193,6 +193,7 @@ void vnMainFrame::execute()
 	}
 #endif
 
+
 	//プレゼンテーション
 	vnDirect3D::present();
 

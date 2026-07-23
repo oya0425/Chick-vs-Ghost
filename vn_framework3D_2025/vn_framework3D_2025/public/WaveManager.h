@@ -104,8 +104,8 @@ private:
 
     int m_killBossCountTarget = 5;
 
-    float m_waveTimer = 0;            //WAVE中の時間
-    float m_waveTimeLimit=20;         //WAVEクリアまでの時間
+    float m_waveTimer = 20;            //WAVE中の時間
+    float m_waveTimeLimit=1;         //WAVEクリアまでの時間（残り０秒でクリア、）
     const float m_waveTimeBase = 20;  //基準の時間
     const float m_addTime = 10;       //増える時間   
 

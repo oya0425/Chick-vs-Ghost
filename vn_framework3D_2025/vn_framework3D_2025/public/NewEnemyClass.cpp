@@ -1185,6 +1185,7 @@ void NewEnemyClass::CheckEvolutionOnSpawn()
     case EnemyPool::eDisplayMode::AllOn:       shouldShow = true; break;
     }
 
+    if (!shouldShow)return;
 
     //1.近接耐性が上がっていたらリストに追加
     if (data->meleeFear > data->oldMeleeFear)
@@ -1204,7 +1205,6 @@ void NewEnemyClass::CheckEvolutionOnSpawn()
         m_upgradeTexts.push_back({ L"「引き寄せ耐性アップ」", GAME_COLOR_GREEN });
         data->oldPullResistance = data->pullResistance;
     }
-    if (!shouldShow)return;
 
     //進化した項目が１つでもあれば、表示する
     if (!m_upgradeTexts.empty())
@@ -1246,7 +1246,6 @@ void NewEnemyClass::ShowMessage()
     MsgInfo patrolMsg = { L"", 0 };     //パトロール中
     MsgInfo followMsg = { L"", 0 };     //リーダー追跡中
     MsgInfo runMsg = { L"", 0 };        //リーダー逃走中
-
 
 
     // 2. 範囲攻撃メッセージのテキスト決定

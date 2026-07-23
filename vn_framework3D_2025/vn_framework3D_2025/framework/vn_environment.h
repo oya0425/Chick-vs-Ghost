@@ -97,7 +97,6 @@ using namespace DirectX;
 #include"../public/vn_effect.h"
 #include"../public/vn_character.h"
 #include "../public/vn_sprite.h"
-#include"../public/SkillButtonUI.h"
 #include "../public/vn_collide.h"
 #include"../public/common.h"
 #include"../public/RigidbodyComponent.h"

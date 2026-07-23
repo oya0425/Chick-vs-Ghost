@@ -189,9 +189,6 @@
     <ClInclude Include="public\Bullet.h">
       <Filter>public\MainScript\Bullet</Filter>
     </ClInclude>
-    <ClInclude Include="public\SkillButtonUI.h">
-      <Filter>public\MainScript\UI</Filter>
-    </ClInclude>
     <ClInclude Include="public\UpgradeSelectionUI.h">
       <Filter>public\MainScript\UI</Filter>
     </ClInclude>
@@ -331,9 +328,6 @@
     </ClCompile>
     <ClCompile Include="public\Bullet.cpp">
       <Filter>public\MainScript\Bullet</Filter>
-    </ClCompile>
-    <ClCompile Include="public\SkillButtonUI.cpp">
-      <Filter>public\MainScript\UI</Filter>
     </ClCompile>
     <ClCompile Include="public\UpgradeSelectionUI.cpp">
       <Filter>public\MainScript\UI</Filter>

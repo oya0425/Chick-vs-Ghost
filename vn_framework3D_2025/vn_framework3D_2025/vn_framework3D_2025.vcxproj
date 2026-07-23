@@ -164,7 +164,6 @@
     <ClInclude Include="public\scene\scene_table.h" />
     <ClInclude Include="public\scene\scene_title.h" />
     <ClInclude Include="public\scene\vn_scene.h" />
-    <ClInclude Include="public\SkillButtonUI.h" />
     <ClInclude Include="public\SoundManager.h" />
     <ClInclude Include="public\TerrainBlock.h" />
     <ClInclude Include="public\UpgradeSelectionUI.h" />
@@ -215,7 +214,6 @@
     <ClCompile Include="public\scene\scene_table.cpp" />
     <ClCompile Include="public\scene\scene_title.cpp" />
     <ClCompile Include="public\scene\vn_scene.cpp" />
-    <ClCompile Include="public\SkillButtonUI.cpp" />
     <ClCompile Include="public\SoundManager.cpp" />
     <ClCompile Include="public\TerrainBlock.cpp" />
     <ClCompile Include="public\UpgradeSelectionUI.cpp" />

@@ -327,7 +327,6 @@ void EnemyPool::Update(float deltaTime)
         {
             if (group == nullptr)
             {
-                OutputDebugString(L"group is null\n");
                 continue;
             }
             switch (group->mode)
@@ -709,6 +708,12 @@ void EnemyPool::SetBossData()
 
 void EnemyPool::DebugSetting()
 {
+    //UIの黒い背景表示
+    if (m_UIBackGroundBlack != nullptr)
+    {
+        m_UIBackGroundBlack->setRenderEnable(true);
+    }
+
     //if (vnKeyboard::trg(DIK_1))m_displayMode = eDisplayMode::LeaderOnly;
     //if (vnKeyboard::trg(DIK_2))m_displayMode = eDisplayMode::OthersOnly;
     //if (vnKeyboard::trg(DIK_3))m_displayMode = eDisplayMode::AllOff;

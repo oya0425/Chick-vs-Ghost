@@ -21,13 +21,18 @@ public:
 	enum class TitleState
 	{
 		MAIN,
-		RULE1,
-		RULE2,
-		RULE3,
-		RULE4,
+		RULE,
+		//RULE2,
+		//RULE3,
+		//RULE4,
 
-	}m_titleState=TitleState::MAIN;
+	}m_titleState = TitleState::MAIN;
 
+	//enum class TitleState
+	//{
+	//	MAIN,
+	//	RULE,
+	//}m_titleState = TitleState::MAIN;
 
 
 	//初期化
@@ -50,7 +55,8 @@ public:
 		bool& isOnButton,
 		float& buttonScale);
 
-	void ChangeBackGround(TitleUI ui);
+	//void ChangeBackGround(TitleUI ui);
+	void ChangeBackGround(int index);
 
 	void ChangeButtonTextSize(float x, float y, float fontScale, bool isOnButton,const WCHAR* text);
 
@@ -94,5 +100,7 @@ private:
 
 
 	int m_currentUI = TITLE_MAIN;	//最初はメインの画像
+	int m_rulePage = 0;			//ルールのページ番号
+
 
 };

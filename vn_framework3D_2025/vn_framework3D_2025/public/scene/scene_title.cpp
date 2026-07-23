@@ -12,16 +12,13 @@ WCHAR seFile_Title[][FILE_PATH_MAX] =
 
 };
 //タイトル画面の背景（ルールとか）
-WCHAR ui_Title[][FILE_PATH_MAX] =
+std::vector<std::wstring> ui_Title =
 {
-    L"data/image/タイトル画面 - コピー.png",
-    //L"data/image/タイトル画面.bmp",
-    L"data/image/説明1.png",
-    L"data/image/説明2.png",
-    L"data/image/説明3.png",
-    L"data/image/説明4.png",
-
-
+    L"data/image/タイトル画面 - コピー.png", // 0
+    L"data/image/説明1.png",               // 1
+    L"data/image/説明2.png",               // 2
+    L"data/image/説明3.png",               // 3
+    L"data/image/説明4.png",               // 4
 };
 
 
@@ -72,17 +69,14 @@ bool SceneTitle::initialize()
     //================================================
     // 背景設定
     //================================================
-    int uifileNum = sizeof(ui_Title) / (sizeof(WCHAR) * FILE_PATH_MAX);
-
-    for (int i = 0; i < uifileNum; i++)
+    for (const auto& file : ui_Title)
     {
         vnSprite* pSprite = new vnSprite(
             SCREEN_WIDTH / 2,
             SCREEN_HEIGHT / 2,
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            ui_Title[i]
-        );
+            file.c_str());
 
         pSprite->setRenderEnable(false);
         pSprite->setAlpha(0.8f);
@@ -91,15 +85,9 @@ bool SceneTitle::initialize()
         m_pBackGround.push_back(pSprite);
         registerObject(pSprite);
     }
+    //タイトル画面を表示する
+    ChangeBackGround(0);
 
-    m_pBackGround[TITLE_MAIN]->setRenderEnable(true);
-
-    //pBackGround = new vnSprite(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH , SCREEN_HEIGHT ,L"data/image/TitleBG.png");
-    //pBackGround = new vnSprite(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH , SCREEN_HEIGHT ,L"data/image/タイトル画面.png");
-    //pBackGround = new vnSprite(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH , SCREEN_HEIGHT ,L"data/image/説明１.png");
-    //pBackGround = new vnSprite(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH , SCREEN_HEIGHT ,L"data/image/説明２.png");
-    //pBackGround = new vnSprite(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH , SCREEN_HEIGHT ,L"data/image/説明３.png");
-    //pBackGround = new vnSprite(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH , SCREEN_HEIGHT ,L"data/image/説明４.png");
 
     //スタートボタン
     //pStartButton = new vnSprite(startButton_x, startButton_y, button_w, button_h, L"data/image/選択ボタン形.png");
@@ -173,7 +161,7 @@ void SceneTitle::execute()
             //ルールボタンは非表示
             pRuleButton->setRenderEnable(false);
 
-                    // 回転速度を徐々に上げる
+            // 回転速度を徐々に上げる
             titleRotation += 10.0f;
 
             // スケールを指数関数的に増やす (1.1倍し続ける)
@@ -203,22 +191,22 @@ void SceneTitle::execute()
         {
 
             m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
-            m_titleState = TitleState::RULE1;
-            ChangeBackGround(TITLE_RULE1);
+            m_titleState = TitleState::RULE;
+            m_rulePage = 0; //0はタイトル画面　１はルール説明画面最初
+            ChangeBackGround(m_rulePage + 1);
+
         }
 
 
 
 
         break;
-    case SceneTitle::TitleState::RULE1:
-        //Start,ルールボタンを隠して、進むボタンのみ表示
+
+    case TitleState::RULE:
         pStartButton->setRenderEnable(false);
         pRuleButton->setRenderEnable(false);
-        pLeftButton->setRenderEnable(false);
-        pRightButton->setRenderEnable(false);
 
-        //戻るボタン
+        // 戻るボタン
         if (UpdateButton(
             leftButton_x,
             leftButton_y,
@@ -226,13 +214,20 @@ void SceneTitle::execute()
             isOnLeftButton,
             leftButtonScale))
         {
-
             m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
-            m_titleState = TitleState::MAIN;
-            ChangeBackGround(TITLE_MAIN);
-        }
 
-        //進むボタン
+            if (m_rulePage == 0)
+            {
+                m_titleState = TitleState::MAIN;
+                ChangeBackGround(0);
+            }
+            else
+            {
+                --m_rulePage;
+                ChangeBackGround(m_rulePage + 1);
+            }
+        }
+        // 進むボタン
         if (UpdateButton(
             rightButton_x,
             rightButton_y,
@@ -240,110 +235,19 @@ void SceneTitle::execute()
             isOnRightButton,
             rightButtonScale))
         {
-
             m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
-            m_titleState = TitleState::RULE2;
-            ChangeBackGround(TITLE_RULE2);
-        }
 
+            ++m_rulePage;
 
-
-        break;
-    case SceneTitle::TitleState::RULE2:
-        //戻るボタンも表示する
-        //pLeftButton->setRenderEnable(true);
-        
-        //戻るボタン
-        if (UpdateButton(
-            leftButton_x,
-            leftButton_y,
-            pLeftButton,
-            isOnLeftButton,
-            leftButtonScale))
-        {
-
-            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
-            m_titleState = TitleState::RULE1;
-            ChangeBackGround(TITLE_RULE1);
-        }
-
-
-        //進むボタン（右ボタン）
-        if (UpdateButton(
-            rightButton_x,
-            rightButton_y,
-            pRightButton,
-            isOnRightButton,
-            rightButtonScale))
-        {
-
-            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
-            m_titleState = TitleState::RULE3;
-            ChangeBackGround(TITLE_RULE3);
-        }
-
-        break;
-    case SceneTitle::TitleState::RULE3:
-        //戻るボタン
-        if (UpdateButton(
-            leftButton_x,
-            leftButton_y,
-            pLeftButton,
-            isOnLeftButton,
-            leftButtonScale))
-        {
-
-            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
-            m_titleState = TitleState::RULE2;
-            ChangeBackGround(TITLE_RULE2);
-        }
-
-
-        //進むボタン（右ボタン）
-        if (UpdateButton(
-            rightButton_x,
-            rightButton_y,
-            pRightButton,
-            isOnRightButton,
-            rightButtonScale))
-        {
-
-            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
-            m_titleState = TitleState::RULE4;
-            ChangeBackGround(TITLE_RULE4);
-        }
-
-
-
-        break;
-    case SceneTitle::TitleState::RULE4:
-        //戻るボタン
-        if (UpdateButton(
-            leftButton_x,
-            leftButton_y,
-            pLeftButton,
-            isOnLeftButton,
-            leftButtonScale))
-        {
-
-            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
-            m_titleState = TitleState::RULE3;
-            ChangeBackGround(TITLE_RULE3);
-        }
-
-
-        //進むボタン（右ボタン）
-        if (UpdateButton(
-            rightButton_x,
-            rightButton_y,
-            pRightButton,
-            isOnRightButton,
-            rightButtonScale))
-        {
-
-            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
-            m_titleState = TitleState::MAIN;
-            ChangeBackGround(TITLE_MAIN);
+            if (m_rulePage >= ui_Title.size() - 1)
+            {
+                m_titleState = TitleState::MAIN;
+                ChangeBackGround(0);
+            }
+            else
+            {
+                ChangeBackGround(m_rulePage + 1);
+            }
         }
         break;
     }
@@ -403,26 +307,51 @@ void SceneTitle::render()
         ChangeButtonTextSize(startButton_x, startButton_y, startButtonScale, isOnStartButton, L"START");
     }
         break;
-    case SceneTitle::TitleState::RULE1:
-        ChangeButtonTextSize(rightButton_x-10, rightButton_y, rightButtonScale, isOnRightButton, L"進む");
-        ChangeButtonTextSize(leftButton_x - 10, leftButton_y, leftButtonScale, isOnLeftButton, L"タイトル");
+    case SceneTitle::TitleState::RULE:
+
+        // 左ボタン
+        if (m_rulePage == 0)
+        {
+            ChangeButtonTextSize(
+                leftButton_x - 10,
+                leftButton_y,
+                leftButtonScale,
+                isOnLeftButton,
+                L"タイトル");
+        }
+        else
+        {
+            ChangeButtonTextSize(
+                leftButton_x - 10,
+                leftButton_y,
+                leftButtonScale,
+                isOnLeftButton,
+                L"戻る");
+        }
+
+        // 右ボタン
+        if (m_rulePage == ui_Title.size() - 2)
+        {
+            // 最後の説明ページ
+            ChangeButtonTextSize(
+                rightButton_x - 30,
+                rightButton_y,
+                rightButtonScale,
+                isOnRightButton,
+                L"タイトル");
+        }
+        else
+        {
+            ChangeButtonTextSize(
+                rightButton_x - 10,
+                rightButton_y,
+                rightButtonScale,
+                isOnRightButton,
+                L"進む");
+        }
 
         break;
-    case SceneTitle::TitleState::RULE2:
-        ChangeButtonTextSize(leftButton_x-10, leftButton_y, leftButtonScale, isOnLeftButton, L"戻る");
-        ChangeButtonTextSize(rightButton_x-10, rightButton_y, rightButtonScale, isOnRightButton, L"進む");
 
-        break;
-    case SceneTitle::TitleState::RULE3:
-        ChangeButtonTextSize(leftButton_x-10, leftButton_y, leftButtonScale, isOnLeftButton, L"戻る");
-        ChangeButtonTextSize(rightButton_x-10, rightButton_y, rightButtonScale, isOnRightButton, L"進む");
-
-        break;
-    case SceneTitle::TitleState::RULE4:
-        ChangeButtonTextSize(leftButton_x-10, leftButton_y, leftButtonScale, isOnLeftButton, L"戻る");
-        ChangeButtonTextSize(rightButton_x-30, rightButton_y, rightButtonScale, isOnRightButton, L"タイトル");
-
-        break;
     }
 
     vnScene::render();
@@ -486,15 +415,21 @@ bool SceneTitle::UpdateButton(
 //=====================
 // 背景の変更
 //=====================
-void SceneTitle::ChangeBackGround(TitleUI ui)
+//void SceneTitle::ChangeBackGround(TitleUI ui)
+//{
+//    m_pBackGround[m_currentUI]->setRenderEnable(false);
+//    m_pBackGround[ui]->setRenderEnable(true);
+//
+//    m_currentUI = ui;
+//}
+
+void SceneTitle::ChangeBackGround(int index)
 {
     m_pBackGround[m_currentUI]->setRenderEnable(false);
-    m_pBackGround[ui]->setRenderEnable(true);
+    m_pBackGround[index]->setRenderEnable(true);
 
-    m_currentUI = ui;
+    m_currentUI = index;
 }
-
-
 //=========================================================
 // 文字の大きさ変更（ボタンに合わせた大きさにする）
 //=========================================================

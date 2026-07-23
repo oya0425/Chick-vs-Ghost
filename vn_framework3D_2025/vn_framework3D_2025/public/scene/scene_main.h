@@ -160,7 +160,8 @@ private:
 	vnSprite* pImageA;
 	vnSprite* pImageS;
 	vnSprite* pImageD;
-	
+	vnSprite* pImageTab;
+
 	vnSprite* pImageE;	//スキルボタン範囲攻撃
 	vnSprite* pImageQ;	//引き寄せ攻撃
 

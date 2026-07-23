@@ -3,7 +3,7 @@
 #include<algorithm>
 #include <DirectXMath.h>
 #include <cmath>
-
+  
 #include"../RigidbodyComponent.h"
 #define ENABLE_TREE_DELETE (1)  // 1: 解放する、0: 解放しない
 
@@ -12,7 +12,9 @@ namespace {
 	constexpr float playerModelScale = 1.2f;
 	constexpr float blackBackSpeed = 0.1f;	//黒い背景の拡大縮小する速度
 
-
+	constexpr float offScreen = -1000.0f;	//2Dにおける画面外（縦、横共通）
+	constexpr float operationUI_Y = 20.0f;	//操作説明のUIの基準の高さ
+	
 	
 
 	constexpr float underRespawnPos=-5.0f;
@@ -86,7 +88,7 @@ namespace {
 	constexpr float barLeftEdgeAreaSkill = 55.0f;
 
 	// バーの「縦の位置（高さ）」を表すY座標（Expバーよりさらに下）
-	constexpr float heightYAreaSkill = 330.0f;
+	constexpr float heightYAreaSkill = 320.0f+ operationUI_Y;
 	
 	// クールタイムが最大のとき（使える状態）のバーの「最大横幅」
 	constexpr float maxWAreaSkill = 250.0f;
@@ -97,7 +99,7 @@ namespace {
 	constexpr float barLeftEdgePullSkill = 55.0f;
 	
 	// バーの「縦の位置（高さ）」を表すY座標（範囲攻撃バーの40px下に配置）
-	constexpr float heightYPullSkill = 410.0f;
+	constexpr float heightYPullSkill = 400.0f+ operationUI_Y;
 	
 	// クールタイムが最大のとき（使える状態）のバーの「最大横幅」
 	constexpr float maxWPullSkill = 250.0f;
@@ -299,8 +301,8 @@ EnemyPool::UIQuestionExplain SceneMain::CreateQuestionUI(const WCHAR* text, DWOR
 	EnemyPool::UIQuestionExplain qus;
 
 	// スプライト生成（共通の設定）
-	qus.pQuestionIcon = new vnSprite(-1000, 200, 64 * offsetSize, 64 * offsetSize, L"data/image/keyboard_question.png");
-	qus.pBalloonBg = new vnSprite(-1000, 200, 256*1.5, 128 , L"data/image/吹き出し.png");
+	qus.pQuestionIcon = new vnSprite(offScreen, 200, 64 * offsetSize, 64 * offsetSize, L"data/image/keyboard_question.png");
+	qus.pBalloonBg = new vnSprite(offScreen, 200, 256*1.5, 128 , L"data/image/吹き出し.png");
 
 	registerObject(qus.pQuestionIcon);
 	registerObject(qus.pBalloonBg);
@@ -402,7 +404,7 @@ void SceneMain::InitializePlayer()
 	registerObject(m_pNewPlayer->GetMeteorModel());
 	registerObject(m_pNewPlayer->GetUpKaraModel());
 
-	m_pGameOverPlayer = new vnSprite(-1000, 200, 128, 128, L"data/image/プレイヤーゲームオーバー.png");
+	m_pGameOverPlayer = new vnSprite(offScreen, 200, 128, 128, L"data/image/プレイヤーゲームオーバー.png");
 	registerObject(m_pGameOverPlayer);
 
 	// --- 弾 ---
@@ -685,13 +687,13 @@ void SceneMain::InitializeUI()
 			wchar_t path[64];
 			swprintf(path, 64, L"data/image/num%d.png", j);
 
-			pComboSprites[i][j] = new vnSprite(-1000, -1000, 96, 96, path);
+			pComboSprites[i][j] = new vnSprite(offScreen, offScreen, 96, 96, path);
 			registerObject(pComboSprites[i][j]);
 			pComboSprites[i][j]->setColor(V_GAME_COLOR_GOLD);
 		}
 	}
 
-	pComboWord = new vnSprite(-1000, -1000, 128, 96, L"data/image/combo.png");
+	pComboWord = new vnSprite(offScreen, offScreen, 128, 96, L"data/image/combo.png");
 	pComboWord->setColor(V_GAME_COLOR_RED);
 	registerObject(pComboWord);
 
@@ -708,14 +710,16 @@ void SceneMain::InitializeUI()
 	m_pUIBackGroundBlack[1]->setAlpha(0.6f);
 	registerObject(m_pUIBackGroundBlack[1]);
 	m_pUIBackGroundBlack[1]->setRenderEnable(true);
+	enemyPool->SetUIBackGroundBlack(m_pUIBackGroundBlack[1]);
 
 	// --- キーボード画像 ---
-	pImageW = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_w_outline.png"); registerObject(pImageW);
-	pImageA = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_a_outline.png"); registerObject(pImageA);
-	pImageS = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_s_outline.png"); registerObject(pImageS);
-	pImageD = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_d_outline.png"); registerObject(pImageD);
-	pImageE = new vnSprite(-100, 200, 64 * 0.7f, 64 * 0.7f, L"data/image/keyboard_e_outline.png"); registerObject(pImageE);
-	pImageQ = new vnSprite(-100, 200, 64 * 0.7f, 64 * 0.7f, L"data/image/keyboard_q_outline.png"); registerObject(pImageQ);
+	pImageW   = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_w_outline.png"); registerObject(pImageW);
+	pImageA   = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_a_outline.png"); registerObject(pImageA);
+	pImageS   = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_s_outline.png"); registerObject(pImageS);
+	pImageD   = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_d_outline.png"); registerObject(pImageD);
+	pImageE   = new vnSprite(-100, 200, 64 * 0.7f, 64 * 0.7f, L"data/image/keyboard_e_outline.png"); registerObject(pImageE);
+	pImageQ	  = new vnSprite(-100, 200, 64 * 0.7f, 64 * 0.7f, L"data/image/keyboard_q_outline.png"); registerObject(pImageQ);
+	pImageTab = new vnSprite(-100, 200, 64 * 1.5f, 64 * 1.5f, L"data/image/keyboard_tab.png"); registerObject(pImageTab);
 
 	// --- スキルUI設定 ---
 	float centerX = barLeftEdgeAreaSkill + (maxWAreaSkill * 0.5f);
@@ -769,6 +773,7 @@ void SceneMain::InitializeUI()
 	SetSkillUIRender(false);
 }
 
+//ポーズ中に出るUI
 void SceneMain::InitializePauseUI()
 {
 	float centerX = barLeftEdgeAreaSkill + (maxWAreaSkill * 0.5f);
@@ -806,11 +811,11 @@ void SceneMain::InitializePauseUI()
 	float offsetSize = 0.8f;
 	float offsetSizeGhost = 1.5f;
 	enemyPool->SetImageTab(new vnSprite(-100, 200, 64 * 1.5f, 64 * 1.5f, L"data/image/keyboard_tab.png"));
+	//enemyPool->SetImageTab(pImageTab);
 	enemyPool->SetImageA(new vnSprite(-100, 200, 64 * offsetSize, 64 * offsetSize, L"data/image/keyboard_a.png"));
 	enemyPool->SetImageD(new vnSprite(-100, 200, 64 * offsetSize, 64 * offsetSize, L"data/image/keyboard_d.png"));
 	enemyPool->SetImageSlash(new vnSprite(-100, 200, 64 * offsetSize, 64 * offsetSize, L"data/image/flair_disabled_line_outline.png"));
 	enemyPool->SetImageGhost(new vnSprite(-100, 200, 64 * offsetSizeGhost, 64 * offsetSizeGhost, L"data/image/ghostImage.png"));
-
 	registerObject(enemyPool->GetImageTab());
 	registerObject(enemyPool->GetImageA());
 	registerObject(enemyPool->GetImageD());
@@ -823,6 +828,7 @@ void SceneMain::InitializePauseUI()
 	enemyPool->SetPullQus(CreateQuestionUI(L"：無効確率に加算", GAME_COLOR_SKY_NEON, 0.6f));
 }
 
+//レベルアップ時に出るUI関連
 void SceneMain::InitializeUpgradeUI()
 {
 	// 黒い幕
@@ -1095,6 +1101,7 @@ void SceneMain::terminate()
 	deleteObject(pImageD);
 	deleteObject(pImageE);
 	deleteObject(pImageQ);
+	deleteObject(pImageTab);
 
 	pImageW = nullptr;
 	pImageA = nullptr;
@@ -1102,6 +1109,7 @@ void SceneMain::terminate()
 	pImageD = nullptr;
 	pImageE = nullptr;
 	pImageQ = nullptr;
+	pImageTab = nullptr;
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -1215,11 +1223,15 @@ void SceneMain::execute()
 		break;
 	}
 
+
+	//ゲーム開始前とゲーム中のみ操作説明を出す
+
 	//左側の表示
 	if (m_gameState == GameState::Play)
 	{
 		m_pUIBackGroundBlack[0]->setRenderEnable(true);
-		m_pUIBackGroundBlack[1]->setRenderEnable(true);
+		//m_pUIBackGroundBlack[1]->setRenderEnable(true);
+		//m_pUIBackGroundBlack[1]->setRenderEnable(false);
 	}
 	else
 	{
@@ -1235,6 +1247,7 @@ void SceneMain::execute()
 		pImageD->setRenderEnable(true);
 		pImageE->setRenderEnable(true);
 		pImageQ->setRenderEnable(true);
+		pImageTab->setRenderEnable(true);
 		enemyPool->ResetQuestionUI();
 		
 	}
@@ -1246,6 +1259,8 @@ void SceneMain::execute()
 		pImageD->setRenderEnable(false);
 		pImageE->setRenderEnable(false);
 		pImageQ->setRenderEnable(false);
+		pImageTab->setRenderEnable(false);
+
 		SetSkillUIRender(false);
 	}
 
@@ -1284,28 +1299,12 @@ void SceneMain::execute()
 	//	m_gameState = GameOver;
 	//}
 
-	// --- デバッグ用：現在のゲーム状態を表示 ---
-	//const wchar_t* stateName = L"Unknown";
-	//switch (m_gameState)
-	//{
-	//case IdelPlay:  stateName = L"IdelPlay (Waiting...)"; break;
-	//case Play:      stateName = L"Play (Running)";       break;
-	//case LevelUp:   stateName = L"LevelUp (Paused)";     break;
-	//case GameOver:  stateName = L"GameOver";             break;
-	//case GameClear: stateName = L"GameClear";            break;
-	//}
-
-	//// 画面の左上（または見やすい位置）に出す
-	//vnFont::print(20, 400, L"Current State: %s", stateName);
-
 	// --- ライト設定 ---
 
 	// 環境光：全体の底上げ（入れすぎない）
 	vnLight::setAmbient(0.35f, 0.35f, 0.35f);
 	//vnLight::setAmbient(0, 0, 0);
 
-	// キャラ個別の環境光：ほぼ補助レベル
-	//pBrid->setAmbient(0.1f, 0.1f, 0.1f, 1.0f);
 
 	// 平行光源：少し斜め前上から当てる
 	vnLight::setLightDir(0.3f, -1.0f, 0.3f);
@@ -1313,15 +1312,6 @@ void SceneMain::execute()
 	// 光の色：完全な白より少しだけ抑える
 	//vnLight::setLightCol(0.95f, 0.95f, 0.95f);
 	vnLight::setLightCol(0.7f, 0.5f, 0.5f);
-
-	//// 環境光：少し暖かい色
-	//vnLight::setAmbient(0.4f, 0.35f, 0.3f);
-
-	//// 太陽が斜めから当たる感じ
-	//vnLight::setLightDir(0.5f, -1.0f, 0.2f);
-
-	//// 夕方っぽいオレンジ色
-	//vnLight::setLightCol(1.0f, 0.75f, 0.5f);
 
 	//vnDebugDraw::Grid();
 	//vnDebugDraw::Axis();
@@ -1334,7 +1324,9 @@ void SceneMain::render()
 	// --- 移動表示 ---
 	// 基準 x = 20, y = 160
 	int baseX = 50;
-	int baseY = 130;
+
+	int baseX_WASD = 120;	//WASDの画像の位置（X）
+	int baseY = operationUI_Y+130;
 
 	// --- 画面表示 ---
 	switch (m_gameState)
@@ -1378,7 +1370,7 @@ void SceneMain::render()
 
 		printShadow(opX, opY + 70, GAME_COLOR_WHITE, L"移動      : W, A, S, D");
 		printShadow(opX, opY + 120, GAME_COLOR_WHITE, L"ジャンプ    : MOUSE");
-		//printShadow(opX, opY + 170, GAME_COLOR_WHITE, L"ズーム    : WHEEL");
+		printShadow(opX, opY + 170, GAME_COLOR_WHITE, L"群れ情報確認: TAB");
 
 
 		// --- 3. 右側：ルール説明 ---
@@ -1415,12 +1407,13 @@ void SceneMain::render()
 		//vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 50));
 		vnFont::setFontSize(38, 50);
 
-		vnFont::print(950.0f + off, 20.0f + off, shadowCol, L"TIME: %02d:%02d", minutes, seconds); // 影
-		vnFont::print(950.0f, 20.0f, GAME_COLOR_GREEN, L"TIME: %02d:%02d", minutes, seconds); // 本体
+		//vnFont::print(950.0f + off, 20.0f + off, shadowCol, L"TIME: %02d:%02d", minutes, seconds); // 影
+		//vnFont::print(950.0f, 20.0f, GAME_COLOR_GREEN, L"TIME: %02d:%02d", minutes, seconds); // 本体
+		vnFont::print(950.0f + off, 20.0f + off, shadowCol, L"TIME: %02d", static_cast<int>(waveManager->GetWaveTimer())); // 影
+		vnFont::print(950.0f, 20.0f, GAME_COLOR_GREEN, L"TIME: %02d", static_cast<int>(waveManager->GetWaveTimer())); // 本体
 
 
 		// --- 現在のWAVE数 ---
-		//vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 40));
 		vnFont::setFontSize(38, 40);
 		vnFont::print(950.0f + off, 70.0f + off, shadowCol, L"WAVE %d", waveManager->GetCurrentWave());
 		vnFont::print(950.0f, 70.0f, GAME_COLOR_LIME, L"WAVE %d", waveManager->GetCurrentWave());
@@ -1463,6 +1456,7 @@ void SceneMain::render()
 			bool sPressed = vnKeyboard::on(DIK_S);
 			bool ePressed = vnKeyboard::on(DIK_E);
 			bool qPressed = vnKeyboard::on(DIK_Q);
+			bool tabPressed = vnKeyboard::on(DIK_TAB);
 
 			bool spacePressed = vnKeyboard::on(DIK_SPACE);
 			bool mousePressed = vnMouse::onL(); // 0 = 左クリック
@@ -1472,26 +1466,28 @@ void SceneMain::render()
 			vnFont::setFontSize(38, 25);
 
 			// 「移動：」は常に白
-			vnFont::print(baseX-25, baseY +20 , GAME_COLOR_YELLOW, L"移動：");
-			pImageW->setPos(baseX + 75, baseY + 35);
+			vnFont::print(baseX-25, baseY +10 , GAME_COLOR_YELLOW, L"移動：");
+			pImageW->setPos(baseX_WASD + 75, baseY + 35);
 			pImageW->setColor(wPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
-			pImageA->setPos(baseX + 15, baseY + 100);
+			pImageA->setPos(baseX_WASD + 15, baseY + 100);
 			pImageA->setColor(aPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
-			pImageS->setPos(baseX + 75, baseY + 100);
+			pImageS->setPos(baseX_WASD + 75, baseY + 100);
 			pImageS->setColor(sPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
-			pImageD->setPos(baseX + 135, baseY + 100);
+			pImageD->setPos(baseX_WASD + 135, baseY + 100);
 			pImageD->setColor(dPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
-			pImageE->setPos(baseX + 55.5f, baseY + 162.5f);
+			pImageE->setPos(baseX + 55.5f, baseY + 152.5f);
 			pImageE->setColor(ePressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 			
-			pImageQ->setPos(baseX + 55.5f, baseY + 242.5f);
+			pImageQ->setPos(baseX + 55.5f, baseY + 232.5f);
 			pImageQ->setColor(qPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
-			vnFont::print(baseX-25, baseY-25 , GAME_COLOR_YELLOW, L" Tab：群れ情報");
+			vnFont::print(baseX-25, baseY-35 , GAME_COLOR_YELLOW, L"群れ情報：");
+			pImageTab->setPos(baseX +150, baseY -25);
+			pImageTab->setColor(tabPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
 		}
 
@@ -2446,7 +2442,9 @@ void SceneMain::UpdateEnemies(float deltaTime)
 	//		enemy->DeSpawn();
 	//	}
 	//}
-	if (waveManager->GetWaveTimer() >= waveManager->GetWaveTimeLimit())
+
+	//if (waveManager->GetWaveTimer() >= waveManager->GetWaveTimeLimit())
+	if (waveManager->GetWaveTimer() <= waveManager->GetWaveTimeLimit())
 	{
 		for (auto enemy : enemies)
 		{
@@ -2705,7 +2703,7 @@ void SceneMain::UpdateCombo(float deltaTime)
 	// 1. まず30個全員を画面外へ飛ばす
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 10; j++) {
-			pComboSprites[i][j]->setPos(-1000, -1000);
+			pComboSprites[i][j]->setPos(offScreen, offScreen);
 			// ついでに透明度もリセットしておく（次に備えて）
 			pComboSprites[i][j]->setAlpha(1.0f);
 		}
@@ -2749,7 +2747,7 @@ void SceneMain::UpdateCombo(float deltaTime)
 	}
 	else {
 		// コンボが0なら、Combo!!も画面外に隠す
-		pComboWord->setPos(-1000, -1000);
+		pComboWord->setPos(offScreen, offScreen);
 	}
 
 	// --- WAVEクリアしたらコンボTimerを最大にしとく ---
@@ -3222,11 +3220,11 @@ void SceneMain::CleanUpScene()
 		digits[0] = (m_comboCount / 100) % 10; // 百の位
 		digits[1] = (m_comboCount / 10) % 10;  // 十の位
 		digits[2] = m_comboCount % 10;          // 一の位
-		pComboWord->setPos(-1000, -1000);
+		pComboWord->setPos(offScreen, offScreen);
 		for (int i = 0; i < 3; i++) {
 			// スプライトを取得して設定
 			vnSprite* s = pComboSprites[i][digits[i]];
-			s->setPos(-1000, -1000);
+			s->setPos(offScreen, offScreen);
 		}
 
 	}

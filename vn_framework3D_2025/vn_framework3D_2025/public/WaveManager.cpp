@@ -51,7 +51,8 @@ void WaveManager::Update(float deltaTime)
     {
         if (!GetFinalWave())
         {
-            m_waveTimer += deltaTime;
+            //m_waveTimer += deltaTime;
+            m_waveTimer -= deltaTime;
         }
         if (IsWaveClear())
         {
@@ -114,7 +115,8 @@ bool WaveManager::IsWaveClear() const
     }
     else
     {
-        return m_waveTimer >= m_waveTimeLimit;
+        //return m_waveTimer >= m_waveTimeLimit;
+        return m_waveTimer < GetWaveTimeLimit();
 
     }
 }
@@ -159,7 +161,10 @@ void WaveManager::SetupWave()
         m_spawnLimit = 5;
 
     //時間制限でWAVEクリアにする
-    m_waveTimeLimit = m_waveTimeBase/* + (m_currentWave - 1) * m_addTime*/;
+    //m_waveTimeLimit = m_waveTimeBase/* + (m_currentWave - 1) * m_addTime*/;
+
+    //始まりの時間を入れる（20秒）
+    m_waveTimer = m_waveTimeBase;
 
 
     if (m_currentWave != 1)
@@ -191,9 +196,12 @@ bool WaveManager::CanSpawn() const
     //    return false;
 
     // ▼時間制に合わせる
-    if (m_waveTimer >= m_waveTimeLimit)
+    //if (m_waveTimer >= m_waveTimeLimit)
+    //    return false;
+    //if (m_waveTimer <= 0)
+    //    return false;
+    if (IsWaveClear())
         return false;
-
     //if (m_currentWave == m_maxWave && m_waveTimer >= m_waveTimeLimit)
     //    return false;
 

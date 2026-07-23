@@ -145,6 +145,9 @@ public:
 	void SetImageGhost(vnSprite* sprite) { m_ImageGhost = sprite; }
 	vnSprite* GetImageGhost()const { return m_ImageGhost; }
 
+	//メッセージの後ろの背景
+	void SetUIBackGroundBlack(vnSprite* sprite) { m_UIBackGroundBlack = sprite; }
+
 	//？マークと吹き出し
 	void SetMeleeQus(UIQuestionExplain ui) { m_meleeQus = ui; }
 	void SetRangeQus(UIQuestionExplain ui) { m_rangeQus = ui; };
@@ -212,6 +215,9 @@ private:
 
 	//お化けの画像
 	vnSprite* m_ImageGhost;
+
+	//メッセージの設定の黒い背景
+	vnSprite* m_UIBackGroundBlack;
 
 	//？マークと吹き出し
 	UIQuestionExplain m_meleeQus;
