@@ -15,10 +15,11 @@ WCHAR seFile_Title[][FILE_PATH_MAX] =
 std::vector<std::wstring> ui_Title =
 {
     L"data/image/タイトル画面 - コピー.png", // 0
-    L"data/image/説明1.png",               // 1
-    L"data/image/説明2.png",               // 2
-    L"data/image/説明3.png",               // 3
-    L"data/image/説明4.png",               // 4
+    L"data/image/Rule1.png",               // 1
+    L"data/image/Rule2.png",               // 2
+    L"data/image/Rule3.png",               // 3
+    L"data/image/Rule4.png",               // 4
+    L"data/image/Rule5.png",               // 5
 };
 
 
@@ -181,20 +182,23 @@ void SceneTitle::execute()
         }
         //-----------------------------
 
-        //ルールボタン押す
-        if (UpdateButton(
-            ruleButton_x,
-            ruleButton_y,
-            pRuleButton,
-            isOnRuleButton,
-            ruleButtonScale))
+        if (!isStarting)
         {
+            //ルールボタン押す
+            if (UpdateButton(
+                ruleButton_x,
+                ruleButton_y,
+                pRuleButton,
+                isOnRuleButton,
+                ruleButtonScale))
+            {
 
-            m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
-            m_titleState = TitleState::RULE;
-            m_rulePage = 0; //0はタイトル画面　１はルール説明画面最初
-            ChangeBackGround(m_rulePage + 1);
+                m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
+                m_titleState = TitleState::RULE;
+                m_rulePage = 0; //0はタイトル画面　１はルール説明画面最初
+                ChangeBackGround(m_rulePage + 1);
 
+            }
         }
 
 

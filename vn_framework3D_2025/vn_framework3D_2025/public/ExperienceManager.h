@@ -47,6 +47,16 @@ public:
 	float GetCurrentExp()const { return m_currentExp; }
 	float GetNeedExp()const { return m_neededExp; }
 
+	//レベルが最大かどうか
+	bool IsMaxUpgrade(int selectedIndex) const
+	{
+		UpgradeType type = m_currentSelectedTypes[selectedIndex];
+		const auto& data = m_upgradeMaster[(int)type];
+
+		return data.currentLv >= data.maxLv;
+	}
+
+	bool AllIsMaxLv();
 
 	/*
 	1.最初にプレイヤーを入れる
@@ -127,7 +137,7 @@ private:
 	int m_reflectCount		 = 1;			//4.反射回数（撃つ球の）
 	float m_bulletSpeedBoost = 0.0f;		//5.弾の速度
 
-
+	
 
 	// --- 通知用 ---	
 	/*

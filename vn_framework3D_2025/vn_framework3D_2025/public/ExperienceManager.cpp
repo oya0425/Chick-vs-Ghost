@@ -120,6 +120,7 @@ void ExperienceManager::GenerateLevelUpOptions()
 {
 	//1.候補リストを作成（最大レベルに達していないものだけを入れる）
 	std::vector<UpgradeType>candidates;
+	// まず最大レベルでないものだけ追加
 	for (int i = 0; i < (int)UpgradeType::MaxCount; i++)
 	{
 		if (m_upgradeMaster[i].currentLv < m_upgradeMaster[i].maxLv)
@@ -127,6 +128,18 @@ void ExperienceManager::GenerateLevelUpOptions()
 			candidates.push_back((UpgradeType)i);
 		}
 	}
+	// 3つ未満なら最大レベルのものも追加して3つにする
+	if (candidates.size() < 3)
+	{
+		for (int i = 0; i < (int)UpgradeType::MaxCount && candidates.size() < 3; i++)
+		{
+			if (m_upgradeMaster[i].currentLv >= m_upgradeMaster[i].maxLv)
+			{
+				candidates.push_back((UpgradeType)i);
+			}
+		}
+	}
+
 
 	//2.シャッフルして先頭から３つ選ぶ（またはランダムに抽出）
 	for (int i = 0; i < canSelectCount; i++)
@@ -152,6 +165,12 @@ void ExperienceManager::GenerateLevelUpOptions()
 			// 習得時は数値をレベルとして出す
 			m_uiDisplayChoices[i].value[m_choiceIndex] = 1.0f;//表示する時に（int）にして使用
 		}
+		else if (m_uiDisplayChoices[i].currentLv >= m_uiDisplayChoices[i].maxLv)
+		{
+			m_uiDisplayChoices[i].suffix = L"% MAX";
+			m_uiDisplayChoices[i].explanation = L"これ以上強化できません";
+			m_uiDisplayChoices[i].value[m_choiceIndex] = 0.0f; // またはそのままでもOK
+		}
 
 		// --- 選んだものは候補から消す（重複防止）
 		candidates.erase(candidates.begin() + index);
@@ -170,7 +189,7 @@ void ExperienceManager::ApplyUpgrade(int choiceIndex)
 	if (selectedType == UpgradeType::MaxCount)return;
 
 	//1.マスターデータレベルを上げる
-	m_upgradeMaster[(int)selectedType].currentLv++;
+	m_upgradeMaster[(int)selectedType].currentLv+=1;
 
 	//2.プレイヤーのステータスに反映(この前にあげる値を変更する)
 	m_choiceIndex = rand() % 5;
@@ -189,7 +208,7 @@ void ExperienceManager::ApplyUpgrade(int choiceIndex)
 		m_rangeBoost += boost;  
 		m_player->SetRangeMultiplier(1.0f + (m_rangeBoost / 100.0f));
 		// 2. もしこれが「最初のレベル（Lv1）」なら、スキルを有効化する
-		if (m_upgradeMaster[(int)selectedType].currentLv == 1)
+		if (m_upgradeMaster[(int)selectedType].currentLv >= 1)
 		{
 			m_player->UnlockAreaAttackSkill(true);
 		}
@@ -198,7 +217,7 @@ void ExperienceManager::ApplyUpgrade(int choiceIndex)
 		m_magnetBoost += boost;
 		m_player->SetPullMultiplier(1.0f + (m_magnetBoost / 100.0f));
 		// 引き寄せスキルの習得
-		if (m_upgradeMaster[(int)selectedType].currentLv == 1)
+		if (m_upgradeMaster[(int)selectedType].currentLv >= 1)
 		{
 			m_player->UnlockPullAttackSkill(true);
 		}
@@ -245,6 +264,22 @@ int ExperienceManager::GetLevelUpStock()
 {
 	return m_levelUpStock;
 }
+
+bool ExperienceManager::AllIsMaxLv()
+{
+
+	for (int i = 0; i < (int)UpgradeType::MaxCount; i++)
+	{
+		//どれか１つでも最大でないものがあったらfalse
+		if (m_upgradeMaster[i].currentLv < m_upgradeMaster[i].maxLv)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 
 void ExperienceManager::SetPlayer(NewPlayerClass* player)
 {

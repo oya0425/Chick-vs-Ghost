@@ -129,6 +129,11 @@ private:
 	vnSprite* pExpBarBack;
 	vnSprite* pExpBarFront;
 
+	//HPバーのシェイク
+	float m_hpShakeTimer = 0.0f;     // シェイクの残り時間
+	float m_hpShakeDuration = 0.25f; // 揺れる時間（0.25秒くらいが心地よいです）
+	float m_hpShakeIntensity = 6.0f; // 揺れの強さ（ピクセル）
+	float m_prevHp = -1.0f;          // 初期化チェック用の前回HP
 
 	// --- スキルUI用スプライト ---
 	// 範囲攻撃（Area Attack）用UI
@@ -209,6 +214,7 @@ private:
 
 	std::unique_ptr<SoundManager> soundManager;
 
+	
 
 	// デバッグ
 	int m_leaderCount = 0;
@@ -287,6 +293,15 @@ private:
 		float heightY			//Y座標
 	);
 
+	//Hpバーのシェイク
+	void ShakeHpBar(
+		float currentHp,
+		float deltaTime,
+		float& outOffsetX,
+		float& outOffsetY
+	);
+
+
 	//バーの設定
 	void CreateUIBar(
 		EnemyPool::UIBar& ui,
@@ -307,7 +322,8 @@ private:
 		vnSprite* pBg,
 		vnSprite* pMain,
 		bool& isOnButton,
-		float& buttonScale);
+		float& buttonScale,
+		bool isMax);
 		
 	bool OnButton(float x, float y);
 

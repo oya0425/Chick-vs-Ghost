@@ -1494,12 +1494,23 @@ void SceneMain::render()
 		{
 			// --- HPバーの表示 ---
 			setHPbarRender(true);
+			// 1. シェイクの揺れ量（オフセット）を取得
+			float shakeX = 0.0f;
+			float shakeY = 0.0f;
+			ShakeHpBar(m_pNewPlayer->GetCurrentHp(), vnScene::getDeltaTime(), shakeX, shakeY);
+
+			// 2. HP割合の計算とスケール適用
 			float hpRatio = (float)m_pNewPlayer->GetCurrentHp() / m_pNewPlayer->GetMaxHp();
-			// スケール適用
 			pHpBarFront->setScaleX(hpRatio);
-			// 座標補正：左端(barLeftEdge)に固定しつつ、今の幅の半分だけ右にずらした位置を中心にする
-			float currentPosX = barLeftEdgeHp + (barWidthHp * hpRatio * 0.5f);
-			pHpBarFront->setPos(currentPosX, heigtYHp); // Y座標もアイコンに合わせて40に調整
+
+			// 3. 各パーツ本来の位置を計算（前バーは伸縮補正入り）
+			float frontPosX = barLeftEdgeHp + (barWidthHp * hpRatio * 0.5f); // 伸縮調整あり
+			float backPosX = barLeftEdgeHp + (barWidthHp * 0.5f);           // 背景系は固定長（満タン時の中心）
+
+			// 4. 本来の位置 + シェイクの揺れ量をセット！
+			pHpBarFront->setPos(frontPosX + shakeX, heigtYHp + shakeY);
+			pHpBarBackBlack->setPos(backPosX + shakeX, heigtYHp + shakeY);
+			pHpBarBack->setPos(backPosX + shakeX, heigtYHp + shakeY);
 		}
 
 		{
@@ -1730,7 +1741,7 @@ void SceneMain::HandleBackgroundFade(bool isFadeOut, float& scale, float speed =
 
 	if (isFadeOut)
 	{
-		// 【拡大（終了時）】目標値: 1.1f
+		// 拡大（終了時）目標値: 1.1f
 		scale += (1.1f - scale) * speed;
 		pBackGroundBlack->setScale(scale);
 
@@ -1749,7 +1760,7 @@ void SceneMain::HandleBackgroundFade(bool isFadeOut, float& scale, float speed =
 	}
 	else
 	{
-		// 【縮小（開始時）】目標値: 0.0f
+		// 縮小（開始時）目標値: 0.0f
 		scale += (0.0f - scale) * speed;
 		pBackGroundBlack->setScale(scale);
 
@@ -1818,6 +1829,7 @@ void SceneMain::UpdateSkillBar(
 		isSkillMaxPrev = false;
 		skillIconScale = 1.0f;
 		skillTargetScale = 1.0f;
+
 	}
 	pSkillIcon->setScale(skillIconScale);
 	pSkillBar->setScaleX(skillRatio);
@@ -1825,8 +1837,40 @@ void SceneMain::UpdateSkillBar(
 	pSkillBar->setPos(currentPosX, heightY);
 
 }
+void SceneMain::ShakeHpBar(
+	float currentHp,
+	float deltaTime,
+	float& outOffsetX,
+	float& outOffsetY
+)
+{
+	if (m_prevHp < 0.0f)
+	{
+		m_prevHp = currentHp;
+	}
 
+	// ダメージ検知
+	if (currentHp < m_prevHp)
+	{
+		m_hpShakeTimer = m_hpShakeDuration;
+	}
+	m_prevHp = currentHp;
 
+	outOffsetX = 0.0f;
+	outOffsetY = 0.0f;
+
+	if (m_hpShakeTimer > 0.0f)
+	{
+		m_hpShakeTimer -= deltaTime;
+
+		float damping = m_hpShakeTimer / m_hpShakeDuration;
+		float randomX = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+		float randomY = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+
+		outOffsetX = randomX * m_hpShakeIntensity * damping;
+		outOffsetY = randomY * m_hpShakeIntensity * damping;
+	}
+}
 
 
 
@@ -2563,6 +2607,7 @@ void SceneMain::UpdateEnemies(float deltaTime)
 					if (!m_pNewPlayer->IsAreaAttack())
 					{
 						m_pNewPlayer->Damage(defualtDamage);
+
 					}
 					//if (m_pNewPlayer->IsPulling())
 					//{
@@ -2769,31 +2814,37 @@ void SceneMain::AddCombo(NewEnemyClass* enemy)
 	m_comboTimer = m_currentComboLimit;
 	m_comboScale = 1.5f; // 一瞬で1.5倍の大きさに跳ねさせる！(コンボの文字)
 	m_killCounter++; // 回復用カウンターを増やす
-	if (m_comboCount %200==0)
+
+	//全ての項目が最大でなければ経験値を獲得しレベルアップする
+	if (!m_pExpManager->AllIsMaxLv())
 	{
-		//==================================
-		// コンボ100ごとにレベルアップ
-		//==================================
-		m_pExpManager->GainLevel(1);
-
-		Common::StartCameraShake(3.5f, 3.5f, 1.0f);
-	}
-	//経験値を獲得
-	if (m_pExpManager)
-	{
-		float expAmount = 0.5f * (1.0f + (waveManager->GetCurrentWave() * 0.2f));
-		//リーダーの時と、その他がパニック状態の時にもらえる経験値が増える
-		if (enemy->GetIsLeader())
+		if (m_comboCount % 200 == 0)
 		{
-			expAmount *= 3.0f;
+			//==================================
+			// コンボ100ごとにレベルアップ
+			//==================================
+			m_pExpManager->GainLevel(1);
+
+			Common::StartCameraShake(3.5f, 3.5f, 1.0f);
 		}
-		else if (!enemy->GetIsLeader() && enemy->GetState() == NewEnemyClass::eState::Panic)
+		//経験値を獲得
+		if (m_pExpManager)
 		{
-			expAmount *= 1.5f;
+			float expAmount = 0.5f * (1.0f + (waveManager->GetCurrentWave() * 0.2f));
+			//リーダーの時と、その他がパニック状態の時にもらえる経験値が増える
+			if (enemy->GetIsLeader())
+			{
+				expAmount *= 3.0f;
+			}
+			else if (!enemy->GetIsLeader() && enemy->GetState() == NewEnemyClass::eState::Panic)
+			{
+				expAmount *= 1.5f;
 
+			}
+
+			m_pExpManager->GainExp(expAmount);
 		}
 
-		m_pExpManager->GainExp(expAmount);
 	}
 
 }
@@ -2992,7 +3043,7 @@ void SceneMain::UpdateLevelUp()
 		//選択肢の画像をマウスカーソルを持って来てクリック
 		for (int i = 0; i < 3; i++)
 		{
-
+			bool isMax = m_pExpManager->IsMaxUpgrade(i);
 			if (UpdateUpgradeButton(
 				m_pUpgradeUI->GetDisplayFrameImg(i)->getPosX(),
 				m_pUpgradeUI->GetDisplayFrameImg(i)->getPosY(),
@@ -3000,7 +3051,8 @@ void SceneMain::UpdateLevelUp()
 				m_pUpgradeUI->GetDisplayBackGroundImg(i),
 				m_pUpgradeUI->GetDisplayMainImg(i),
 				m_isOnSelectButton[i],
-				m_SelectButtonScale[i]
+				m_SelectButtonScale[i],
+				isMax
 			))
 			{
 
@@ -3083,8 +3135,20 @@ bool SceneMain::UpdateUpgradeButton(
 	vnSprite* pBg,
 	vnSprite* pMain,
 	bool& isOnButton,
-	float& buttonScale)
+	float& buttonScale,
+	bool isMax)
 {
+	if (isMax)
+	{
+		isOnButton = false;
+		buttonScale += (1.0f - buttonScale) * 0.2f;
+
+		pFrame->setScale(buttonScale);
+		pBg->setScale(buttonScale);
+		pMain->setScale(buttonScale);
+
+		return false;
+	}
 	if (OnButton(x, y))
 	{
 		if (!isOnButton)
