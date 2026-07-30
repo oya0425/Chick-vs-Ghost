@@ -1016,7 +1016,7 @@ void EnemyPool::DrawBossDebugInfo()
     auto& data = m_bossGroupData;
 
     // 既存の近接説明文を「ボス用」に上書きする
-    m_meleeQus.explainText = L"：プレイヤーに\n 与えるダメージに加算";
+    m_meleeQus.explainText = L"：特攻状態の\n      敵の数が増える";
 
     //==================================================
     // 2. 描画基準座標・レイアウトの計算

@@ -170,7 +170,8 @@ private:
 	vnSprite* pImageE;	//スキルボタン範囲攻撃
 	vnSprite* pImageQ;	//引き寄せ攻撃
 
-
+	//時間表示の後ろに置く背景（円形の）
+	vnSprite* pTimeBackGround;
 
 	// --- スキル獲得選択ボタン ---
 	bool m_isOnOneButton = false;

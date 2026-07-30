@@ -9,6 +9,9 @@
 
 // --- メンバ変数 ---
 namespace {
+
+
+
 	constexpr float playerModelScale = 1.2f;
 	constexpr float blackBackSpeed = 0.1f;	//黒い背景の拡大縮小する速度
 
@@ -50,10 +53,21 @@ namespace {
 	constexpr float mainImgW = 110.0f*0.9f;
 	constexpr float mainImgH = 110.0f*0.9f;
 
+	//時間表示の後ろの背景の設定（画像の縦横、位置xは画面の中心）
+	constexpr float timeBackGround_w = 150;
+	constexpr float timeBackGround_h = 150;
+	constexpr float timeBackGround_y = 120;
+
+
+
 	// --- HPバー ---
 	constexpr float barLeftEdgeHp = 90.0f;
-	constexpr float barWidthHp = 450.0f;
-	constexpr float barBackWidthHp = 458.0f;
+	constexpr float barWidthHp = 400.0f;
+	constexpr float barHeightHp = 18.0f;
+
+	constexpr float barBackWidthHp = 408.0f;
+	constexpr float barBackHeightHp = 22.0f;
+
 	// 中心座標 = 左端 + (幅の半分)
 	constexpr float newBarPosXHp = barLeftEdgeHp + (barWidthHp * 0.5f);      // 310.0f
 	constexpr float newBarBackPosXHp = barLeftEdgeHp + (barBackWidthHp * 0.5f); // 314.0f (枠を考慮)
@@ -643,17 +657,17 @@ void SceneMain::InitializeEffects()
 void SceneMain::InitializeUI()
 {
 	// --- HPバー ---
-	pHpBarBackBlack = new vnSprite(newBarPosXHp, heigtYHp, 458.0f, 22.0f, NULL);
+	pHpBarBackBlack = new vnSprite(newBarPosXHp, heigtYHp, barBackWidthHp, barBackHeightHp, NULL);
 	pHpBarBackBlack->setColor(V_GAME_COLOR_BLACK);
 	pHpBarBackBlack->setSkewX(12.0f);
 	registerObject(pHpBarBackBlack);
 
-	pHpBarBack = new vnSprite(newBarPosXHp, heigtYHp, 450.0f, 18.0f, NULL);
+	pHpBarBack = new vnSprite(newBarPosXHp, heigtYHp, barWidthHp, barHeightHp, NULL);
 	pHpBarBack->setColor(V_GAME_COLOR_RED);
 	pHpBarBack->setSkewX(9.8f); 
 	registerObject(pHpBarBack);
 
-	pHpBarFront = new vnSprite(newBarPosXHp, heigtYHp, 450.0f, 18.0f, NULL);
+	pHpBarFront = new vnSprite(newBarPosXHp, heigtYHp, barWidthHp, barHeightHp, NULL);
 	pHpBarFront->setColor(V_GAME_COLOR_GREEN);
 	pHpBarFront->setSkewX(9.8f);
 	registerObject(pHpBarFront);
@@ -680,8 +694,10 @@ void SceneMain::InitializeUI()
 
 	setHPbarRender(false);
 	SetExpbarRender(false);
-
+	
+	//===============================================================
 	// --- コンボ表示 ---
+	//===============================================================
 	for (int i = 0; i < 3; i++) {       // 桁 (0:百, 1:十, 2:一)
 		for (int j = 0; j < 10; j++) {  // 数字 (0〜9)
 			wchar_t path[64];
@@ -697,6 +713,8 @@ void SceneMain::InitializeUI()
 	pComboWord->setColor(V_GAME_COLOR_RED);
 	registerObject(pComboWord);
 
+
+	//===============================================================
 	// --- 文字用背景(左側にある操作説明の後ろにある背景)---
 	m_pUIBackGroundBlack[0] = new vnSprite(1280 - 1120, 720.0f - 450.0f, 256 * 1.2f, 512 * 0.7, L"BackGroundBlack.png");
 	m_pUIBackGroundBlack[0]->setColor(V_GAME_COLOR_BLACK);
@@ -712,7 +730,10 @@ void SceneMain::InitializeUI()
 	m_pUIBackGroundBlack[1]->setRenderEnable(true);
 	enemyPool->SetUIBackGroundBlack(m_pUIBackGroundBlack[1]);
 
+
+	//============================================================
 	// --- キーボード画像 ---
+	//============================================================
 	pImageW   = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_w_outline.png"); registerObject(pImageW);
 	pImageA   = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_a_outline.png"); registerObject(pImageA);
 	pImageS   = new vnSprite(-100, 200, 64, 64, L"data/image/keyboard_s_outline.png"); registerObject(pImageS);
@@ -721,10 +742,16 @@ void SceneMain::InitializeUI()
 	pImageQ	  = new vnSprite(-100, 200, 64 * 0.7f, 64 * 0.7f, L"data/image/keyboard_q_outline.png"); registerObject(pImageQ);
 	pImageTab = new vnSprite(-100, 200, 64 * 1.5f, 64 * 1.5f, L"data/image/keyboard_tab.png"); registerObject(pImageTab);
 
+
+
+	//===================================================================
 	// --- スキルUI設定 ---
+	//===================================================================
 	float centerX = barLeftEdgeAreaSkill + (maxWAreaSkill * 0.5f);
 
-	// 範囲攻撃
+	//============================================================
+	// 範囲攻撃(スキルバー)
+	//============================================================
 	pAreaAtkBtnBackBlack = new vnSprite(centerX, heightYAreaSkill, maxWAreaSkill + 10.0f, skillBarThick + 6.0f, NULL);
 	pAreaAtkBtnBackBlack->setColor(V_GAME_COLOR_BLACK);
 	registerObject(pAreaAtkBtnBackBlack);
@@ -742,12 +769,15 @@ void SceneMain::InitializeUI()
 	pAreaSkillIcon->setAlpha(1.0f);
 	registerObject(pAreaSkillIcon);
 
+	//初期状態では黒に塗りつぶす為初期値を保存しておく
 	m_areaAtkUIColor.colorBackBlack = V_GAME_COLOR_BLACK;
 	m_areaAtkUIColor.colorBack = V_GAME_COLOR_BLUEBLACK;
 	m_areaAtkUIColor.colorFront = V_GAME_COLOR_CYAN;
 	m_areaAtkUIColor.colorIcon = V_GAME_COLOR_WHITE;
 
-	// 引き寄せ攻撃
+	//============================================================
+	// 引き寄せ攻撃(スキルUIバー)
+	//============================================================
 	pPullBtnBackBlack = new vnSprite(centerX, heightYPullSkill, maxWAreaSkill + 10.0f, skillBarThick + 6.0f, NULL);
 	pPullBtnBackBlack->setColor(V_GAME_COLOR_BLACK);
 	registerObject(pPullBtnBackBlack);
@@ -765,32 +795,51 @@ void SceneMain::InitializeUI()
 	pPullSkillIcon->setAlpha(1.0f);
 	registerObject(pPullSkillIcon);
 
+	//初期状態では黒に塗りつぶす為初期値を保存しておく
 	m_pullUIColor.colorBackBlack = V_GAME_COLOR_BLACK;
 	m_pullUIColor.colorBack = V_GAME_COLOR_BLUEBLACK;
 	m_pullUIColor.colorFront = V_GAME_COLOR_CYAN;
 	m_pullUIColor.colorIcon = V_GAME_COLOR_WHITE;
+	//==============================================================
 
+	//スキルバーの非表示
 	SetSkillUIRender(false);
+
+	//===================================================================
+
+
+	//===============================================================
+	//時間表示の後ろの背景
+	//===============================================================
+	pTimeBackGround = new vnSprite(vnMainFrame::screenWidth / 2, timeBackGround_y, timeBackGround_w, timeBackGround_h, L"data/image/TimeBackGround.png");
+	registerObject(pTimeBackGround);
+	pTimeBackGround->setRenderEnable(false);
+
+	//===============================================================
+
+
 }
 
 //ポーズ中に出るUI
 void SceneMain::InitializePauseUI()
 {
 	float centerX = barLeftEdgeAreaSkill + (maxWAreaSkill * 0.5f);
+	float screenWidth= vnMainFrame::screenWidth;
+	float screenHeight = vnMainFrame::screenHeight;
 
 	// ポーズ背景幕
-	m_pUIBackGroundBlackPause = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"BackGroundBlack.png");
+	m_pUIBackGroundBlackPause = new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth, screenHeight, L"BackGroundBlack.png");
 	m_pUIBackGroundBlackPause->setColor(V_GAME_COLOR_BLACK);
 	m_pUIBackGroundBlackPause->setAlpha(0.6f);
 	registerObject(m_pUIBackGroundBlackPause);
 	m_pUIBackGroundBlackPause->setRenderEnable(false);
 
 	// ポーズフレーム
-	m_pPauseFrame = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"data/image/Pauseframe.png");
+	m_pPauseFrame = new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth, screenHeight, L"data/image/Pauseframe.png");
 	registerObject(m_pPauseFrame);
 	m_pPauseFrame->setRenderEnable(false);
 
-	m_pPauseFrame2 = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"data/image/Pauseframe2.png");
+	m_pPauseFrame2 = new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth, screenHeight, L"data/image/Pauseframe2.png");
 	registerObject(m_pPauseFrame2);
 	m_pPauseFrame2->setRenderEnable(false);
 
@@ -831,8 +880,11 @@ void SceneMain::InitializePauseUI()
 //レベルアップ時に出るUI関連
 void SceneMain::InitializeUpgradeUI()
 {
+	float screenWidth = vnMainFrame::screenWidth;
+	float screenHeight = vnMainFrame::screenHeight;
+
 	// 黒い幕
-	pBackGroundBlack = new vnSprite(1280 / 2, 720 / 2, 1280, 720, L"BackGroundBlack.png");
+	pBackGroundBlack = new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth, screenHeight, L"BackGroundBlack.png");
 	pBackGroundBlack->setColor(V_GAME_COLOR_BLACK);
 	registerObject(pBackGroundBlack);
 	pBackGroundBlack->setRenderEnable(false);
@@ -1128,6 +1180,9 @@ void SceneMain::terminate()
 	deleteObject(pBackGroundBlack);
 	pBackGroundBlack = nullptr;
 
+	deleteObject(pTimeBackGround);
+	pTimeBackGround = nullptr;
+
 
 
 	//レベルアップ時に出るUI
@@ -1248,6 +1303,7 @@ void SceneMain::execute()
 		pImageE->setRenderEnable(true);
 		pImageQ->setRenderEnable(true);
 		pImageTab->setRenderEnable(true);
+		pTimeBackGround->setRenderEnable(true);
 		enemyPool->ResetQuestionUI();
 		
 	}
@@ -1260,6 +1316,7 @@ void SceneMain::execute()
 		pImageE->setRenderEnable(false);
 		pImageQ->setRenderEnable(false);
 		pImageTab->setRenderEnable(false);
+		pTimeBackGround->setRenderEnable(false);
 
 		SetSkillUIRender(false);
 	}
@@ -1328,6 +1385,8 @@ void SceneMain::render()
 	int baseX_WASD = 120;	//WASDの画像の位置（X）
 	int baseY = operationUI_Y+130;
 
+	float text_RIGHT_CLICK_x = 380.0f;
+
 	// --- 画面表示 ---
 	switch (m_gameState)
 	{
@@ -1343,12 +1402,12 @@ void SceneMain::render()
 		unsigned int shadowAlpha = ((unsigned int)(alpha * 255) << 24) | 0x00000000; // 影も一緒に点滅
 
 		//vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 60));		
-		vnFont::setFontSize(38, 60);
+		vnFont::setFontSize(38, 40);
 
 		// 影を描画
-		vnFont::print(340 + off, 600 + off, shadowAlpha, L"[RIGHT CLICK] TO START");
+		vnFont::print(text_RIGHT_CLICK_x + off, 600 + off, shadowAlpha, L"[RIGHT CLICK] TO START");
 		// 本体を描画
-		vnFont::print(340, 600, blinkColor, L"[RIGHT CLICK] TO START");
+		vnFont::print(text_RIGHT_CLICK_x, 600, blinkColor, L"[RIGHT CLICK] TO START");
 
   
 		// --- 2. 左上：操作説明 ---
@@ -1394,29 +1453,55 @@ void SceneMain::render()
 	}
 		break;
 	case Play:
-		// 通常HUD描画
-		// 
-		// --- 時間表示 ---
 	{
+		float screenWidth = vnMainFrame::screenWidth;
+		float screenHeight = vnMainFrame::screenHeight;
+
 		float off = 3.0f;
 		unsigned int shadowCol = 0xFF000000; // 不透明な黒
 
+		//==========================================================
 		// --- タイム表示 ---
+		//==========================================================
 		int minutes = (int)(totalClearTime / 60);
 		int seconds = (int)totalClearTime % 60;
 		//vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 50));
-		vnFont::setFontSize(38, 50);
+		vnFont::setFontSize(38, 40);
+		int remainTime = static_cast<int>(waveManager->GetWaveTimer());
+
+		unsigned int time_textColor = (remainTime <= 3) ? GAME_COLOR_RED : GAME_COLOR_WHITE;
+
+		if (waveManager->GetFinalWave())
+		{
+			vnFont::print(screenWidth / 2 - 34 + off, 100.0f + off, shadowCol, L" ∞");
+
+			vnFont::print(screenWidth / 2 - 34, 100.0f, GAME_COLOR_WHITE, L" ∞");
+		}
+		else
+		{
+			vnFont::print(screenWidth / 2 - 35 + off, 100.0f + off, shadowCol, L"%02ds", remainTime);
+
+			vnFont::print(screenWidth / 2 - 35, 100.0f, time_textColor, L"%02ds", remainTime);
+
+
+		}
 
 		//vnFont::print(950.0f + off, 20.0f + off, shadowCol, L"TIME: %02d:%02d", minutes, seconds); // 影
 		//vnFont::print(950.0f, 20.0f, GAME_COLOR_GREEN, L"TIME: %02d:%02d", minutes, seconds); // 本体
-		vnFont::print(950.0f + off, 20.0f + off, shadowCol, L"TIME: %02d", static_cast<int>(waveManager->GetWaveTimer())); // 影
-		vnFont::print(950.0f, 20.0f, GAME_COLOR_GREEN, L"TIME: %02d", static_cast<int>(waveManager->GetWaveTimer())); // 本体
+		//vnFont::print(screenWidth / 2 - 35 + off, 100.0f + off, shadowCol, L"%02ds", static_cast<int>(waveManager->GetWaveTimer())); // 影
+		//vnFont::print(screenWidth / 2 - 35, 100.0f, GAME_COLOR_WHITE, L"%02ds", static_cast<int>(waveManager->GetWaveTimer())); // 本体
 
 
+		//============================================================
 		// --- 現在のWAVE数 ---
-		vnFont::setFontSize(38, 40);
-		vnFont::print(950.0f + off, 70.0f + off, shadowCol, L"WAVE %d", waveManager->GetCurrentWave());
-		vnFont::print(950.0f, 70.0f, GAME_COLOR_LIME, L"WAVE %d", waveManager->GetCurrentWave());
+		//============================================================
+		vnFont::setFontSize(38, 25);
+		
+		vnFont::print(screenWidth / 2 - 25 + off, 10.0f + off, shadowCol, L"%d/%d", waveManager->GetCurrentWave(), waveManager->GetMaxWave());
+		vnFont::print(screenWidth / 2 - 25 , 10.0f, GAME_COLOR_WHITE, L"%d/%d", waveManager->GetCurrentWave(), waveManager->GetMaxWave());
+
+		vnFont::print(screenWidth / 2 - 55 + off, 35.0f + off, shadowCol, L"WAVE進捗");
+		vnFont::print(screenWidth / 2 - 55, 35.0f, GAME_COLOR_SILVER, L"WAVE進捗");
 
 		// --- 撃破数関係 ---
 		//vnFont::print(950.0f + off, 110.0f + off, shadowCol, L"%d / %d 体撃破", waveManager->GetKillCount(), waveManager->GetKillTargetCount());
@@ -1428,14 +1513,14 @@ void SceneMain::render()
 		{
 			vnFont::setFontSize(38, 80);
 			// メインのクリア表示 (影あり)
-			vnFont::print(320.0f + off, 200.0f + off, shadowCol, L"WAVE %d CLEAR!!", waveManager->GetCurrentWave());
-			vnFont::print(320.0f, 200.0f, GAME_COLOR_WHITE, L"WAVE %d CLEAR!!", waveManager->GetCurrentWave());
+			vnFont::print(350.0f + off, 200.0f + off, shadowCol, L"WAVE %d CLEAR!!", waveManager->GetCurrentWave());
+			vnFont::print(350.0f, 200.0f, GAME_COLOR_WHITE, L"WAVE %d CLEAR!!", waveManager->GetCurrentWave());
 
 			vnFont::setFontSize(38, 40);
 
 			// NEXT表示 (影あり)
-			vnFont::print(300.0f + off, 320.0f + off, shadowCol, L"NEXT : フィールド拡大");
-			vnFont::print(300.0f, 320.0f, GAME_COLOR_LIME, L"NEXT : フィールド拡大");
+			vnFont::print(430.0f + off, 320.0f + off, shadowCol, L"NEXT : フィールド拡大");
+			vnFont::print(430.0f, 320.0f, GAME_COLOR_LIME, L"NEXT : フィールド拡大");
 
 			// --- 点滅処理 ---
 			blinkCounter++;
@@ -1445,8 +1530,8 @@ void SceneMain::render()
 			unsigned int blinkShadow = ((unsigned int)(alpha * 255) << 24) | 0x00000000;
 			unsigned int blinkColor = ((unsigned int)(alpha * 255) << 24) | (GAME_COLOR_CYAN & 0x00FFFFFF);
 
-			vnFont::print(320.0f + off, 450.0f + off, blinkShadow, L"[RIGHT CLICK] NEXT WAVE"); // 点滅する影
-			vnFont::print(320.0f, 450.0f, blinkColor, L"[RIGHT CLICK] NEXT WAVE"); // 点滅する本体
+			vnFont::print(text_RIGHT_CLICK_x + off, 450.0f + off, blinkShadow, L"[RIGHT CLICK] NEXT WAVE"); // 点滅する影
+			vnFont::print(text_RIGHT_CLICK_x, 450.0f, blinkColor, L"[RIGHT CLICK] NEXT WAVE"); // 点滅する本体
 		}
 		{
 			// --- 操作説明 ---
@@ -1675,8 +1760,8 @@ void SceneMain::render()
 		vnFont::setFontSize(38, 40);
 
 		// 影も一緒に点滅させる
-		vnFont::print(400.0f + off, 450.0f + off, blinkShadow, L"[RIGHT CLICK]  BACK TITLE");
-		vnFont::print(400.0f, 450.0f, blinkColor, L"[RIGHT CLICK]  BACK TITLE");
+		vnFont::print(text_RIGHT_CLICK_x + off, 450.0f + off, blinkShadow, L"[RIGHT CLICK]  BACK TITLE");
+		vnFont::print(text_RIGHT_CLICK_x, 450.0f, blinkColor, L"[RIGHT CLICK]  BACK TITLE");
 
 		break;
 
@@ -1704,8 +1789,8 @@ void SceneMain::render()
 		//vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 50));
 		vnFont::setFontSize(38, 50);
 
-		vnFont::print(340 + off, 400 + off, shadowCol, L"～TOTAL TIME: %02d:%02d～", minutes, seconds);
-		vnFont::print(340, 400, GAME_COLOR_WHITE, L"～TOTAL TIME: %02d:%02d～", minutes, seconds);
+		//vnFont::print(340 + off, 400 + off, shadowCol, L"～TOTAL TIME: %02d:%02d～", minutes, seconds);
+		//vnFont::print(340, 400, GAME_COLOR_WHITE, L"～TOTAL TIME: %02d:%02d～", minutes, seconds);
 
 		// --- THANK YOU FOR PLAYING! ---
 		vnFont::print(330 + off, 500 + off, shadowCol, L"THANK YOU FOR PLAYING!");
@@ -1715,9 +1800,10 @@ void SceneMain::render()
 		float alpha = (sinf(blinkCounter * 0.1f) + 1.0f) * 0.5f;
 		unsigned int blinkShadow = ((unsigned int)(alpha * 255) << 24) | 0x00000000;
 		unsigned int blinkColor = ((unsigned int)(alpha * 255) << 24) | (GAME_COLOR_CYAN & 0x00FFFFFF);
+		vnFont::setFontSize(38, 40);
 
-		vnFont::print(370.0f + off, 600.0f + off, blinkShadow, L"[RIGHT CLICK]  BACK TITLE");
-		vnFont::print(370.0f, 600.0f, blinkColor, L"[RIGHT CLICK]  BACK TITLE");
+		vnFont::print(text_RIGHT_CLICK_x + off, 600.0f + off, blinkShadow, L"[RIGHT CLICK]  BACK TITLE");
+		vnFont::print(text_RIGHT_CLICK_x, 600.0f, blinkColor, L"[RIGHT CLICK]  BACK TITLE");
 
 
 		break;
@@ -2233,6 +2319,7 @@ void SceneMain::UpdateIdel()
 
 }
 
+//最初のカメラ位置
 void SceneMain::StartCameraRote()
 {
 	//カメラの座標の計算
@@ -2623,8 +2710,9 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				{
 					if (!m_pNewPlayer->IsAreaAttack() || !m_pNewPlayer->IsPulling())
 					{
-						float damage = enemy->GetGroupData()->meleeFear;
-						m_pNewPlayer->Damage(damage);
+						//ボスに当たるとダメージを受ける
+						//float damage = enemy->GetGroupData()->meleeFear;
+						//m_pNewPlayer->Damage(damage);
 						//m_pNewPlayer->Jump();
 					}
 				}
