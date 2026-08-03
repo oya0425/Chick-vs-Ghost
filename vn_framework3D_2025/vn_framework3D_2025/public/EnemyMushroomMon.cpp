@@ -26,7 +26,7 @@ EnemyMushroomMon::~EnemyMushroomMon()
 
 }
 
-void EnemyMushroomMon::OnIdel(float deltaTime, float distance, const XMVECTOR& toPlayer)
+void EnemyMushroomMon::OnIdle(float deltaTime, float distance, const XMVECTOR& toPlayer)
 {
     GetModel()->setMotion(motion_idle_Mush);
     GetModel()->execute(motionSpeed, false, false);
@@ -112,7 +112,7 @@ void EnemyMushroomMon::OnRun(float deltaTime, float distance, const XMVECTOR& to
         if (GetRigidbody().GetIsGround())
         {
             GetRigidbody().SetBaseVelocity(XMVectorZero());
-            SetState(eState::Idel);
+            SetState(eState::Idle);
         }
     }
 }

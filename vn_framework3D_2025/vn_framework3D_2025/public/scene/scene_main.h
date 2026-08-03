@@ -42,6 +42,29 @@ private:
 		GameFinish,
 		TimeStop,
 	};
+	
+	//チュートリアル用
+	enum class TutorialState
+	{
+		None,
+		StartMessage,          // 最初の説明表示「敵にたいあたりしよう！」
+		WaitFirstKill,         // 初めて敵を倒すまで
+
+		ExplainExp,            // 経験値・特攻・パニック説明
+		WaitLevelUp,           // レベルアップ待ち
+
+		ExplainUI,             // UI説明
+		WaitSkillSelect,       // スキル選択待ち
+
+		ExplainSkills,         // 引き寄せ・範囲攻撃説明
+		WaitSkillUse,          // 両方1回ずつ使用
+
+		ExplainRushEnemy,      // 特攻状態の説明
+		WaitRushEnemyDefeat,   // 特攻敵を倒す
+
+		Finish,
+	};
+
 
 	struct UIColor
 	{
@@ -131,20 +154,20 @@ private:
 
 	//HPバーのシェイク
 	float m_hpShakeTimer = 0.0f;     // シェイクの残り時間
-	float m_hpShakeDuration = 0.25f; // 揺れる時間（0.25秒くらいが心地よいです）
-	float m_hpShakeIntensity = 6.0f; // 揺れの強さ（ピクセル）
+	float m_hpShakeDuration = 0.25f; // 揺れる時間
+	float m_hpShakeIntensity = 6.0f; // 揺れの強さ
 	float m_prevHp = -1.0f;          // 初期化チェック用の前回HP
 
 	// --- スキルUI用スプライト ---
 	// 範囲攻撃（Area Attack）用UI
 	vnSprite* pAreaAtkBtnBackBlack; // 一番下の黒い座布団（または外枠）
 	vnSprite* pAreaAtkBtnBack;      // スキルアイコン画像本体
-	vnSprite* pAreaAtkBtnFront;     // 上から重ねるクールダウン用の影（時計回りに減る）
+	vnSprite* pAreaAtkBtnFront;     // 上から重ねるクールダウン用の影
 	vnSprite* pAreaSkillIcon;		//範囲攻撃のアイコン
 	bool m_bIsAreaSkillMaxPrev = true; // 前回MAXだったか
 	float m_areaSkillIconScale = 1.0f;           // 現在のアイコンのスケール（初期値 1.0）
 	float m_areaSkillTargetScale = 1.0f;         // 目標のスケール（初期値 1.0）
-	UIColor m_areaAtkUIColor;			//色を保存しておくよう
+	UIColor m_areaAtkUIColor;			//色を保存しておく用
 
 
 	// 引き寄せ攻撃（Pull）用UI
@@ -152,7 +175,7 @@ private:
 	vnSprite* pPullBtnBack;
 	vnSprite* pPullBtnFront;
 	vnSprite* pPullSkillIcon;
-	bool m_bIsPullSkillMaxPrev = true; // 前回MAXだったか
+	bool m_bIsPullSkillMaxPrev = true;			 // 前回MAXだったか
 	float m_pullSkillTargetScale = 1.0f;         // 目標のスケール（初期値 1.0）
 	float m_pullSkillIconScale = 1.0f;           // 現在のアイコンのスケール（初期値 1.0）
 	UIColor m_pullUIColor;
@@ -217,6 +240,16 @@ private:
 
 	
 
+	//======================================================
+	// チュートリアル関係
+	//======================================================
+	bool m_isTutorial = false;								//チュートリアルかどうか
+	TutorialState m_state_tutorial = TutorialState::None;	//無しにして置き、タイトルでチュートリアルが選択されたときに設定する
+
+
+
+
+
 	// デバッグ
 	int m_leaderCount = 0;
 	int m_activeCount = 0;
@@ -236,6 +269,7 @@ private:
 	void InitializeUpgradeUI();      // レベルアップUI
 	void InitializeFont();           // フォント
 	void InitializeSound();          // サウンド
+	void InitializeTutorial();       // チュートリアルに関する設定
 
 
 	// --- 内部処理関数 (executeの分割) ---

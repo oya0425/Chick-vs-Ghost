@@ -22,6 +22,9 @@ std::vector<std::wstring> ui_Title =
     L"data/image/Rule5.png",               // 5
 };
 
+//チュートリアルをするかどうか
+bool g_isTutorial = true;
+
 
 namespace
 {

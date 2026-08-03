@@ -34,7 +34,7 @@ EnemyGhost::~EnemyGhost()
 
 }
 
-void EnemyGhost::OnIdel(float deltaTime, float distance, const XMVECTOR& toPlayer)
+void EnemyGhost::OnIdle(float deltaTime, float distance, const XMVECTOR& toPlayer)
 {
     GetModel()->setMotion(motion_idle_Ghost);
     GetModel()->execute(motionSpeed, false, false);
@@ -244,7 +244,7 @@ void EnemyGhost::OnRun(float deltaTime, float distance, const XMVECTOR& toPlayer
         if (GetRigidbody().GetIsGround())
         {
             GetRigidbody().SetBaseVelocity(XMVectorZero());
-            SetState(eState::Idel);
+            SetState(eState::Idle);
             m_lastMoveDir = XMVectorZero(); // 次回の動き出しのためにリセット
         }
     }
@@ -382,9 +382,9 @@ void EnemyGhost::OnFollow(float deltaTime)
 }
 void EnemyGhost::OnPanic(float deltaTime)
 { 
-    if (m_panicRecoveryStartTime > 0&&GetState()!=eState::Idel)
+    if (m_panicRecoveryStartTime > 0&&GetState()!=eState::Idle)
     {
-       SetState(eState::Idel);
+       SetState(eState::Idle);
       return;
     }
 
@@ -419,9 +419,9 @@ void EnemyGhost::OnPanic(float deltaTime)
 }
 void EnemyGhost::OnCharge(float deltaTime, const XMVECTOR& toPlayer)
 {
-    if (m_panicRecoveryStartTime > 0 && GetState() != eState::Idel)
+    if (m_panicRecoveryStartTime > 0 && GetState() != eState::Idle)
     {
-        SetState(eState::Idel);
+        SetState(eState::Idle);
         return;
     }
 

@@ -5,7 +5,7 @@ public:
 	EnemyGhost();
 	~EnemyGhost();
 
-	void OnIdel(float deltaTime,float distance, const XMVECTOR& toPlayer)override;
+	void OnIdle(float deltaTime,float distance, const XMVECTOR& toPlayer)override;
 	void OnRun(float deltaTime, float distance, const XMVECTOR& toPlayer)override;
 	void OnDead()override;
 

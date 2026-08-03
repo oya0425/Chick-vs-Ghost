@@ -158,7 +158,7 @@ void NewEnemyClass::Spawn(const XMVECTOR& pos)
     rb.SetVerticalVelocity(0.0f);
     rb.SetIsGround(false);
     rb.SetIsUseGravity(true);
-    m_state = eState::Idel; // 待機状態に戻す
+    m_state = eState::Idle; // 待機状態に戻す
     m_isCharge = false;
 
 
@@ -222,7 +222,7 @@ void NewEnemyClass::Spawn(const XMVECTOR& pos,bool isFinal)
     }
     else
     {
-        m_state = eState::Idel; // 待機状態に戻す
+        m_state = eState::Idle; // 待機状態に戻す
     }
 
 
@@ -250,7 +250,7 @@ void NewEnemyClass::DeSpawn()
     {
         GetModel()->getParts(i)->setRenderEnable(false);
     }
-    m_state = eState::Idel;
+    m_state = eState::Idle;
     m_panicDirTimer = 0;
     m_panicRecoveryTime = 0;
 
@@ -362,12 +362,12 @@ void NewEnemyClass::UpdateState(
 {
     switch (m_state)
     {
-    case Idel:
+    case Idle:
         if (GetIsLeader() && !m_onceStartUI)
         {
             m_isSpwanStart = true;
         }
-        OnIdel(deltaTime, distance, toPlayer);
+        OnIdle(deltaTime, distance, toPlayer);
         break;
 
     case Run:
@@ -600,7 +600,7 @@ void NewEnemyClass::UpdateKnockback(float deltaTime)
 {
     if (!m_kbData.active)
     {
-        m_state = Idel; 
+        m_state = Idle; 
         return;
     }
 

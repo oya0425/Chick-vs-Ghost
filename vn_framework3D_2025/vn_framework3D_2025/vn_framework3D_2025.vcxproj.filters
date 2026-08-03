@@ -49,6 +49,9 @@
     <Filter Include="public\MainScript\Sound">
       <UniqueIdentifier>{d25f34dd-2cb9-4f54-afd9-d12bc18e5bcb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="public\MainScript\Scene">
+      <UniqueIdentifier>{2fb03403-5425-4a90-aae2-74a04e7c1e54}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -147,16 +150,7 @@
     <ClInclude Include="public\RigidbodyComponent.h">
       <Filter>public\MainScript</Filter>
     </ClInclude>
-    <ClInclude Include="public\scene\scene_main.h">
-      <Filter>public\MainScript</Filter>
-    </ClInclude>
-    <ClInclude Include="public\EnemyPool.h">
-      <Filter>public\MainScript</Filter>
-    </ClInclude>
     <ClInclude Include="public\WaveManager.h">
-      <Filter>public\MainScript</Filter>
-    </ClInclude>
-    <ClInclude Include="public\scene\scene_title.h">
       <Filter>public\MainScript</Filter>
     </ClInclude>
     <ClInclude Include="public\CharacterBase.h">
@@ -166,9 +160,6 @@
       <Filter>public\MainScript</Filter>
     </ClInclude>
     <ClInclude Include="public\CollisionComponent.h">
-      <Filter>public\MainScript</Filter>
-    </ClInclude>
-    <ClInclude Include="public\NewEnemyClass.h">
       <Filter>public\MainScript</Filter>
     </ClInclude>
     <ClInclude Include="public\EnemyGhost.h">
@@ -200,6 +191,18 @@
     </ClInclude>
     <ClInclude Include="framework\vn_resourceLoader.h">
       <Filter>framework</Filter>
+    </ClInclude>
+    <ClInclude Include="public\NewEnemyClass.h">
+      <Filter>public\MainScript\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="public\EnemyPool.h">
+      <Filter>public\MainScript\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="public\scene\scene_title.h">
+      <Filter>public\MainScript\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="public\scene\scene_main.h">
+      <Filter>public\MainScript\Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -287,16 +290,7 @@
     <ClCompile Include="public\RigidbodyComponent.cpp">
       <Filter>public\MainScript</Filter>
     </ClCompile>
-    <ClCompile Include="public\scene\scene_main.cpp">
-      <Filter>public\MainScript</Filter>
-    </ClCompile>
-    <ClCompile Include="public\EnemyPool.cpp">
-      <Filter>public\MainScript</Filter>
-    </ClCompile>
     <ClCompile Include="public\WaveManager.cpp">
-      <Filter>public\MainScript</Filter>
-    </ClCompile>
-    <ClCompile Include="public\scene\scene_title.cpp">
       <Filter>public\MainScript</Filter>
     </ClCompile>
     <ClCompile Include="public\CharacterBase.cpp">
@@ -306,9 +300,6 @@
       <Filter>public\MainScript</Filter>
     </ClCompile>
     <ClCompile Include="public\CollisionComponent.cpp">
-      <Filter>public\MainScript</Filter>
-    </ClCompile>
-    <ClCompile Include="public\NewEnemyClass.cpp">
       <Filter>public\MainScript</Filter>
     </ClCompile>
     <ClCompile Include="public\EnemyGhost.cpp">
@@ -340,6 +331,18 @@
     </ClCompile>
     <ClCompile Include="framework\vn_resourceLoader.cpp">
       <Filter>framework</Filter>
+    </ClCompile>
+    <ClCompile Include="public\NewEnemyClass.cpp">
+      <Filter>public\MainScript\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="public\EnemyPool.cpp">
+      <Filter>public\MainScript\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="public\scene\scene_main.cpp">
+      <Filter>public\MainScript\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="public\scene\scene_title.cpp">
+      <Filter>public\MainScript\Scene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -7,6 +7,12 @@
 #include"../RigidbodyComponent.h"
 #define ENABLE_TREE_DELETE (1)  // 1: 解放する、0: 解放しない
 
+//グローバル変数
+extern bool g_isTutorial;	//タイトルシーンのチュートリアルをするかどうかの変数（trueでする）
+
+
+
+
 // --- メンバ変数 ---
 namespace {
 
@@ -224,6 +230,9 @@ void SceneMain::SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData&
 		group->id = colorData.id;
 		group->color = colorData.color;
 
+		group->isLeaderAlive = false;		//出てきていないリーダーTabのリーダー情報殻外すため
+
+
 		int paletteIndex = colorData.id - 1;
 		group->colorName = NewEnemyClass::g_LeaderColorPalette[paletteIndex].colorName;
 		enemy->SettingBoss(group);
@@ -254,6 +263,8 @@ void SceneMain::SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData&
 			// IDが1から始まるなら、インデックスは [id - 1]
 			int paletteIndex = colorData.id - 1;
 			group->colorName = NewEnemyClass::g_LeaderColorPalette[paletteIndex].colorName;
+			
+			group->isLeaderAlive = false;		//出てきていないリーダーTabのリーダー情報殻外すため
 
 			enemy->SettingLeader(group);
 			enemy->SetFenceRadius(FenceRadius);
@@ -355,6 +366,7 @@ bool SceneMain::initialize()
 	InitializeUpgradeUI();
 	InitializeFont();
 	InitializeSound();
+	InitializeTutorial();
 
 	return true;
 }
@@ -374,7 +386,7 @@ void SceneMain::RegisterCharacter(vnCharacter* character)
 
 //変数の初期化
 void SceneMain::InitializeVariables()
-{
+{	
 	m_gameState = Opening;
 
 	radius = defualtRadius;
@@ -399,6 +411,8 @@ void SceneMain::InitializeVariables()
 
 	FenceRadius = defalutFenceRadius;
 
+	// --- ウェーブマネージャー ---
+	waveManager = new WaveManager();
 
 }
 
@@ -617,9 +631,6 @@ void SceneMain::InitializeField()
 	}
 
 
-	// --- ウェーブマネージャー ---
-	waveManager = new WaveManager();
-	waveManager->Init();
 }
 
 //エフェクトの初期化
@@ -928,6 +939,20 @@ void SceneMain::InitializeSound()
 	soundManager = std::make_unique<SoundManager>();
 	enemyPool->SetSoundManager(soundManager.get());
 	m_pNewPlayer->SetSoundManager(soundManager.get());
+}
+
+void SceneMain::InitializeTutorial()
+{
+	// タイトル画面の設定を引き継ぐ
+	m_isTutorial = g_isTutorial;
+
+	if (!m_isTutorial)
+	{
+		return;
+	}
+
+	// チュートリアル開始
+	m_state_tutorial = TutorialState::StartMessage;
 }
 
 
@@ -1343,10 +1368,6 @@ void SceneMain::execute()
 	UpdateWaveTransition();
 
 	//デバッグ表示
-#if _DEBUG
-	//XMVECTOR ropecenter = XMVectorAdd(*pPlayerTest->GetModel()->getPosition(), pPlayerTest->GetModel()->center);
-	//vnDebugDraw::Box(ropecenter, pPlayerTest->GetModel()->size, GAME_COLOR_SILVER);
-#endif
 	//if (vnKeyboard::trg(DIK_R)) {
 	//	m_gameState = GameClear;
 
@@ -1471,7 +1492,7 @@ void SceneMain::render()
 
 		unsigned int time_textColor = (remainTime <= 3) ? GAME_COLOR_RED : GAME_COLOR_WHITE;
 
-		if (waveManager->GetFinalWave())
+		if (waveManager->GetFinalWave()||m_isTutorial)
 		{
 			vnFont::print(screenWidth / 2 - 34 + off, 100.0f + off, shadowCol, L" ∞");
 
@@ -2312,7 +2333,7 @@ void SceneMain::UpdateIdel()
 		//pSound[2]->play();
 		soundManager->PlaySE(SE_ENTER);
 
-		waveManager->Init();   //ここでWave開始
+		waveManager->Init(m_isTutorial);   //ここでWave開始
 		m_pBlockManager->RespawnBlocks(waveManager->GetCurrentWave(), FenceRadius, waveManager->GetFinalWave());
 
 	}
@@ -3151,7 +3172,7 @@ void SceneMain::UpdateLevelUp()
 
 		if (selectedIndex != -1)
 		{
-			m_pExpManager->ApplyUpgrade(selectedIndex);
+			m_pExpManager->ApplyUpgrade(selectedIndex,m_isTutorial);
 			soundManager->PlaySE(SE_ENTER);
 			m_pUpgradeUI->SetUiPhase(UpgradeSelectionUI::UIPhase::Closing);
 			m_pUpgradeUI->HideUI(); // ここでアニメーション開始（IsHidingがtrueになる想定）

@@ -20,7 +20,7 @@ public:
 	// --- 状態 ---
 	enum eState
 	{
-		Idel,		//待機状態
+		Idle,		//待機状態
 		Run,		//走る
 		KnockBack,	//吹っ飛び中
 		Dead,		//吹っ飛び終わり
@@ -339,7 +339,7 @@ protected:
 	//==================================================
 	// 状態ごとの処理（子クラス実装）
 	//==================================================
-	virtual void OnIdel(float deltaTime, float distance, const XMVECTOR& toPlayer) = 0;
+	virtual void OnIdle(float deltaTime, float distance, const XMVECTOR& toPlayer) = 0;
 	virtual void OnRun(float deltaTime, float distance, const XMVECTOR& toPlayer) = 0;
 	virtual void OnDead() = 0;
 
@@ -485,7 +485,7 @@ private:
 	//==================================================
 	// 状態管理
 	//==================================================
-	eState m_state = eState::Idel;
+	eState m_state = eState::Idle;
 	//eGroupMode m_currentGroupMode = eGroupMode::Normal;
 
 	bool m_isEscaping = false;			// 逃走中か

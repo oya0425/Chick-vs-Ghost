@@ -102,5 +102,4 @@ private:
 	int m_currentUI = TITLE_MAIN;	//最初はメインの画像
 	int m_rulePage = 0;			//ルールのページ番号
 
-
 };

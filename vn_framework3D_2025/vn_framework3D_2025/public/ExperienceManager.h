@@ -35,7 +35,7 @@ public:
 	void GainLevel(int level);
 
 	// --- 選択した結果をプレイヤーに適応する ---
-	void ApplyUpgrade(int choiceIndex);
+	void ApplyUpgrade(int choiceIndex,bool isTutorial);
 
 
 	// --- 選ばれた配列番号（強化する値）---
@@ -57,6 +57,9 @@ public:
 	}
 
 	bool AllIsMaxLv();
+
+	// --- 項目のレベルを全てリセット ---
+	void AllLevelReset();
 
 	/*
 	1.最初にプレイヤーを入れる

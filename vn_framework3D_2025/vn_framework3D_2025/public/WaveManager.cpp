@@ -32,13 +32,18 @@ WaveManager::~WaveManager()
 //--------------------------------------------------------------
 // 初期化
 //--------------------------------------------------------------
-void WaveManager::Init()
+void WaveManager::Init(bool isTutorial)
 {
-    m_currentWave = 1;
+    m_isTutorial = isTutorial;
+    //チュートリアル時 WAVEを0スタートとする,最大はそのまま
+    m_currentWave = m_isTutorial ? 0 : 1;
     m_maxWave = 5;
     m_state = WaveState::InProgress;
+
     SetupWave();
 }
+
+
 
 //--------------------------------------------------------------
 // 更新
@@ -49,7 +54,8 @@ void WaveManager::Update(float deltaTime)
 
     if (m_state == WaveState::InProgress)
     {
-        if (!GetFinalWave())
+        //最終WAVEとチュートリアルは時間が減らない
+        if (!GetFinalWave()&&!m_isTutorial)
         {
             //m_waveTimer += deltaTime;
             m_waveTimer -= deltaTime;
@@ -107,16 +113,25 @@ void WaveManager::OnEnemySpawned()
 //--------------------------------------------------------------
 bool WaveManager::IsWaveClear() const
 {
-    //return m_killedCount >= m_killTarget;
-    //最終WAVEのみボスを５体倒したらクリア
-    if (m_currentWave == m_maxWave)
+    //チュートリアル時
+    if (m_isTutorial)
     {
-        return m_killedCount >= 5;
+        return m_isTutorial_Clear;
     }
     else
     {
-        //return m_waveTimer >= m_waveTimeLimit;
-        return m_waveTimer < GetWaveTimeLimit();
+        //return m_killedCount >= m_killTarget;
+        //最終WAVEのみボスを５体倒したらクリア
+        if (m_currentWave == m_maxWave)
+        {
+            return m_killedCount >= 5;
+        }
+        else
+        {
+            //return m_waveTimer >= m_waveTimeLimit;
+            return m_waveTimer < GetWaveTimeLimit();
+
+        }
 
     }
 }
@@ -159,6 +174,11 @@ void WaveManager::SetupWave()
 
     if (m_spawnLimit < 5)   // 下限を決める
         m_spawnLimit = 5;
+
+    if (m_isTutorial)
+    {
+        m_spawnLimit = m_spawnLimit_tutorial;
+    }
 
     //時間制限でWAVEクリアにする
     //m_waveTimeLimit = m_waveTimeBase/* + (m_currentWave - 1) * m_addTime*/;

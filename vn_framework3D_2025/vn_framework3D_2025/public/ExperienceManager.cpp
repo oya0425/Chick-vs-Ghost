@@ -58,6 +58,24 @@ ExperienceManager::ExperienceManager()
 	}
 
 }
+
+void ExperienceManager::AllLevelReset()
+{
+	for (int i = 0; i < (int)UpgradeType::MaxCount; i++)
+	{
+		//移動速度アップのみLv１スタート
+		if (wcscmp(m_upgradeMaster[i].label,L"移動速度") == 0)
+		{
+			m_upgradeMaster[i].currentLv = 1;
+		}
+		else
+		{
+		    m_upgradeMaster[i].currentLv = 0;
+		}
+	}
+}
+
+
 void ExperienceManager::GainExp(float exp)
 {
 	if (!m_player)return;
@@ -179,7 +197,7 @@ void ExperienceManager::GenerateLevelUpOptions()
 
 }
 
-void ExperienceManager::ApplyUpgrade(int choiceIndex)
+void ExperienceManager::ApplyUpgrade(int choiceIndex,bool isTurorial)
 {
 	//範囲外チェック
 	if (choiceIndex < 0 || choiceIndex >= canSelectCount)return;
@@ -189,7 +207,19 @@ void ExperienceManager::ApplyUpgrade(int choiceIndex)
 	if (selectedType == UpgradeType::MaxCount)return;
 
 	//1.マスターデータレベルを上げる
-	m_upgradeMaster[(int)selectedType].currentLv+=1;
+	//チュートリアルの時は１回選択すると最大にして選択できないようにする
+	if (isTurorial)
+	{
+		m_upgradeMaster[(int)selectedType].currentLv += 50;
+		if (m_upgradeMaster[(int)selectedType].currentLv >= m_upgradeMaster[(int)selectedType].maxLv)
+		{
+			m_upgradeMaster[(int)selectedType].currentLv = m_upgradeMaster[(int)selectedType].maxLv;
+		}
+	}
+	else
+	{
+		m_upgradeMaster[(int)selectedType].currentLv += 1;
+	}
 
 	//2.プレイヤーのステータスに反映(この前にあげる値を変更する)
 	m_choiceIndex = rand() % 5;

@@ -466,7 +466,7 @@ NewEnemyClass* EnemyPool::GetInactiveEnemy()
 {
     for (auto e : _enemies)
     {
-        if ((!e->GetActive()&&e->IsUnlocked())&&e->GetState()==NewEnemyClass::eState::Idel)
+        if ((!e->GetActive()&&e->IsUnlocked())&&e->GetState()==NewEnemyClass::eState::Idle)
         {
             return e;
         }
@@ -477,7 +477,7 @@ NewEnemyClass* EnemyPool::GetInactiveFinalWaveEnemy()
 {
     for (auto e : _enemies)
     {
-        if ((!e->GetActive() && e->IsUnlocked()) && e->GetState() == NewEnemyClass::eState::Idel&&!e->GetIsLeader())
+        if ((!e->GetActive() && e->IsUnlocked()) && e->GetState() == NewEnemyClass::eState::Idle&&!e->GetIsLeader())
         {
             return e;
         }
@@ -492,7 +492,7 @@ NewEnemyClass* EnemyPool::GetInactiveBoss()
     {
         // 通常の条件に「かつ、ボスであること」をプラスする
         if ((!e->GetActive() && e->IsUnlocked()) &&
-            e->GetState() == NewEnemyClass::eState::Idel &&
+            e->GetState() == NewEnemyClass::eState::Idle &&
             e->GetIsBoss()) // ★ここ！
         {
             return e;
@@ -794,147 +794,155 @@ void EnemyPool::DebugPause()
 void EnemyPool::DrawGroupDebugInfo()
 {
     //==================================================
-    // 1. 事前チェック & データ取得
+    // 事前チェック & データ取得
     //==================================================
     if (m_groupDatas.empty()) return;
     auto& data = m_groupDatas[m_debugGroupIndex];
 
-    // 入力状態の取得
-    bool aPressed = vnKeyboard::on(DIK_A);
-    bool dPressed = vnKeyboard::on(DIK_D);
+    {
 
-    //==================================================
-    // 2. カラーパレットの特定 (data->id から取得)
-    //==================================================
-    unsigned int displayGroupColor = GAME_COLOR_WHITE;
 
-    switch (data->id) {
-    case 1:  displayGroupColor = GAME_COLOR_RED;          break;
-    case 2:  displayGroupColor = GAME_COLOR_GREEN;        break;
-    case 3:  displayGroupColor = GAME_COLOR_BLUE;         break;
-    case 4:  displayGroupColor = GAME_COLOR_YELLOW;       break;
-    case 5:  displayGroupColor = GAME_COLOR_OLIVE;        break;
-    case 6:  displayGroupColor = GAME_COLOR_CYAN;         break;
-    case 7:  displayGroupColor = GAME_COLOR_ORANGE;       break;
-    case 8:  displayGroupColor = GAME_COLOR_PURPLE;       break;
-    case 9:  displayGroupColor = GAME_COLOR_BROWN;        break;
-    case 10: displayGroupColor = GAME_COLOR_PINK;         break;
-    case 11: displayGroupColor = GAME_COLOR_LIME;         break;
-    case 12: displayGroupColor = GAME_COLOR_DARK_BLUE;    break;
-    case 13: displayGroupColor = GAME_COLOR_TEAL;         break;
-    case 14: displayGroupColor = GAME_COLOR_GOLD;         break;
-    case 15: displayGroupColor = GAME_COLOR_NEON_GREEN;   break;
-    case 16: displayGroupColor = GAME_COLOR_DARK_GRAY;    break;
-    case 17: displayGroupColor = GAME_COLOR_BLACK;        break;
-    case 18: displayGroupColor = GAME_COLOR_GREEN;        break;
-    case 19: displayGroupColor = GAME_COLOR_PINK;         break;
-    case 20: displayGroupColor = GAME_COLOR_RED;          break;
-    default: displayGroupColor = GAME_COLOR_WHITE;        break;
+        // 入力状態の取得
+        bool aPressed = vnKeyboard::on(DIK_A);
+        bool dPressed = vnKeyboard::on(DIK_D);
+
+        //==================================================
+        // カラーパレットの特定 (data->id から取得)
+        //==================================================
+        unsigned int displayGroupColor = GAME_COLOR_WHITE;
+
+        switch (data->id) {
+        case 1:  displayGroupColor = GAME_COLOR_RED;          break;
+        case 2:  displayGroupColor = GAME_COLOR_GREEN;        break;
+        case 3:  displayGroupColor = GAME_COLOR_BLUE;         break;
+        case 4:  displayGroupColor = GAME_COLOR_YELLOW;       break;
+        case 5:  displayGroupColor = GAME_COLOR_OLIVE;        break;
+        case 6:  displayGroupColor = GAME_COLOR_CYAN;         break;
+        case 7:  displayGroupColor = GAME_COLOR_ORANGE;       break;
+        case 8:  displayGroupColor = GAME_COLOR_PURPLE;       break;
+        case 9:  displayGroupColor = GAME_COLOR_BROWN;        break;
+        case 10: displayGroupColor = GAME_COLOR_PINK;         break;
+        case 11: displayGroupColor = GAME_COLOR_LIME;         break;
+        case 12: displayGroupColor = GAME_COLOR_DARK_BLUE;    break;
+        case 13: displayGroupColor = GAME_COLOR_TEAL;         break;
+        case 14: displayGroupColor = GAME_COLOR_GOLD;         break;
+        case 15: displayGroupColor = GAME_COLOR_NEON_GREEN;   break;
+        case 16: displayGroupColor = GAME_COLOR_DARK_GRAY;    break;
+        case 17: displayGroupColor = GAME_COLOR_BLACK;        break;
+        case 18: displayGroupColor = GAME_COLOR_GREEN;        break;
+        case 19: displayGroupColor = GAME_COLOR_PINK;         break;
+        case 20: displayGroupColor = GAME_COLOR_RED;          break;
+        default: displayGroupColor = GAME_COLOR_WHITE;        break;
+        }
+
+        //==================================================
+        // 3. 描画基準座標・レイアウトの計算
+        //==================================================
+        float x = (float)vnMainFrame::screenWidth - 1080 * 0.95f;
+        float y = (float)vnMainFrame::screenHeight - 512 * 1.1f;
+
+        float lineYPitch = 40.0f;  // 行間（縦）
+        float lineXPitch = 210.0f; // 列間（横）
+        float colonX = x + lineXPitch;
+
+        // フォントサイズ設定
+        vnFont::setFontSize(31, 25);
+
+        //==================================================
+        // 4. ヘッダー情報の描画 (タイトル / Tab戻る)
+        //==================================================
+        // タイトル
+        vnFont::print(x, y, GAME_COLOR_ICE_BLUE, L"～敵の群れ情報表示～");
+
+        // Tabキー（戻るボタン）
+        if (m_ImageTab) {
+            float imageX = x + lineXPitch * 3.5f;
+            m_ImageTab->setPos(imageX, y + lineYPitch * 1.2f);
+            vnFont::print(imageX + 55.0f, y + lineYPitch * 0.8f, GAME_COLOR_YELLOW, L"：戻る");
+        }
+
+        //==================================================
+        // 5. 群れ選択・基本情報の描画 (A/D切り替え / 色)
+        //==================================================
+        // 群切り替えテキスト
+        vnFont::print(x, y + lineYPitch * 1, GAME_COLOR_WHITE, L"群切り替え");
+        vnFont::print(colonX, y + lineYPitch * 1, GAME_COLOR_WHITE, L"：", m_debugGroupIndex);
+
+        // 区切り線（Slash）
+        if (m_ImageSlash) {
+            m_ImageSlash->setPos(x + lineXPitch * 1.4f, y + lineYPitch * 1.3f);
+        }
+
+        // Aボタン
+        float buttonAX = colonX + 40.0f;
+        if (m_ImageA) {
+            m_ImageA->setColor(aPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
+            m_ImageA->setPos(buttonAX, y + lineYPitch * 1.3f);
+        }
+
+        // Dボタン
+        float numberX = buttonAX + 50.0f;
+        float buttonDX = numberX + 40.0f;
+        if (m_ImageD) {
+            m_ImageD->setColor(dPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
+            m_ImageD->setPos(buttonDX, y + lineYPitch * 1.3f);
+        }
+
+        // 群れの色情報 & ゴースト画像
+        vnFont::print(x, y + lineYPitch * 2, GAME_COLOR_WHITE, L"色");
+        vnFont::print(colonX, y + lineYPitch * 2, displayGroupColor, L"： %s", data->colorName);
+
+        if (m_ImageGhost) {
+            m_ImageGhost->setPos(x + lineXPitch * 1.3f, y + lineYPitch * 4.2f);
+            m_ImageGhost->setColor(data->color);
+        }
+
+        //==================================================
+        // 6. 成長値（ステータス・棒グラフ）の描画
+        //==================================================
+        // 項目全体のレイアウトを少し下へオフセット
+        float changeY = 100.0f;
+        y += changeY;
+
+        // セクションタイトル
+        vnFont::print(x, y + lineYPitch * 3, GAME_COLOR_ICE_BLUE, L"～成長値～");
+
+        // ステータス名
+        vnFont::print(x, y + lineYPitch * 4, GAME_COLOR_AMBER, L"近接耐性");
+        vnFont::print(x, y + lineYPitch * 5, GAME_COLOR_ELECTRIC_PURPLE, L"範囲攻撃耐性");
+        vnFont::print(x, y + lineYPitch * 6, GAME_COLOR_ELECTRIC_CYAN, L"引き寄せ攻撃耐性");
+
+        // 現在値
+        vnFont::print(colonX, y + lineYPitch * 4, GAME_COLOR_SUNGLOW, L"：% .0f%%", data->meleeFear * 100.0f);
+        vnFont::print(colonX, y + lineYPitch * 5, GAME_COLOR_NEON_MAGENTA, L"：% .1f", data->rangeFear);
+        vnFont::print(colonX, y + lineYPitch * 6, GAME_COLOR_AQUA_GREEN, L"：% .0f%%", data->pullResistance * 100.0f);
+
+        // 最大値
+        vnFont::print(x + lineXPitch * 2.8f, y + lineYPitch * 4, GAME_COLOR_SUNGLOW, L"/ % .0f%%", data->maxMeleeFear * 100.0f);
+        vnFont::print(x + lineXPitch * 2.8f, y + lineYPitch * 5, GAME_COLOR_NEON_MAGENTA, L"/ % .1f", data->maxRangeFear);
+        vnFont::print(x + lineXPitch * 2.8f, y + lineYPitch * 6, GAME_COLOR_AQUA_GREEN, L"/ % .0f%%", data->maxPullResistance * 100.0f);
+
+        // 棒グラフ（UIバー）の更新・描画
+        float barLeftEdge = ENEMY_GRAPH_CENTER_X - (ENEMY_GRAPH_MAX_W * 0.5f);
+
+        UpdateUIBarHelper(m_meleeBar, data->meleeFear, data->maxMeleeFear,
+            barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 4.3f, V_GAME_COLOR_SUNGLOW);
+
+        UpdateUIBarHelper(m_rangeBar, data->rangeFear, data->maxRangeFear,
+            barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 5.3f, V_GAME_COLOR_NEON_MAGENTA);
+
+        UpdateUIBarHelper(m_pullBar, data->pullResistance, data->maxPullResistance,
+            barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 6.3f, V_GAME_COLOR_AQUA_GREEN);
+
+        //==================================================
+        // 7. 特殊UI（？マークと説明吹き出し）の処理
+        //==================================================
+        UpdateAndRenderQuestionUI(x, y, lineYPitch, m_meleeQus, m_rangeQus, m_pullQus);
+
+
     }
-
-    //==================================================
-    // 3. 描画基準座標・レイアウトの計算
-    //==================================================
-    float x = (float)vnMainFrame::screenWidth - 1080 * 0.95f;
-    float y = (float)vnMainFrame::screenHeight - 512 * 1.1f;
-
-    float lineYPitch = 40.0f;  // 行間（縦）
-    float lineXPitch = 210.0f; // 列間（横）
-    float colonX = x + lineXPitch;
-
-    // フォントサイズ設定
-    vnFont::setFontSize(31, 25);
-
-    //==================================================
-    // 4. ヘッダー情報の描画 (タイトル / Tab戻る)
-    //==================================================
-    // タイトル
-    vnFont::print(x, y, GAME_COLOR_ICE_BLUE, L"～敵の群れ情報表示～");
-
-    // Tabキー（戻るボタン）
-    if (m_ImageTab) {
-        float imageX = x + lineXPitch * 3.5f;
-        m_ImageTab->setPos(imageX, y + lineYPitch * 1.2f);
-        vnFont::print(imageX + 55.0f, y + lineYPitch * 0.8f, GAME_COLOR_YELLOW, L"：戻る");
-    }
-
-    //==================================================
-    // 5. 群れ選択・基本情報の描画 (A/D切り替え / 色)
-    //==================================================
-    // 群切り替えテキスト
-    vnFont::print(x, y + lineYPitch * 1, GAME_COLOR_WHITE, L"群切り替え");
-    vnFont::print(colonX, y + lineYPitch * 1, GAME_COLOR_WHITE, L"：", m_debugGroupIndex);
-
-    // 区切り線（Slash）
-    if (m_ImageSlash) {
-        m_ImageSlash->setPos(x + lineXPitch * 1.4f, y + lineYPitch * 1.3f);
-    }
-
-    // Aボタン
-    float buttonAX = colonX + 40.0f;
-    if (m_ImageA) {
-        m_ImageA->setColor(aPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
-        m_ImageA->setPos(buttonAX, y + lineYPitch * 1.3f);
-    }
-
-    // Dボタン
-    float numberX = buttonAX + 50.0f;
-    float buttonDX = numberX + 40.0f;
-    if (m_ImageD) {
-        m_ImageD->setColor(dPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
-        m_ImageD->setPos(buttonDX, y + lineYPitch * 1.3f);
-    }
-
-    // 群れの色情報 & ゴースト画像
-    vnFont::print(x, y + lineYPitch * 2, GAME_COLOR_WHITE, L"色");
-    vnFont::print(colonX, y + lineYPitch * 2, displayGroupColor, L"： %s", data->colorName);
-
-    if (m_ImageGhost) {
-        m_ImageGhost->setPos(x + lineXPitch * 1.3f, y + lineYPitch * 4.2f);
-        m_ImageGhost->setColor(data->color);
-    }
-
-    //==================================================
-    // 6. 成長値（ステータス・棒グラフ）の描画
-    //==================================================
-    // 項目全体のレイアウトを少し下へオフセット
-    float changeY = 100.0f;
-    y += changeY;
-
-    // セクションタイトル
-    vnFont::print(x, y + lineYPitch * 3, GAME_COLOR_ICE_BLUE, L"～成長値～");
-
-    // ステータス名
-    vnFont::print(x, y + lineYPitch * 4, GAME_COLOR_AMBER, L"近接耐性");
-    vnFont::print(x, y + lineYPitch * 5, GAME_COLOR_ELECTRIC_PURPLE, L"範囲攻撃耐性");
-    vnFont::print(x, y + lineYPitch * 6, GAME_COLOR_ELECTRIC_CYAN, L"引き寄せ攻撃耐性");
-
-    // 現在値
-    vnFont::print(colonX, y + lineYPitch * 4, GAME_COLOR_SUNGLOW, L"：% .0f%%", data->meleeFear*100.0f);
-    vnFont::print(colonX, y + lineYPitch * 5, GAME_COLOR_NEON_MAGENTA, L"：% .1f", data->rangeFear);
-    vnFont::print(colonX, y + lineYPitch * 6, GAME_COLOR_AQUA_GREEN, L"：% .0f%%", data->pullResistance * 100.0f);
-
-    // 最大値
-    vnFont::print(x + lineXPitch * 2.8f, y + lineYPitch * 4, GAME_COLOR_SUNGLOW, L"/ % .0f%%", data->maxMeleeFear*100.0f);
-    vnFont::print(x + lineXPitch * 2.8f, y + lineYPitch * 5, GAME_COLOR_NEON_MAGENTA, L"/ % .1f", data->maxRangeFear);
-    vnFont::print(x + lineXPitch * 2.8f, y + lineYPitch * 6, GAME_COLOR_AQUA_GREEN, L"/ % .0f%%", data->maxPullResistance * 100.0f);
-
-    // 棒グラフ（UIバー）の更新・描画
-    float barLeftEdge = ENEMY_GRAPH_CENTER_X - (ENEMY_GRAPH_MAX_W * 0.5f);
-
-    UpdateUIBarHelper(m_meleeBar, data->meleeFear, data->maxMeleeFear,
-        barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 4.3f, V_GAME_COLOR_SUNGLOW);
-
-    UpdateUIBarHelper(m_rangeBar, data->rangeFear, data->maxRangeFear,
-        barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 5.3f, V_GAME_COLOR_NEON_MAGENTA);
-
-    UpdateUIBarHelper(m_pullBar, data->pullResistance, data->maxPullResistance,
-        barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 6.3f, V_GAME_COLOR_AQUA_GREEN);
-
-    //==================================================
-    // 7. 特殊UI（？マークと説明吹き出し）の処理
-    //==================================================
-    UpdateAndRenderQuestionUI(x, y, lineYPitch, m_meleeQus, m_rangeQus, m_pullQus);
+    
+    
 }
 
 
@@ -975,24 +983,36 @@ void EnemyPool::DrawGroupDebugArrow() {
 
 void EnemyPool::ChangeDebugGroupIndex(int direction)
 {
-    //1.データがないなら何もしない
+    //今登場してるリーダーの数をカウントする
+    //登場している分だけを移動して確認できるようにする
+    float aliveCount = 0;
+    for (int i = 0; i < m_groupDatas.size(); i++)
+    {
+        if (m_groupDatas.at(i).get()->isLeaderAlive)
+        {
+            aliveCount++;
+        }
+    }
+
+    //データがないなら何もしない
     if (m_groupDatas.empty())
     {
         m_debugGroupIndex = -1;
         return;
     }
 
-    //2.インデックスを増減する
+    //インデックスを増減する
     m_debugGroupIndex += direction;
 
-    //3.ループ処理（端に行ったら反対側へ）
+    //ループ処理（端に行ったら反対側へ）
     if (m_debugGroupIndex < 0)
     {
         //左へ行きすぎたら一番最後へ
         m_debugGroupIndex = (int)m_groupDatas.size() - 1;
 
     }
-    else if(m_debugGroupIndex>=(int)m_groupDatas.size())
+    //else if(m_debugGroupIndex>=(int)m_groupDatas.size())
+    else if(m_debugGroupIndex>=aliveCount)
     {
         m_debugGroupIndex = 0;
     }

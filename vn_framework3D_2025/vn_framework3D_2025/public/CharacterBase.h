@@ -51,7 +51,7 @@ private:
 
     // ƒ‚ƒfƒ‹
     vnCharacter* m_pModel = nullptr;
-
+    
     // Œü‚«
     XMVECTOR m_moveDir = XMVectorZero();
 

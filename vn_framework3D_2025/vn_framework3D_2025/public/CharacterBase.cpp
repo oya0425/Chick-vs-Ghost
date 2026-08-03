@@ -11,7 +11,7 @@ CharacterBase::CharacterBase()
 void CharacterBase::SetModel(vnCharacter* model)
 {
     m_pModel = model;
-
+    
 }
 
 vnCharacter* CharacterBase::GetModel() const

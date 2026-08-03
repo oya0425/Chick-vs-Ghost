@@ -20,8 +20,9 @@ public:
         Finished    //全WAVEクリア画面
     };
 
-    void Init();
+    void Init(bool isTutorial);
     void Update(float deltaTime);
+
 
     void OnEnemyKilled();      // 撃破通知
     void OnEnemySpawned();     // 出現通知
@@ -106,7 +107,7 @@ private:
 
     float m_waveTimer = 20;            //WAVE中の時間
     float m_waveTimeLimit=1;         //WAVEクリアまでの時間（残り０秒でクリア、）
-    const float m_waveTimeBase = 2;  //基準の時間
+    const float m_waveTimeBase = 20;  //基準の時間
     const float m_addTime = 10;       //増える時間   
 
     int m_nextKillTarget;    // 次の必要キル数
@@ -117,9 +118,18 @@ private:
     int m_aliveCount;        // 現在生存数
     int m_configMaxSimultaneous = 1000;   //最初の敵の最大数
 
+    int m_spawnLimit_tutorial = 100;
+
     float m_respawnInterval; // 湧き間隔
     float m_respawnTimer;    // 湧きタイマー
 
     WaveState m_state;
     int m_maxWave = 5;
+
+
+    //チュートリアル時のクリア条件に変更する
+    bool m_isTutorial = false;
+    bool m_isTutorial_Clear = false;    //チュートリアルをクリアしたかどうか
+
+
 };
