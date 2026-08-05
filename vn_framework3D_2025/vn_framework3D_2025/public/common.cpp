@@ -8,6 +8,8 @@
 #include"../framework/vn_environment.h"
 
 using namespace Common;
+
+#pragma region カメラ関係
 //--------------------------------------
 // マウスによるカメラ操作（引数なし）
 //--------------------------------------
@@ -49,7 +51,6 @@ using namespace Common;
 //    vnCamera::setTarget(&camTarget);
 //}
 
-
 void Common::UpdateCameraByMouse(
     float& theta,
     float& phi,
@@ -79,8 +80,8 @@ void Common::UpdateCameraByMouse(
         radius -= wheel * 0.01f;
         //radius = max(1.0f, min(radius, 100.0f));
         radius = max(10.0f, min(radius, 40.0f));
-    } 
-    
+    }
+
 
     // --- カメラ座標 ---
     float camX = radius * cosf(phi) * cosf(theta);
@@ -94,7 +95,7 @@ void Common::UpdateCameraByMouse(
     vnCamera::setTarget(pTargetPos);
 }
 
-void Common::UpdateFlexibleCamera(const XMVECTOR* pPlayerPos, float phi, float radius, float theta,float fenceRadius)
+void Common::UpdateFlexibleCamera(const XMVECTOR* pPlayerPos, float phi, float radius, float theta, float fenceRadius)
 {
     if (!pPlayerPos)return;
 #pragma region カメラに回転がある（奥行きがよく見えてしまう）
@@ -261,7 +262,7 @@ void Common::UpdateCameraLevelUp(
     //fixedTargetPos = XMVectorAdd(fixedTargetPos, XMVectorSet(offsetX, 0, offsetZ, 0));
 
     // 5. 最終的な適用 (書き換えた fixedTargetPos を渡す)
-    UpdateFlexibleCamera(&fixedTargetPos, currentPhi, currentRadius, currentTheta,0);
+    UpdateFlexibleCamera(&fixedTargetPos, currentPhi, currentRadius, currentTheta, 0);
 
 }
 
@@ -274,3 +275,105 @@ void Common::StartCameraShake(float x, float y, float duration)
     g_shakeMaxDuration = duration;
     g_shakeTimer = duration;
 }
+
+#pragma endregion
+
+
+#pragma region ボタン関係
+
+//ボタンの上に来たかどうか（画像の位置にマウスが来たかどうか）
+bool Common::OnButton(float x, float y, float button_w, float button_h)
+{
+    int mx = vnMouse::getX();
+    int my = vnMouse::getY();
+
+    return (mx >= x - button_w / 2 && mx <= x + button_w / 2 &&
+        my >= y - button_h / 2 && my <= y + button_h / 2);
+}
+//ボタン処理（ボタン押したときにtrue）
+bool Common::UpdateButton(
+    float x,
+    float y,
+    float button_w,
+    float button_h,
+    vnSprite* pButton,
+    bool& isOnButton,
+    float& buttonScale,
+    SoundManager* soundManager)
+{
+    if (OnButton(x, y,button_w,button_h))
+    {
+        if (!isOnButton)
+        {
+            soundManager->PlaySE(SE_TITLE_CURSOR);
+        }
+
+        isOnButton = true;
+
+        buttonScale += (1.2f - buttonScale) * 0.2f;
+        pButton->setColor(V_GAME_COLOR_BLACK);
+
+        if (vnMouse::trgL())
+        {
+            return true;
+        }
+    }
+    else
+    {
+        isOnButton = false;
+
+        buttonScale += (1.0f - buttonScale) * 0.2f;
+        pButton->setColor(V_GAME_COLOR_YELLOW);
+    }
+
+    pButton->setScale(buttonScale);
+
+    return false;
+}
+
+
+
+#pragma endregion
+
+void Common::ChangeButtonTextSize(
+    float x,
+    float y,
+    float buttonScale,
+    bool isOnButton,
+    const WCHAR* text)
+{
+    float off = 4.0f;
+    unsigned int shadowCol = GAME_COLOR_WHITE;
+
+    int len = wcslen(text);
+
+    float currentFontSize = 45.0f * buttonScale;
+
+    vnFont::setTextFormat(
+        vnFont::create(
+            vnFont::getFontName(38),
+            (int)currentFontSize));
+
+    float textWidth = currentFontSize * 0.65f * len;
+    float textHeight = currentFontSize * 0.5f;
+
+    float tx = x - textWidth * 0.5f;
+    float ty = y - textHeight;
+
+    vnFont::print(tx + off, ty + off * 0.3f, shadowCol, text);
+
+    if (isOnButton)
+    {
+        vnFont::print(tx, ty, GAME_COLOR_RED, text);
+    }
+    else
+    {
+        vnFont::print(tx, ty, GAME_COLOR_BLACK, text);
+    }
+}
+
+
+
+
+
+

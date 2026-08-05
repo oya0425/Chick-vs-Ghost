@@ -39,6 +39,12 @@ NewPlayerClass::NewPlayerClass()
 
 }
 
+//スキルのクールタイムのリセット
+void NewPlayerClass::ResetSkillCoolTime()
+{
+	m_areaAtkCoolTimer = 0.0f;
+	m_pullCooldownTimer = 0.0f;
+}
 
 //必殺の落ちてくる殻のモデルセット
 void NewPlayerClass::SetMeteorModel(vnModel* model)
@@ -321,40 +327,6 @@ void NewPlayerClass::Jump(bool isLevelUping)
 }
 
 
-void NewPlayerClass::DrawDebugInfo()
-{
-
-	//XMVECTOR ropecenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
-	//DWORD debugColor = m_isExpanding ? GAME_COLOR_RED : GAME_COLOR_LIME; // 攻撃中は赤くする
-	//vnDebugDraw::Sphere(ropecenter, m_currentRadius, debugColor);
-
-	//const wchar_t* stateStr = L"UNKNOWN";
-	//switch (m_ShootState)
-	//{
-	//case eSkillState::READY:    stateStr = L"READY";    break;
-	//case eSkillState::ACTIVE:   stateStr = L"ACTIVE";   break;
-	//case eSkillState::COOLDOWN: stateStr = L"COOLDOWN"; break;
-	//}
-
-	//// 2. 指定のフォーマットで表示
-	//// 座標(400, posY)などは適宜調整してください
-	//vnFont::print(20, 400, L"[Skill] ShootState : %s (CT: %.1f / %.1f)",
-	//	stateStr,                     // ステート名
-	//	m_shootCooldownTimer,         // 現在の残り時間
-	//	m_shootCooldownMax            // 最大クールタイム
-	//);
-
-	//vnFont::print(10, 650, L"最大反射回数　%d", m_bullet->GetMaxBounce());
-
-	//vnFont::print(10, 700, L"反射可能回数　%d", m_bullet->GetCurrentBounce());
-
-	//vnFont::print(10, 650, L"MoveDir %.f, %.f , %.f",
-	//	XMVectorGetX(GetMoveDir()),
-	//	XMVectorGetY(GetMoveDir()),
-	//	XMVectorGetZ(GetMoveDir())
-	//	);
-	//vnFont::print(10, 700, L"RotY %.f", GetModel()->getRotationY());
-}
 
 // --- 範囲攻撃スキル ---
 void NewPlayerClass::UpdateAreaAttackSkill(float deltaTime)
@@ -723,4 +695,40 @@ void NewPlayerClass::FinishLevelUp()
 
 NewPlayerClass::~NewPlayerClass()
 {
+}
+
+
+void NewPlayerClass::DrawDebugInfo()
+{
+
+	//XMVECTOR ropecenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
+	//DWORD debugColor = m_isExpanding ? GAME_COLOR_RED : GAME_COLOR_LIME; // 攻撃中は赤くする
+	//vnDebugDraw::Sphere(ropecenter, m_currentRadius, debugColor);
+
+	//const wchar_t* stateStr = L"UNKNOWN";
+	//switch (m_ShootState)
+	//{
+	//case eSkillState::READY:    stateStr = L"READY";    break;
+	//case eSkillState::ACTIVE:   stateStr = L"ACTIVE";   break;
+	//case eSkillState::COOLDOWN: stateStr = L"COOLDOWN"; break;
+	//}
+
+	//// 2. 指定のフォーマットで表示
+	//// 座標(400, posY)などは適宜調整してください
+	//vnFont::print(20, 400, L"[Skill] ShootState : %s (CT: %.1f / %.1f)",
+	//	stateStr,                     // ステート名
+	//	m_shootCooldownTimer,         // 現在の残り時間
+	//	m_shootCooldownMax            // 最大クールタイム
+	//);
+
+	//vnFont::print(10, 650, L"最大反射回数　%d", m_bullet->GetMaxBounce());
+
+	//vnFont::print(10, 700, L"反射可能回数　%d", m_bullet->GetCurrentBounce());
+
+	//vnFont::print(10, 650, L"MoveDir %.f, %.f , %.f",
+	//	XMVectorGetX(GetMoveDir()),
+	//	XMVectorGetY(GetMoveDir()),
+	//	XMVectorGetZ(GetMoveDir())
+	//	);
+	//vnFont::print(10, 700, L"RotY %.f", GetModel()->getRotationY());
 }

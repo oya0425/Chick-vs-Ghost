@@ -28,6 +28,14 @@ public:
 
 	}m_titleState = TitleState::MAIN;
 
+	//押されたボタンの種類（ルールボタンを除く）
+	enum class StartType
+	{
+		Normal,
+		Tutorial,
+		Endless
+	};
+
 	//enum class TitleState
 	//{
 	//	MAIN,
@@ -46,19 +54,11 @@ public:
 	void render();
 
 
-	//ボタンの当たり判定
-	bool OnButton(float x, float y);
-	bool UpdateButton(
-		float x,
-		float y,
-		vnSprite* pButton,
-		bool& isOnButton,
-		float& buttonScale);
-
 	//void ChangeBackGround(TitleUI ui);
 	void ChangeBackGround(int index);
 
-	void ChangeButtonTextSize(float x, float y, float fontScale, bool isOnButton,const WCHAR* text);
+
+	void OnStartButton(StartType type, float& buttonScale,vnSprite*pButton);
 
 private:
 	//-----フォント----------
@@ -75,17 +75,23 @@ private:
 	std::vector<vnSprite*> m_pBackGround;
 	//vnSprite* pBackGround;
 	vnSprite* pStartButton;
+	vnSprite* pTutorialStartButton;
+	vnSprite* pEndlessStartButton;
 	vnSprite* pRuleButton;
 	vnSprite* pLeftButton;
 	vnSprite* pRightButton;
 
 	//ボタン設定
 	bool isOnStartButton;
+	bool isOnTutorialStartButton;
+	bool isOnEndlessStartButton;
 	bool isOnRuleButton;
 	bool isOnLeftButton;
 	bool isOnRightButton;
 
 	float startButtonScale = 1.0f;
+	float tutorialStartButtonScale = 1.0f;
+	float endlessStartButtonScale = 1.0f;
 	float ruleButtonScale = 1.0f;
 	float leftButtonScale = 1.0f;
 	float rightButtonScale = 1.0f;
@@ -102,4 +108,5 @@ private:
 	int m_currentUI = TITLE_MAIN;	//最初はメインの画像
 	int m_rulePage = 0;			//ルールのページ番号
 
+	StartType startType = StartType::Normal;	//どのボタンを押したかを保存
 };

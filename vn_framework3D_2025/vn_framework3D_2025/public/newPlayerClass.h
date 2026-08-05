@@ -101,7 +101,7 @@ public:
 	// --- レベルアップ演出用 ---
 	void UpdateLevelUp();
 	void FinishLevelUp();	//レベルアップが終わった
-	void ResetSkillCounts()//WAVE終了時にカウントをリセットする
+	void ResetSkillCounts()	//WAVE終了時にカウントをリセットする
 	{
 		m_pullUseCount = 0;
 		m_areaUseCount = 0;
@@ -124,8 +124,9 @@ public:
 	float GetPullRadius()const { return m_pullRadius; }//敵が範囲に入っているか判定するため
 
 
-	// --- クールタイムのゲッター ---
-	//float Getm_areaAtkCoolTimer
+	// --- スキルのクールタイムリセット ---
+	void ResetSkillCoolTime();
+
 
 	// ---　入力関係(移動) ---
 	enum eInputDir

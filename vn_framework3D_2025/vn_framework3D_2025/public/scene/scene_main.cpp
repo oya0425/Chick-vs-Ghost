@@ -9,12 +9,21 @@
 
 //グローバル変数
 extern bool g_isTutorial;	//タイトルシーンのチュートリアルをするかどうかの変数（trueでする）
+extern bool g_isEndless;	//タイトルシーンのエンドレスモードにするかどうかの変数（trueでする）
 
 
 
 
 // --- メンバ変数 ---
 namespace {
+
+	//ボタン設定用
+	constexpr float titleBack_button_x = 1150.0f;
+	constexpr float titleBack_button_y = 650.0f;
+
+	//全ボタンサイズ
+	constexpr float button_w = 200;
+	constexpr float button_h = 70;
 
 
 
@@ -63,6 +72,14 @@ namespace {
 	constexpr float timeBackGround_w = 150;
 	constexpr float timeBackGround_h = 150;
 	constexpr float timeBackGround_y = 120;
+
+
+	// --- Comboimgと数値の位置 ---
+	constexpr float combo_num_x = 1000.0f;
+	constexpr float combo_num_y = 300.0f;
+	constexpr float combo_img_x = 1200.0f;
+	constexpr float combo_img_y = 300.0f;
+
 
 
 
@@ -137,7 +154,7 @@ namespace {
 
 
 	//
-	constexpr float defualtDamage = 4.0f;
+	constexpr float defualtDamage = 2.0f;
 
 	//
 	constexpr float finalChargeEnemyNum = 2;	//最終WAVEの特攻状態で出てくる敵の数を増やす倍率（ボスの近接耐性に掛ける）
@@ -388,6 +405,8 @@ void SceneMain::RegisterCharacter(vnCharacter* character)
 void SceneMain::InitializeVariables()
 {	
 	m_gameState = Opening;
+
+	m_isEndless = g_isEndless;
 
 	radius = defualtRadius;
 	theta = defualtTheta;
@@ -667,7 +686,9 @@ void SceneMain::InitializeEffects()
 //UIの初期化
 void SceneMain::InitializeUI()
 {
+	//================================================
 	// --- HPバー ---
+	//================================================
 	pHpBarBackBlack = new vnSprite(newBarPosXHp, heigtYHp, barBackWidthHp, barBackHeightHp, NULL);
 	pHpBarBackBlack->setColor(V_GAME_COLOR_BLACK);
 	pHpBarBackBlack->setSkewX(12.0f);
@@ -682,8 +703,10 @@ void SceneMain::InitializeUI()
 	pHpBarFront->setColor(V_GAME_COLOR_GREEN);
 	pHpBarFront->setSkewX(9.8f);
 	registerObject(pHpBarFront);
-
+	
+	//================================================
 	// --- Expバー ---
+	//================================================
 	pExpBarBackBlack = new vnSprite(barLeftEdgeExp + (maxWExp * 0.5f), heightYExp, maxWExp + 10.0f, barThick + 4.0f, NULL);
 	pExpBarBackBlack->setColor(V_GAME_COLOR_BLACK);
 	pExpBarBackBlack->setSkewX(8.0f);
@@ -699,7 +722,10 @@ void SceneMain::InitializeUI()
 	pExpBarFront->setSkewX(8.0f);
 	registerObject(pExpBarFront);
 
+
+	//================================================
 	// --- プレイヤーアイコン ---
+	//================================================
 	pIconPlayer = new vnSprite(40, 40, 70, 70, L"data/image/Icon.png");
 	registerObject(pIconPlayer);
 
@@ -709,6 +735,12 @@ void SceneMain::InitializeUI()
 	//===============================================================
 	// --- コンボ表示 ---
 	//===============================================================
+
+	//コンボ（Combo）の文字
+	pComboWord = new vnSprite(offScreen, offScreen, 128, 96, L"data/image/combo.png");
+	pComboWord->setColor(V_GAME_COLOR_RED);
+	registerObject(pComboWord);
+	//数値（３桁まで）
 	for (int i = 0; i < 3; i++) {       // 桁 (0:百, 1:十, 2:一)
 		for (int j = 0; j < 10; j++) {  // 数字 (0〜9)
 			wchar_t path[64];
@@ -720,13 +752,11 @@ void SceneMain::InitializeUI()
 		}
 	}
 
-	pComboWord = new vnSprite(offScreen, offScreen, 128, 96, L"data/image/combo.png");
-	pComboWord->setColor(V_GAME_COLOR_RED);
-	registerObject(pComboWord);
 
 
 	//===============================================================
 	// --- 文字用背景(左側にある操作説明の後ろにある背景)---
+	//===============================================================
 	m_pUIBackGroundBlack[0] = new vnSprite(1280 - 1120, 720.0f - 450.0f, 256 * 1.2f, 512 * 0.7, L"BackGroundBlack.png");
 	m_pUIBackGroundBlack[0]->setColor(V_GAME_COLOR_BLACK);
 	m_pUIBackGroundBlack[0]->setAlpha(0.6f);
@@ -826,9 +856,10 @@ void SceneMain::InitializeUI()
 	registerObject(pTimeBackGround);
 	pTimeBackGround->setRenderEnable(false);
 
-	//===============================================================
 
+	
 
+	
 }
 
 //ポーズ中に出るUI
@@ -886,6 +917,18 @@ void SceneMain::InitializePauseUI()
 	enemyPool->SetMeleeQus(CreateQuestionUI(L"：特攻確率に加算", GAME_COLOR_AMBER, 0.6f));
 	enemyPool->SetRangeQus(CreateQuestionUI(L"：基本速度に加算", GAME_COLOR_NEON_MAGENTA, 0.6f));
 	enemyPool->SetPullQus(CreateQuestionUI(L"：無効確率に加算", GAME_COLOR_SKY_NEON, 0.6f));
+
+
+	//===============================================================
+	// --- ボタン設定（タイトルに戻るボタンなど）
+	//===============================================================
+
+	//タイトルに戻るボタン
+	m_buttonData[(int)UIButton::TITLEBACK].sprite = new vnSprite(titleBack_button_x, titleBack_button_y, button_w, button_h, L"data/image/無題.png");
+	registerObject(m_buttonData[(int)UIButton::TITLEBACK].sprite);
+	m_buttonData[(int)UIButton::TITLEBACK].sprite->setRenderEnable(false);
+
+
 }
 
 //レベルアップ時に出るUI関連
@@ -1209,6 +1252,12 @@ void SceneMain::terminate()
 	pTimeBackGround = nullptr;
 
 
+	//ボタン
+	for (int i = 0; i < (int)UIButton::MaxNum; i++)
+	{
+		deleteObject(m_buttonData[i].sprite);
+	}
+
 
 	//レベルアップ時に出るUI
 	for (int i = 0; i < 3; i++)
@@ -1235,7 +1284,7 @@ void SceneMain::terminate()
 void SceneMain::execute()
 {
 
-	float dt = vnScene::getDeltaTime();
+	float deltaTime = vnScene::getDeltaTime();
 	switch (m_gameState)
 	{
 	case Opening:
@@ -1258,7 +1307,7 @@ void SceneMain::execute()
 	{
 		soundManager->PlayBGM(BGM_GAME);
 
-		UpdatePlay(dt);
+		UpdatePlay(deltaTime);
 		
 		break;
 	}
@@ -1274,7 +1323,7 @@ void SceneMain::execute()
 		Common::UpdateCameraLevelUp(
 			m_pNewPlayer->GetModel()->getPosition(),
 			m_levelUpCameraTargetTheta,
-			dt,
+			deltaTime,
 			m_phi,
 			m_radius,
 			m_theta);
@@ -1303,6 +1352,19 @@ void SceneMain::execute()
 		break;
 	}
 
+	// チュートリアル更新
+	UpdateTutorial(deltaTime);
+
+	//if (Common::UpdateButton(titleBack_button_x, titleBack_button_y, button_w, button_h,
+	//	m_buttonData[(int)UIButton::TITLEBACK].sprite,
+	//	m_buttonData[(int)UIButton::TITLEBACK].isOn,
+	//	m_buttonData[(int)UIButton::TITLEBACK].scale,
+	//	soundManager.get()))
+	//{
+	//	switchScene(TITEL);
+	//}
+
+
 
 	//ゲーム開始前とゲーム中のみ操作説明を出す
 
@@ -1330,7 +1392,8 @@ void SceneMain::execute()
 		pImageTab->setRenderEnable(true);
 		pTimeBackGround->setRenderEnable(true);
 		enemyPool->ResetQuestionUI();
-		
+
+
 	}
 	else
 	{
@@ -1353,6 +1416,9 @@ void SceneMain::execute()
 		m_pPauseFrame->setRenderEnable(true);
 		m_pPauseFrame2->setRenderEnable(true);
 
+		//ポーズ中にのみタイトルに戻るボタンを表示にしておく
+		m_buttonData[(int)UIButton::TITLEBACK].sprite->setRenderEnable(true);
+
 		enemyPool->ShowHideUI(true);
 	}
 	else
@@ -1361,6 +1427,10 @@ void SceneMain::execute()
 		m_pPauseFrame->setRenderEnable(false);
 		m_pPauseFrame2->setRenderEnable(false);
 		enemyPool->ShowHideUI(false);
+
+		//タイトルに戻るボタンは非表示にしておく
+		m_buttonData[(int)UIButton::TITLEBACK].sprite->setRenderEnable(false);
+
 
 	}
 
@@ -1492,7 +1562,7 @@ void SceneMain::render()
 
 		unsigned int time_textColor = (remainTime <= 3) ? GAME_COLOR_RED : GAME_COLOR_WHITE;
 
-		if (waveManager->GetFinalWave()||m_isTutorial)
+		if (waveManager->GetFinalWave()||m_isTutorial||m_isEndless)
 		{
 			vnFont::print(screenWidth / 2 - 34 + off, 100.0f + off, shadowCol, L" ∞");
 
@@ -1506,6 +1576,14 @@ void SceneMain::render()
 
 
 		}
+
+
+		//============================================================
+		// --- 倒した敵の合計 ---
+		//============================================================
+		vnFont::setFontSize(38, 30);
+		vnFont::print(1000 + off, 500 + off, shadowCol, L"撃破数：%d体", waveManager->GetTotalKillCount());
+		vnFont::print(1000, 500, GAME_COLOR_WHITE, L"撃破数：%d体", waveManager->GetTotalKillCount());
 
 		//vnFont::print(950.0f + off, 20.0f + off, shadowCol, L"TIME: %02d:%02d", minutes, seconds); // 影
 		//vnFont::print(950.0f, 20.0f, GAME_COLOR_GREEN, L"TIME: %02d:%02d", minutes, seconds); // 本体
@@ -1830,6 +1908,18 @@ void SceneMain::render()
 		break;
 
 		}
+
+	case Pause:
+		{
+		vnFont::setFontSize(38, 20);
+		Common::ChangeButtonTextSize(
+			titleBack_button_x+25, titleBack_button_y,
+			m_buttonData[(int)UIButton::TITLEBACK].scale,
+			m_buttonData[(int)UIButton::TITLEBACK].isOn,
+			L"Title");
+
+		}
+		break;
 	}
 	//--プレイヤーのHP
 
@@ -1837,6 +1927,8 @@ void SceneMain::render()
 
 	vnScene::render();
 }
+
+
 
 
 
@@ -1981,274 +2073,7 @@ void SceneMain::ShakeHpBar(
 
 
 
-//フェンスの外に出ないようにする関数
-void SceneMain::InFence(vnCharacter* pObject)
-{
-	//if (pObject == nullptr) return;
-
-	XMVECTOR vPos = *pObject->getPosition();  // 現在位置
-	float length = XMVectorGetX(XMVector3Length(vPos));  // 原点からの距離
-
-	if (length > FenceRadius - 1.0f)
-	{
-		XMVECTOR dir = XMVector3Normalize(vPos);
-		XMVECTOR newPos = XMVectorScale(dir, FenceRadius - 1.0f);
-		pObject->setPosition(&newPos);
-	}
-}
-//=====================================================================
-// 弾の反射用
-//=====================================================================
-bool SceneMain::CheckFenceReflection(vnCharacter* pObject)
-{
-	XMVECTOR vPos = *pObject->getPosition();
-	float length = XMVectorGetX(XMVector3Length(vPos));
-
-	if (length > FenceRadius - 1.0f)
-	{
-		// ① 座標をフェンス内に押し戻す
-		XMVECTOR dir = XMVector3Normalize(vPos);
-		XMVECTOR newPos = XMVectorScale(dir, FenceRadius - 2.0f);
-		pObject->setPosition(&newPos);
-
-		return true; // 当たった！
-	}
-	return false; // 当たってない
-}
-// --- フェンスのサイズを更新 ---
-void SceneMain::UpdateFencePositions() {
-	for (int i = 0; i < FENCE_NUM_MAIN; i++) {
-		// 角度の計算（初期化時と同じ）
-		float degree = 360.0f / FENCE_NUM_MAIN * (float)i;
-		float radian = degree * 3.141592f / 180.0f;
-
-		// 新しい FenceRadius を使って座標を再計算
-		float x = sin(radian) * FenceRadius;
-		float z = cos(radian) * FenceRadius;
-
-		// モデルの位置を更新
-		pFence[i]->setPosition(x, 0.0, z);
-		pFence[i]->setRotationY(radian);
-	}
-}
-
-// --- 当たり判定（地面とキャラクター）
-void SceneMain::OnCollider(vnCharacter* pCharacter,vnModel *pGround, float footOffset,RigidbodyComponent &rigidBody)
-{
-	XMVECTOR LinePos = *pCharacter->getPosition();
-	//LineDir = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
-
-	// --- モデルデータから内部情報を取得 ---
-	int vnum = pGround->getVertexNum();	//頂点数を獲得
-	int inum = pGround->getIndexNum();	//インデックス数
-
-	//メッシュ単位で走査するため、メッシュデータを取得
-	int meshNum = pGround->getMeshNum();
-	vnModel_MeshData* pMesh = pGround->getMesh();
-
-	vnVertex3D* vtx = pGround->getVertex();	//頂点配列
-	unsigned short* idx = pGround->getIndex();	//インデックス配列
-	//ワールドマトリクス
-	XMMATRIX world = *pGround->getWorld();
-
-	float highestY = -10000.0f; // 初期値は極端に低く
-	int hitMeshID = -1;
-
-	//地面
-	vnCollide::stSegment seg;
-	float safetyMargin = 0.2f;
-
-	seg.Pos = *pCharacter->getPosition() + XMVectorSet(0, footOffset, 0, 0);
-	seg.Dir = XMVectorSet(0, -1, 0, 0);
-	seg.Length = footOffset + safetyMargin;
-	//seg.Pos = *pPlayerTest->GetModel()->getPosition() + XMVectorSet(0.0f, 20.5f, 0.0f, 0.0f);
-	//seg.Dir = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
-	//seg.Length = 0.6f;
-
-	for (int m = 0; m < meshNum; m++)
-	{
-		int m_inum = pMesh[m].IndexNum;
-		int m_sidx = pMesh[m].StartIndex;
-
-		//for(int i=sidx;i<sidx+inum;i+=3)
-		for (int i = 0; i < m_inum; i += 3)
-		{
-			XMVECTOR v1 = XMVector3TransformCoord(
-				XMVectorSet(vtx[idx[m_sidx + i + 0]].x,
-					vtx[idx[m_sidx + i + 0]].y,
-					vtx[idx[m_sidx + i + 0]].z, 0.0f),
-				world);
-
-			XMVECTOR v2 = XMVector3TransformCoord(
-				XMVectorSet(vtx[idx[m_sidx + i + 1]].x,
-					vtx[idx[m_sidx + i + 1]].y,
-					vtx[idx[m_sidx + i + 1]].z, 0.0f),
-				world);
-
-			XMVECTOR v3 = XMVector3TransformCoord(
-				XMVectorSet(vtx[idx[m_sidx + i + 2]].x,
-					vtx[idx[m_sidx + i + 2]].y,
-					vtx[idx[m_sidx + i + 2]].z, 0.0f),
-				world);
-
-			// ★ ここで vnCollide 用の三角形を作る
-			vnCollide::stTriangle tri;
-			tri.fromPoints(&v1, &v2, &v3);
-
-			// ★ ここで Segment と当てる
-			XMVECTOR hit;
-			if (vnCollide::isCollide(&hit, &seg, &tri))
-			{
-				float y = XMVectorGetY(hit);
-				if (y > highestY)
-				{
-					highestY = y;
-				}
-			}
-		}
-	}
-
-	if (highestY > -10000.0f)
-	{
-		//pEnemy->SetIsGround(true);
-		rigidBody.SetVerticalVelocity(0.0f);
-		rigidBody.SetIsGround(true);
-		rigidBody.SetIsUseGravity(false);
-
-		pCharacter->setPositionY(highestY + GROUND_OFFSET);
-	}
-	else {
-		//pEnemy->SetIsGround(false);
-		rigidBody.SetIsUseGravity(true);
-		rigidBody.SetIsGround(false);
-
-	}
-
-
-}
-
-// --- 当たり判定（キャラクターとキャラクター）
-SceneMain::eDirection SceneMain::colliderCtoC(CharacterBase* p1, CharacterBase* p2)
-{
-	eDirection ret = eDirection::None;
-
-	if (!p1 || !p2) return ret;
-	
-	XMVECTOR range = XMVectorAdd(p1->GetCollision().GetSize() * 0.5f, p2->GetCollision().GetSize() * 0.5f);
-	float rx = XMVectorGetX(range);
-	float ry = XMVectorGetY(range);
-	float rz = XMVectorGetZ(range);
-
-	XMVECTOR center1 = XMVectorAdd(*p1->GetModel()->getPosition(), p1->GetCollision().GetCenter());
-	XMVECTOR center2 = XMVectorAdd(*p2->GetModel()->getPosition(), p2->GetCollision().GetCenter());
-
-	XMVECTOR dif = XMVectorAbs(center1 - center2);
-
-	float dx = XMVectorGetX(dif);
-	float dy = XMVectorGetY(dif);
-	float dz = XMVectorGetZ(dif);
-
-	if (dx < rx && dy < ry && dz < rz)
-	{
-		float sx = rx - dx;
-		float sy = ry - dy;
-		float sz = rz - dz;
-
-		if (sx < sy && sx < sz)
-		{
-			if (XMVectorGetX(center1) < XMVectorGetX(center2))
-			{
-				p1->GetModel()->addPositionX(-sx);
-				ret = X_Neg;
-			}
-			else
-			{
-				p1->GetModel()->addPositionX(sx);
-				ret = X_Pos;
-			}
-		}
-		else if (sy < sz)
-		{
-			if (XMVectorGetY(center1) < XMVectorGetY(center2))
-			{
-				p1->GetModel()->addPositionY(-sy);
-				ret = Y_Neg;
-			}
-			else
-			{
-				p1->GetModel()->addPositionY(sy);
-				p1->GetRigidbody().SetIsGround(true);
-				ret = Y_Pos;
-			}
-		}
-		else
-		{
-			if (XMVectorGetZ(center1) < XMVectorGetZ(center2))
-			{
-				p1->GetModel()->addPositionZ(-sz);
-				ret = Z_Neg;
-			}
-			else
-			{
-				p1->GetModel()->addPositionZ(sz);
-				ret = Z_Pos;
-			}
-		}
-	}
-	
-	return ret;
-}
-
-// 球体同士の判定と押し戻し
-SceneMain::eDirection SceneMain::colliderStoS(CharacterBase* p1, CharacterBase* p2)
-{
-	eDirection ret = eDirection::None;
-	if (!p1 || !p2) return ret;
-
-	auto& col1 = p1->GetCollision();
-	auto& col2 = p2->GetCollision();
-
-	// 1. 半径の取得（size.xを直径として扱う、またはradiusを追加）
-	float r1 = p1->GetEffectiveRadius();
-	float r2 = p2->GetEffectiveRadius();
-	float sumRadii = r1 + r2;
-
-	// 2. 世界座標での中心位置
-	XMVECTOR center1 = XMVectorAdd(*p1->GetModel()->getPosition(), col1.GetCenter());
-	XMVECTOR center2 = XMVectorAdd(*p2->GetModel()->getPosition(), col2.GetCenter());
-
-	// 3. 距離の計算
-	XMVECTOR diff = center2 - center1;
-	XMVECTOR distSqVec = XMVector3LengthSq(diff);
-	float distSq = XMVectorGetX(distSqVec);
-
-	// 4. 衝突判定
-	if (distSq < sumRadii * sumRadii)
-	{
-		float dist = sqrtf(distSq);
-		if (dist < 0.0001f) return ret; // 重なりすぎ防止
-
-		float overlap = (sumRadii - dist)*1.1f;
-		XMVECTOR pushDir = XMVector3Normalize(diff * -1.0f); // p1を押し戻す方向
-
-		// --- 範囲攻撃かどうかの分岐をここに入れる ---
-		//if (p1->IsAttacking()) {
-		//	// 攻撃中なら敵(p2)を吹っ飛ばす！
-		//	XMVECTOR knockbackDir = XMVector3Normalize(diff);
-		//	p2->GetRigidbody().AddImpulse(knockbackDir * 25.0f);
-		//	p2->ApplyDamage(10);
-		//}
-		//else 
-		{
-			// 通常時は位置を補正
-			XMVECTOR pushVector = pushDir * overlap;
-			p1->GetModel()->addPosition(&pushVector);
-		}
-
-		ret = X_Pos; // 戻り値は必要に応じて調整
-	}
-	return ret;
-}
+#pragma region UIの表示非表示
 
 void SceneMain::setHPbarRender(bool on)
 
@@ -2277,46 +2102,50 @@ void SceneMain::SetExpbarRender(bool on)
 //スキルボタンのUIの表示・非表示
 void SceneMain::SetSkillUIRender(bool on)
 {
-	pAreaAtkBtnBackBlack ->setRenderEnable(on);
-	pAreaAtkBtnBack		 ->setRenderEnable(on);
-	pAreaAtkBtnFront	 ->setRenderEnable(on);
-	pAreaSkillIcon		 ->setRenderEnable(on);
-	pPullBtnBackBlack	 ->setRenderEnable(on);
-	pPullBtnBack		 ->setRenderEnable(on);
-	pPullBtnFront		 ->setRenderEnable(on);
-	pPullSkillIcon		 ->setRenderEnable(on);
+	pAreaAtkBtnBackBlack->setRenderEnable(on);
+	pAreaAtkBtnBack->setRenderEnable(on);
+	pAreaAtkBtnFront->setRenderEnable(on);
+	pAreaSkillIcon->setRenderEnable(on);
+	pPullBtnBackBlack->setRenderEnable(on);
+	pPullBtnBack->setRenderEnable(on);
+	pPullBtnFront->setRenderEnable(on);
+	pPullSkillIcon->setRenderEnable(on);
 
 	if (!m_pNewPlayer->GetIsHaveAreaAtkSkill())
 	{
 		pAreaAtkBtnBackBlack->setColor(V_GAME_COLOR_BLACK);
-		pAreaAtkBtnBack		->setColor(V_GAME_COLOR_BLACK);
-		pAreaAtkBtnFront	->setColor(V_GAME_COLOR_BLACK);
-		pAreaSkillIcon		->setColor(V_GAME_COLOR_BLACK);
+		pAreaAtkBtnBack->setColor(V_GAME_COLOR_BLACK);
+		pAreaAtkBtnFront->setColor(V_GAME_COLOR_BLACK);
+		pAreaSkillIcon->setColor(V_GAME_COLOR_BLACK);
 	}
 	else
 	{
 		pAreaAtkBtnBackBlack->setColor(m_areaAtkUIColor.colorBackBlack);
-		pAreaAtkBtnBack		->setColor(m_areaAtkUIColor.colorBack);
-		pAreaAtkBtnFront	->setColor(m_areaAtkUIColor.colorFront);
-		pAreaSkillIcon		->setColor(m_areaAtkUIColor.colorIcon);
+		pAreaAtkBtnBack->setColor(m_areaAtkUIColor.colorBack);
+		pAreaAtkBtnFront->setColor(m_areaAtkUIColor.colorFront);
+		pAreaSkillIcon->setColor(m_areaAtkUIColor.colorIcon);
 	}
 
 	if (!m_pNewPlayer->GetIsHavePullSkill())
 	{
 		pPullBtnBackBlack->setColor(V_GAME_COLOR_BLACK);
-		pPullBtnBack	 ->setColor(V_GAME_COLOR_BLACK);
-		pPullBtnFront	 ->setColor(V_GAME_COLOR_BLACK);
-		pPullSkillIcon	 ->setColor(V_GAME_COLOR_BLACK);
+		pPullBtnBack->setColor(V_GAME_COLOR_BLACK);
+		pPullBtnFront->setColor(V_GAME_COLOR_BLACK);
+		pPullSkillIcon->setColor(V_GAME_COLOR_BLACK);
 	}
 	else
 	{
 		pPullBtnBackBlack->setColor(m_pullUIColor.colorBackBlack);
-		pPullBtnBack	 ->setColor(m_pullUIColor.colorBack);
-		pPullBtnFront	 ->setColor(m_pullUIColor.colorFront);
-		pPullSkillIcon	 ->setColor(m_pullUIColor.colorIcon);
+		pPullBtnBack->setColor(m_pullUIColor.colorBack);
+		pPullBtnFront->setColor(m_pullUIColor.colorFront);
+		pPullSkillIcon->setColor(m_pullUIColor.colorIcon);
 	}
 
 }
+
+#pragma endregion
+
+
 
 //----------------------------------------
 
@@ -2333,7 +2162,7 @@ void SceneMain::UpdateIdel()
 		//pSound[2]->play();
 		soundManager->PlaySE(SE_ENTER);
 
-		waveManager->Init(m_isTutorial);   //ここでWave開始
+		waveManager->Init(m_isTutorial, m_isEndless);   //ここでWave開始
 		m_pBlockManager->RespawnBlocks(waveManager->GetCurrentWave(), FenceRadius, waveManager->GetFinalWave());
 
 	}
@@ -2380,6 +2209,19 @@ void SceneMain::UpdatePause()
 		enemyPool->DebugPause();
 	}
 
+	//=================================
+	// --- タイトルに戻るボタン ---
+	//=================================
+	if (Common::UpdateButton(titleBack_button_x, titleBack_button_y, button_w, button_h,
+		m_buttonData[(int)UIButton::TITLEBACK].sprite,
+		m_buttonData[(int)UIButton::TITLEBACK].isOn,
+		m_buttonData[(int)UIButton::TITLEBACK].scale,
+		soundManager.get()))
+	{
+		soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
+		m_gameState = GameFinish;
+	}
+
 
 
 }
@@ -2399,22 +2241,23 @@ void SceneMain::UpdateBossPause()
 //----------------------------------------
 void SceneMain::UpdatePlay(float deltaTime)
 {
-	//1.プレイヤーの更新（移動、エフェクト、落下チェック、HP減少など）
+	// プレイヤーの更新（移動、エフェクト、落下チェック、HP減少など）
 	UpdatePlayer(deltaTime);
 	UpdateBlocksCollision();
-	//2.敵の出現管理（WaveManagerの状態を確認してスポーン）
+	// 敵の出現管理（WaveManagerの状態を確認してスポーン）
 	SpawnEnemies(deltaTime);
 
-	//3.敵全体の更新（移動、敵同士の衝突、プレイヤーとの衝突・撃破）
+	// 敵全体の更新（移動、敵同士の衝突、プレイヤーとの衝突・撃破）
 	UpdateEnemies(deltaTime);
 
-	//4.コンボと回復の更新（コンボのタイマー処理、コンボの画像表示）
+	// コンボと回復の更新（コンボのタイマー処理、コンボの画像表示）
 	UpdateCombo(deltaTime);
 
-	//5.グローバルな更新（フェンスの拡大、カメラ追従、タイマー加算）
+	// グローバルな更新（フェンスの拡大、カメラ追従、タイマー加算）
 	UpdateGlobalSystems(deltaTime);
 
-	//レベルアップチェック//毎フレーム呼ばれるのを防ぐ
+
+	// レベルアップチェック//毎フレーム呼ばれるのを防ぐ
 	if (m_pExpManager && m_pExpManager->GetLevelUpStock() > 0)
 	{
 		m_gameState = LevelUp;
@@ -2455,7 +2298,27 @@ void SceneMain::UpdatePlay(float deltaTime)
 
 
 }
+
+//==================================================
+// --- チュートリアル処理 ---
+//==================================================
+void SceneMain::UpdateTutorial(float deltaTime)
+{
+	//ボタンを画面で押すかキーボードで押す（キーボードは仮）
+	if (vnKeyboard::trg(DIK_RETURN))
+	{
+		m_isTutorial = false;
+	}
+	if (m_isTutorial)return;
+	//HandleBackgroundFade(false, backGroundBlackScale, blackBackSpeed);
+
+}
+
+
+
+//==================================================
 // --- プレイヤー挙動・衝突判定・回復処理 ---
+//==================================================
 void SceneMain::UpdatePlayer(float deltaTime)
 {
 	m_pNewPlayer->Update(deltaTime);
@@ -2503,19 +2366,19 @@ void SceneMain::UpdatePlayer(float deltaTime)
 	{
 		// 5体倒したかチェック
 		if (m_killCounter >= 1) {
-			// 1. 基礎係数を 0.5 -> 0.2 に落とす（これでも十分強力です）
+			// 基礎係数を 0.5 -> 0.2 に落とす
 			float baseEffect = (float)m_comboCount * 0.2f;
 
-			// 2. 減衰を (currentWave + 1) ではなく、2乗に近い形にする
+			// 減衰を (currentWave + 1) ではなく、2乗に近い形にする
 			// Wave1: 1.0 / 1.5 = 0.66
 			// Wave5: 1.0 / 5.5 = 0.18
 			float waveMitigation = 1.0f / ((float)waveManager->GetCurrentWave() * 0.25f + 0.75f);
 
 			float totalRecovery = baseEffect * waveMitigation;
 
-			// 3. 【重要】1回の回復に「上限」を作る（ここがバランスの肝！）
+			// 1回の回復に「上限」を作る
 			// これを入れないと、100コンボ超えの時に一気にHPが全快してしまいます
-			float maxHealCap = 5.0f; // Waveごとのダメージ数秒分に抑える
+			float maxHealCap = 3.0f; // Waveごとのダメージ数秒分に抑える
 			if (totalRecovery > maxHealCap) {
 				totalRecovery = maxHealCap;
 			}
@@ -2530,7 +2393,10 @@ void SceneMain::UpdatePlayer(float deltaTime)
 
 }
 
+
+//==================================================
 // --- 敵の出現管理 ---
+//==================================================
 void SceneMain::SpawnEnemies(float deltaTime)
 {
 	// === 出現 ===
@@ -2576,7 +2442,9 @@ void SceneMain::SpawnEnemies(float deltaTime)
 	}
 }
 
+//==================================================
 // --- 敵の移動・衝突・プレイヤーとの判定 ---
+//==================================================
 void SceneMain::UpdateEnemies(float deltaTime)
 {
 	// プレイヤー座標を全敵に渡す
@@ -2587,15 +2455,6 @@ void SceneMain::UpdateEnemies(float deltaTime)
 	// 移動反映＋地面衝突
 	auto& enemies = enemyPool->GetEnemies();
 	// --- WAVEをクリアしたら敵を消す ---
-	//if (waveManager->GetKillTargetCount() <= waveManager->GetKillCount())
-	//{
-	//	for (auto enemy : enemies)
-	//	{
-	//		enemy->DeSpawn();
-	//	}
-	//}
-
-	//if (waveManager->GetWaveTimer() >= waveManager->GetWaveTimeLimit())
 	if (waveManager->GetWaveTimer() <= waveManager->GetWaveTimeLimit())
 	{
 		for (auto enemy : enemies)
@@ -2620,9 +2479,6 @@ void SceneMain::UpdateEnemies(float deltaTime)
 
 
 		// --- 移動 ---
-
-		//enemy->ChangeSpeed(waveManager->GetCurrentWave() * 0.5);
-
 		// 移動量取得
 		XMVECTOR moveEnemy = enemy->GetRigidbody().getMoveDelta();
 
@@ -2650,28 +2506,16 @@ void SceneMain::UpdateEnemies(float deltaTime)
 			{
 				continue;
 			}
-			//// 1. まずは「お互いにリーダー」か「お互いにザコ」なら、両方押し合う
-			//if (a->GetIsLeader() == b->GetIsLeader())
-			//{
-			//	colliderCtoC(a, b);
-			//	colliderCtoC(b, a);
-			//}
-			//// 2. どちらか片方だけがリーダーなら、リーダーじゃない方（ザコ）を動かす
-			//else if (b->GetIsLeader())
-			//{
-			//	colliderCtoC(a, b); // bがリーダーなので、aがどく
-			//}
-			//else
-			//{
-			//	colliderCtoC(b, a); // aがリーダーなので、bがどく
-			//}
+			
+			//=========================================
+			// --- 敵同士の当たり判定 ---
+			//=========================================
 			bool aIsL = a->GetIsLeader();
 			bool bIsL = b->GetIsLeader();
 			bool sameGroup = (a->GetGroupID() == b->GetGroupID());
 
-			// 1. リーダー同士なら（群れが違っても）当たる
-			// 2. 同じ群れの配下同士（リーダーじゃない者同士）なら当たる
-			// ⇒ これにより「リーダーと配下」は同じ群れでも当たらなくなる
+			// リーダー同士なら（群れが違っても）当たる
+			// 同じ群れの配下同士（リーダーじゃない者同士）なら当たる
 			if ((aIsL && bIsL) || (sameGroup && !aIsL && !bIsL))
 			{
 				colliderCtoC(a, b);
@@ -2680,8 +2524,9 @@ void SceneMain::UpdateEnemies(float deltaTime)
 
 		}
 	}
-
-	//敵と味方の当たり判定
+	//================================
+	// --- 敵と味方の当たり判定 ---
+	//================================
 	for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
 	{
 		NewEnemyClass* enemy = enemyPool->GetEnemies()[i];
@@ -2699,9 +2544,6 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				// --- 倒したとき ---
 				soundManager->PlaySE(SE_ENEMY_DEAD);
 
-
-
-
 				pEmitter->setPosition(enemy->GetModel()->getPosition());
 				pEmitter->setPositionY(enemy->GetModel()->getPositionY() + 2.0f);
 				int index = rand() % (sizeof(vnEmitter::colors) / sizeof(vnEmitter::colors[0]));
@@ -2717,11 +2559,6 @@ void SceneMain::UpdateEnemies(float deltaTime)
 						m_pNewPlayer->Damage(defualtDamage);
 
 					}
-					//if (m_pNewPlayer->IsPulling())
-					//{
-					//	m_pNewPlayer->Damage(10.0f);
-					//}
-
 				}
 
 				//-------------------------------------------------------
@@ -2774,7 +2611,6 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				//enemy->SetIsHitPlayer(false);
 				//--当たった時に枠外に飛ばせる
 				InFence(enemy->GetModel());
-
 			}
 
 			//==================================================
@@ -2787,8 +2623,6 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				// --- 倒したとき ---
 				soundManager->PlaySE(SE_ENEMY_DEAD);
 
-
-
 				pEmitter->setPosition(enemy->GetModel()->getPosition());
 				pEmitter->setPositionY(enemy->GetModel()->getPositionY() + 2.0f);
 				int index = rand() % (sizeof(vnEmitter::colors) / sizeof(vnEmitter::colors[0]));
@@ -2798,22 +2632,21 @@ void SceneMain::UpdateEnemies(float deltaTime)
 
 				enemy->SetIsHitPlayer(true);
 				waveManager->OnEnemyKilled();
-
-
 			}
 			else
 			{
 				//enemy->SetIsHitPlayer(false);
 				//--当たった時に枠外に飛ばせる
 				InFence(enemy->GetModel());
-
 			}
-
 		}
 	}
 }
 
+
+//==================================================
 // --- コンボ計算(UI) ---
+//==================================================
 void SceneMain::UpdateCombo(float deltaTime)
 {
 #pragma region コンボ処理（数の増加のみ敵の処理にある）
@@ -2878,13 +2711,13 @@ void SceneMain::UpdateCombo(float deltaTime)
 			showing = true;
 
 			// 表示位置の調整
-			float startX = 500.0f + 500.0f;
+			float startX = combo_num_x;
 			float spacing = (128.0f * 0.5f) * m_comboScale / 1.5;
 			float posX = startX + (i * spacing);
 
 			// スプライトを取得して設定
 			vnSprite* s = pComboSprites[i][digits[i]];
-			s->setPos(posX, 220);
+			s->setPos(posX, combo_num_y);
 			s->setScale(0.5f * m_comboScale);
 
 			// 【追加】透明度を適用
@@ -2892,10 +2725,10 @@ void SceneMain::UpdateCombo(float deltaTime)
 		}
 
 		// Combo!! の表示
-		pComboWord->setPos(800 + 400, 220);
+		pComboWord->setPos(combo_img_x, combo_img_y);
 		pComboWord->setScale(m_comboScale);
 
-		// 【追加】Combo!!も一緒にフェード
+		// Combo!!も一緒にフェード
 		pComboWord->setAlpha(currentAlpha);
 
 	}
@@ -2914,7 +2747,11 @@ void SceneMain::UpdateCombo(float deltaTime)
 
 #pragma endregion
 }
+
+
+//==================================================
 // --- コンボ加算 ---
+//==================================================
 void SceneMain::AddCombo(NewEnemyClass* enemy)
 {
 	// コンボ加算！
@@ -2958,7 +2795,10 @@ void SceneMain::AddCombo(NewEnemyClass* enemy)
 
 }
 
+
+//==================================================
 // --- フェンス・タイマー・カメラ ---
+//==================================================
 void SceneMain::UpdateGlobalSystems(float deltaTime)
 {
 	// --- フェンスの半径WAVEごとに５ずつ大きくする ---
@@ -3010,7 +2850,9 @@ void SceneMain::UpdateGlobalSystems(float deltaTime)
 
 }
 
+//==================================================
 //WAVE更新処理
+//==================================================
 void SceneMain::UpdateWaveTransition()
 {
 	// --- WAVEの状態の切り替え(WAVEクリア→次のWAVEとか) ---
@@ -3019,6 +2861,9 @@ void SceneMain::UpdateWaveTransition()
 		if (isWaveClear == false) // WAVEクリア時
 		{
 			soundManager->PlaySE(SE_WAVE_CLEAR);
+
+			//クリアしたと同時にプレイヤーのスキルのクールタイムをリセットする
+			m_pNewPlayer->ResetSkillCoolTime();
 
 		}
 		isWaveClear = true;
@@ -3058,6 +2903,9 @@ void SceneMain::UpdateWaveTransition()
 
 }
 
+//==================================================
+// --- 背景の木の位置の更新 ---
+//==================================================
 void SceneMain::SetWAVETree()
 {
 #if ENABLE_TREE_DELETE
@@ -3123,8 +2971,9 @@ void SceneMain::SetWAVETree()
 }
 
 
-
+//==================================================
 // --- レベルアップ画面の更新 ---
+//==================================================
 void SceneMain::UpdateLevelUp()
 {
 
@@ -3218,7 +3067,9 @@ void SceneMain::UpdateLevelUp()
 
 }
 
+//==================================================
 //ボタン当たり判定
+//==================================================
 bool SceneMain::OnButton(float x, float y)
 {
 	int mx = vnMouse::getX();
@@ -3235,8 +3086,9 @@ bool SceneMain::OnButton(float x, float y)
 		return false;
 	}
 }
-
+//==================================================
 //ボタン処理（ボタン押したときにtrue）
+//==================================================
 bool SceneMain::UpdateUpgradeButton(
 	float x,
 	float y,
@@ -3271,7 +3123,7 @@ bool SceneMain::UpdateUpgradeButton(
 
 		if (vnMouse::trgL())
 		{
-			return true; // クリックされた！
+			return true; // クリックされた
 		}
 	}
 	else
@@ -3281,25 +3133,20 @@ bool SceneMain::UpdateUpgradeButton(
 		//pFrame->setColor(V_GAME_COLOR_YELLOW);
 	}
 
-	// 3つのスプライト全てに同じスケールを適用（これで一体化して動く）
+	// 3つのスプライト全てに同じスケールを適用
 	pFrame->setScale(buttonScale);
 	pBg->setScale(buttonScale);
 	pMain->setScale(buttonScale);
 
-	// 座標も追従させる必要がある場合（演出で動かすなら）
-	// pFrame->setPos(x, y); ...など
 
 	return false;
 }
 
 
 
-
-//----------------------------------------
-
+//==================================================
 // --- ゲームオーバー ---
-
-//----------------------------------------
+//==================================================
 void SceneMain::UpdateGameOver()
 {
 	soundManager->StopSE(SE_GRILL);
@@ -3334,11 +3181,9 @@ void SceneMain::UpdateGameOver()
 
 
 
-//----------------------------------------
-
+//==================================================
 // --- ゲームクリア ---
-
-//----------------------------------------
+//==================================================
 void SceneMain::UpdateGameClear()
 {
 	soundManager->StopSE(SE_GRILL);
@@ -3374,8 +3219,9 @@ void SceneMain::UpdateGameClear()
 
 }
 
-
+//==================================================
 //--敵の消去など共通の処理
+//==================================================
 void SceneMain::CleanUpScene()
 {
 	pDustEmitter->setEmit(false, 0);
@@ -3403,6 +3249,9 @@ void SceneMain::CleanUpScene()
 	}
 }
 
+//==================================================
+// --- ブロックとの当たり判定 ---
+//==================================================
 void SceneMain::UpdateBlocksCollision()
 {
 	// --- 地形との当たり判定（ブロック） ---
@@ -3524,3 +3373,282 @@ void SceneMain::DebugDraw()
 {
 
 }
+
+
+
+#pragma region 物理演算（地面との当たり判定など）
+
+
+//フェンスの外に出ないようにする関数
+void SceneMain::InFence(vnCharacter* pObject)
+{
+	//if (pObject == nullptr) return;
+
+	XMVECTOR vPos = *pObject->getPosition();  // 現在位置
+	float length = XMVectorGetX(XMVector3Length(vPos));  // 原点からの距離
+
+	if (length > FenceRadius - 1.0f)
+	{
+		XMVECTOR dir = XMVector3Normalize(vPos);
+		XMVECTOR newPos = XMVectorScale(dir, FenceRadius - 1.0f);
+		pObject->setPosition(&newPos);
+	}
+}
+//=====================================================================
+// 弾の反射用
+//=====================================================================
+bool SceneMain::CheckFenceReflection(vnCharacter* pObject)
+{
+	XMVECTOR vPos = *pObject->getPosition();
+	float length = XMVectorGetX(XMVector3Length(vPos));
+
+	if (length > FenceRadius - 1.0f)
+	{
+		// ① 座標をフェンス内に押し戻す
+		XMVECTOR dir = XMVector3Normalize(vPos);
+		XMVECTOR newPos = XMVectorScale(dir, FenceRadius - 2.0f);
+		pObject->setPosition(&newPos);
+
+		return true; // 当たった！
+	}
+	return false; // 当たってない
+}
+// --- フェンスのサイズを更新 ---
+void SceneMain::UpdateFencePositions() {
+	for (int i = 0; i < FENCE_NUM_MAIN; i++) {
+		// 角度の計算（初期化時と同じ）
+		float degree = 360.0f / FENCE_NUM_MAIN * (float)i;
+		float radian = degree * 3.141592f / 180.0f;
+
+		// 新しい FenceRadius を使って座標を再計算
+		float x = sin(radian) * FenceRadius;
+		float z = cos(radian) * FenceRadius;
+
+		// モデルの位置を更新
+		pFence[i]->setPosition(x, 0.0, z);
+		pFence[i]->setRotationY(radian);
+	}
+}
+//==================================================
+// --- 当たり判定（地面とキャラクター）
+//==================================================
+void SceneMain::OnCollider(vnCharacter* pCharacter, vnModel* pGround, float footOffset, RigidbodyComponent& rigidBody)
+{
+	XMVECTOR LinePos = *pCharacter->getPosition();
+	//LineDir = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
+
+	// --- モデルデータから内部情報を取得 ---
+	int vnum = pGround->getVertexNum();	//頂点数を獲得
+	int inum = pGround->getIndexNum();	//インデックス数
+
+	//メッシュ単位で走査するため、メッシュデータを取得
+	int meshNum = pGround->getMeshNum();
+	vnModel_MeshData* pMesh = pGround->getMesh();
+
+	vnVertex3D* vtx = pGround->getVertex();	//頂点配列
+	unsigned short* idx = pGround->getIndex();	//インデックス配列
+	//ワールドマトリクス
+	XMMATRIX world = *pGround->getWorld();
+
+	float highestY = -10000.0f; // 初期値は極端に低く
+	int hitMeshID = -1;
+
+	//地面
+	vnCollide::stSegment seg;
+	float safetyMargin = 0.2f;
+
+	seg.Pos = *pCharacter->getPosition() + XMVectorSet(0, footOffset, 0, 0);
+	seg.Dir = XMVectorSet(0, -1, 0, 0);
+	seg.Length = footOffset + safetyMargin;
+	//seg.Pos = *pPlayerTest->GetModel()->getPosition() + XMVectorSet(0.0f, 20.5f, 0.0f, 0.0f);
+	//seg.Dir = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
+	//seg.Length = 0.6f;
+
+	for (int m = 0; m < meshNum; m++)
+	{
+		int m_inum = pMesh[m].IndexNum;
+		int m_sidx = pMesh[m].StartIndex;
+
+		//for(int i=sidx;i<sidx+inum;i+=3)
+		for (int i = 0; i < m_inum; i += 3)
+		{
+			XMVECTOR v1 = XMVector3TransformCoord(
+				XMVectorSet(vtx[idx[m_sidx + i + 0]].x,
+					vtx[idx[m_sidx + i + 0]].y,
+					vtx[idx[m_sidx + i + 0]].z, 0.0f),
+				world);
+
+			XMVECTOR v2 = XMVector3TransformCoord(
+				XMVectorSet(vtx[idx[m_sidx + i + 1]].x,
+					vtx[idx[m_sidx + i + 1]].y,
+					vtx[idx[m_sidx + i + 1]].z, 0.0f),
+				world);
+
+			XMVECTOR v3 = XMVector3TransformCoord(
+				XMVectorSet(vtx[idx[m_sidx + i + 2]].x,
+					vtx[idx[m_sidx + i + 2]].y,
+					vtx[idx[m_sidx + i + 2]].z, 0.0f),
+				world);
+
+			// ★ ここで vnCollide 用の三角形を作る
+			vnCollide::stTriangle tri;
+			tri.fromPoints(&v1, &v2, &v3);
+
+			// ★ ここで Segment と当てる
+			XMVECTOR hit;
+			if (vnCollide::isCollide(&hit, &seg, &tri))
+			{
+				float y = XMVectorGetY(hit);
+				if (y > highestY)
+				{
+					highestY = y;
+				}
+			}
+		}
+	}
+
+	if (highestY > -10000.0f)
+	{
+		//pEnemy->SetIsGround(true);
+		rigidBody.SetVerticalVelocity(0.0f);
+		rigidBody.SetIsGround(true);
+		rigidBody.SetIsUseGravity(false);
+
+		pCharacter->setPositionY(highestY + GROUND_OFFSET);
+	}
+	else {
+		//pEnemy->SetIsGround(false);
+		rigidBody.SetIsUseGravity(true);
+		rigidBody.SetIsGround(false);
+
+	}
+
+
+}
+//==================================================
+// --- 当たり判定（キャラクターとキャラクター）
+//==================================================
+SceneMain::eDirection SceneMain::colliderCtoC(CharacterBase* p1, CharacterBase* p2)
+{
+	eDirection ret = eDirection::None;
+
+	if (!p1 || !p2) return ret;
+
+	XMVECTOR range = XMVectorAdd(p1->GetCollision().GetSize() * 0.5f, p2->GetCollision().GetSize() * 0.5f);
+	float rx = XMVectorGetX(range);
+	float ry = XMVectorGetY(range);
+	float rz = XMVectorGetZ(range);
+
+	XMVECTOR center1 = XMVectorAdd(*p1->GetModel()->getPosition(), p1->GetCollision().GetCenter());
+	XMVECTOR center2 = XMVectorAdd(*p2->GetModel()->getPosition(), p2->GetCollision().GetCenter());
+
+	XMVECTOR dif = XMVectorAbs(center1 - center2);
+
+	float dx = XMVectorGetX(dif);
+	float dy = XMVectorGetY(dif);
+	float dz = XMVectorGetZ(dif);
+
+	if (dx < rx && dy < ry && dz < rz)
+	{
+		float sx = rx - dx;
+		float sy = ry - dy;
+		float sz = rz - dz;
+
+		if (sx < sy && sx < sz)
+		{
+			if (XMVectorGetX(center1) < XMVectorGetX(center2))
+			{
+				p1->GetModel()->addPositionX(-sx);
+				ret = X_Neg;
+			}
+			else
+			{
+				p1->GetModel()->addPositionX(sx);
+				ret = X_Pos;
+			}
+		}
+		else if (sy < sz)
+		{
+			if (XMVectorGetY(center1) < XMVectorGetY(center2))
+			{
+				p1->GetModel()->addPositionY(-sy);
+				ret = Y_Neg;
+			}
+			else
+			{
+				p1->GetModel()->addPositionY(sy);
+				p1->GetRigidbody().SetIsGround(true);
+				ret = Y_Pos;
+			}
+		}
+		else
+		{
+			if (XMVectorGetZ(center1) < XMVectorGetZ(center2))
+			{
+				p1->GetModel()->addPositionZ(-sz);
+				ret = Z_Neg;
+			}
+			else
+			{
+				p1->GetModel()->addPositionZ(sz);
+				ret = Z_Pos;
+			}
+		}
+	}
+
+	return ret;
+}
+//==================================================
+// 球体同士の判定と押し戻し
+//==================================================
+SceneMain::eDirection SceneMain::colliderStoS(CharacterBase* p1, CharacterBase* p2)
+{
+	eDirection ret = eDirection::None;
+	if (!p1 || !p2) return ret;
+
+	auto& col1 = p1->GetCollision();
+	auto& col2 = p2->GetCollision();
+
+	// 1. 半径の取得（size.xを直径として扱う、またはradiusを追加）
+	float r1 = p1->GetEffectiveRadius();
+	float r2 = p2->GetEffectiveRadius();
+	float sumRadii = r1 + r2;
+
+	// 2. 世界座標での中心位置
+	XMVECTOR center1 = XMVectorAdd(*p1->GetModel()->getPosition(), col1.GetCenter());
+	XMVECTOR center2 = XMVectorAdd(*p2->GetModel()->getPosition(), col2.GetCenter());
+
+	// 3. 距離の計算
+	XMVECTOR diff = center2 - center1;
+	XMVECTOR distSqVec = XMVector3LengthSq(diff);
+	float distSq = XMVectorGetX(distSqVec);
+
+	// 4. 衝突判定
+	if (distSq < sumRadii * sumRadii)
+	{
+		float dist = sqrtf(distSq);
+		if (dist < 0.0001f) return ret; // 重なりすぎ防止
+
+		float overlap = (sumRadii - dist) * 1.1f;
+		XMVECTOR pushDir = XMVector3Normalize(diff * -1.0f); // p1を押し戻す方向
+
+		// --- 範囲攻撃かどうかの分岐をここに入れる ---
+		//if (p1->IsAttacking()) {
+		//	// 攻撃中なら敵(p2)を吹っ飛ばす！
+		//	XMVECTOR knockbackDir = XMVector3Normalize(diff);
+		//	p2->GetRigidbody().AddImpulse(knockbackDir * 25.0f);
+		//	p2->ApplyDamage(10);
+		//}
+		//else 
+		{
+			// 通常時は位置を補正
+			XMVECTOR pushVector = pushDir * overlap;
+			p1->GetModel()->addPosition(&pushVector);
+		}
+
+		ret = X_Pos; // 戻り値は必要に応じて調整
+	}
+	return ret;
+}
+
+#pragma endregion

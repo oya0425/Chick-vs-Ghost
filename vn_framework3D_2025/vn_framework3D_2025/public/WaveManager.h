@@ -20,7 +20,7 @@ public:
         Finished    //全WAVEクリア画面
     };
 
-    void Init(bool isTutorial);
+    void Init(bool isTutorial, bool isEndless);
     void Update(float deltaTime);
 
 
@@ -40,6 +40,7 @@ public:
     int GetCurrentWave() const;                         //現在のWAVE数
     int GetKillTargetCount()const { return m_killTarget; }//必要撃破数
 
+    int GetTotalKillCount()const { return m_totalKillCount; }   //倒した敵の合計
 
     int GetKillBossCountTarget()const { return m_killBossCountTarget - m_killedCount; } //ボスの残り撃破数
 
@@ -103,6 +104,9 @@ private:
     int m_killTarget;        // 必要撃破数
     int m_killedCount;       // 現在撃破数
 
+    int m_totalKillCount;    // 全体の撃破数
+
+
     int m_killBossCountTarget = 5;
 
     float m_waveTimer = 20;            //WAVE中の時間
@@ -112,7 +116,6 @@ private:
 
     int m_nextKillTarget;    // 次の必要キル数
 
-    int m_totalKillCount;    // 全体の撃破数
 
     int m_spawnLimit;        // 同時出現上限
     int m_aliveCount;        // 現在生存数
@@ -130,6 +133,6 @@ private:
     //チュートリアル時のクリア条件に変更する
     bool m_isTutorial = false;
     bool m_isTutorial_Clear = false;    //チュートリアルをクリアしたかどうか
-
+    bool m_isEndless = false;           //エンドレスモードかどうか、0WAVE固定状態にする
 
 };

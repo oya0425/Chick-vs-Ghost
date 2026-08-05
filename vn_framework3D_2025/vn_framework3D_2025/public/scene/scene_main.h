@@ -75,6 +75,21 @@ private:
 
 	};
 
+	//ボタンの種類
+	enum class UIButton
+	{
+		TITLEBACK = 0,		//タイトルに戻るボタン
+
+		MaxNum			//最大数
+	};
+	//ボタンの情報
+	struct ButtonData
+	{
+		vnSprite* sprite = nullptr;
+		bool isOn = false;
+		float scale = 1.0f;
+	};
+
 	// --- 定数 (constexpr) ---
 	static constexpr float COMBO_BASE_TIME = 3.0f;
 	static constexpr float COMBO_MIN_TIME = 1.0f;
@@ -158,7 +173,9 @@ private:
 	float m_hpShakeIntensity = 6.0f; // 揺れの強さ
 	float m_prevHp = -1.0f;          // 初期化チェック用の前回HP
 
+	//=======================================
 	// --- スキルUI用スプライト ---
+	//=======================================
 	// 範囲攻撃（Area Attack）用UI
 	vnSprite* pAreaAtkBtnBackBlack; // 一番下の黒い座布団（または外枠）
 	vnSprite* pAreaAtkBtnBack;      // スキルアイコン画像本体
@@ -169,8 +186,9 @@ private:
 	float m_areaSkillTargetScale = 1.0f;         // 目標のスケール（初期値 1.0）
 	UIColor m_areaAtkUIColor;			//色を保存しておく用
 
-
+	//=======================================
 	// 引き寄せ攻撃（Pull）用UI
+	//=======================================
 	vnSprite* pPullBtnBackBlack;
 	vnSprite* pPullBtnBack;
 	vnSprite* pPullBtnFront;
@@ -181,7 +199,9 @@ private:
 	UIColor m_pullUIColor;
 
 
+	//===============================================
 	// --- UI: スプライト (コンボ・操作説明) ---
+	//===============================================
 	vnSprite* pComboSprites[3][10];
 	vnSprite* pComboWord;
 	vnSprite* pImageW;
@@ -196,25 +216,6 @@ private:
 	//時間表示の後ろに置く背景（円形の）
 	vnSprite* pTimeBackGround;
 
-	// --- スキル獲得選択ボタン ---
-	bool m_isOnOneButton = false;
-	bool m_isOnTwoButton = false;
-	bool m_isOnThreeButton = false;
-	bool m_isOnSelectButton[3] = { false };
-
-	float m_SelectButtonScale[3] = { 1.0f };
-	float m_OneButtonScale = 1.0f;
-	float m_TwoButtonScale = 1.0f;
-	float m_ThreeButtonScale = 1.0f;
-
-
-	// --- ボス登場時に出す文字 ---
-	bool m_isBossAppearanceTriggered = false; // ボス演出が既にトリガーされたか
-	bool m_showBossText = false;              // 現在ボス文字を表示中か
-	float m_bossTextTimer = 0.0f;             // 表示時間をカウントするタイマー
-
-
-
 	// --- ポーズ中画面に出すもの ---
 	vnSprite* m_pPauseFrame;		//ポーズ中に出るフレーム
 	vnSprite* m_pPauseFrame2;		//ポーズ中に出るフレーム
@@ -222,6 +223,24 @@ private:
 	//--説明を見やすくする為の黒い背景
 	vnSprite* m_pUIBackGroundBlack[2];
 	vnSprite* m_pUIBackGroundBlackPause;
+
+
+	// --- ボタン ---
+	ButtonData m_buttonData[(int)UIButton::MaxNum];	//ボタンの種類とその分のデータ
+
+	//====================================
+	// --- スキル獲得選択ボタン ---
+	//====================================
+	bool m_isOnSelectButton[3] = { false };
+
+	float m_SelectButtonScale[3] = { 1.0f };
+
+	// --- ボス登場時に出す文字 ---
+	bool m_isBossAppearanceTriggered = false; // ボス演出が既にトリガーされたか
+	bool m_showBossText = false;              // 現在ボス文字を表示中か
+	float m_bossTextTimer = 0.0f;             // 表示時間をカウントするタイマー
+
+
 
 
 
@@ -241,12 +260,12 @@ private:
 	
 
 	//======================================================
-	// チュートリアル関係
+	// チュートリアル関係、エンドレスモード関係
 	//======================================================
 	bool m_isTutorial = false;								//チュートリアルかどうか
 	TutorialState m_state_tutorial = TutorialState::None;	//無しにして置き、タイトルでチュートリアルが選択されたときに設定する
 
-
+	bool m_isEndless = false;								//エンドレスモードかどうか（プレイヤーが死ぬまで終わらない）
 
 
 
@@ -279,6 +298,7 @@ private:
 	void UpdatePause();
 	void UpdateBossPause();
 
+
 	// --- Play中のサブシステム ---
 	void UpdatePlayer(float deltaTime);			//プレイヤー挙動・衝突判定
 	void SpawnEnemies(float deltaTime);			//敵の出現管理
@@ -287,6 +307,7 @@ private:
 	void AddCombo(NewEnemyClass* enemy);							//コンボ加算
 	void UpdateGlobalSystems(float deltaTime);	// フェンス・タイマー・カメラ
 
+	void UpdateTutorial(float deltaTime);		//チュートリアル
 
 
 	// --- GameOver,Clear処理 ---
@@ -349,7 +370,7 @@ private:
 	EnemyPool::UIQuestionExplain CreateQuestionUI(const WCHAR* text, DWORD color, float offsetSize);
 
 
-	// --- ボタン ---
+	// --- レベルアップ時ボタン ---
 	bool UpdateUpgradeButton(
 		float x,
 		float y,

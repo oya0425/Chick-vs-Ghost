@@ -47,4 +47,28 @@ namespace Common {
         if (value > max)return max;
         return value;
     }
+
+    //ボタン押されたか
+    bool UpdateButton(
+        float x,
+        float y,
+        float button_w,
+        float button_h,
+        vnSprite* pButton,
+        bool& isOnButton,
+        float& buttonScale,
+        SoundManager* soundManager
+        );
+    bool OnButton(float x, float y, float button_w, float button_h);
+
+    //=========================================================
+    // 文字の大きさ変更（ボタンに合わせた大きさにする）
+    //=========================================================
+    void ChangeButtonTextSize(
+        float x,
+        float y,
+        float buttonScale,
+        bool isOnButton,
+        const WCHAR* text);
+
 }

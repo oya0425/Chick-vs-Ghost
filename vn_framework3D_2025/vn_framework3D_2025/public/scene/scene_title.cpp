@@ -23,22 +23,32 @@ std::vector<std::wstring> ui_Title =
 };
 
 //チュートリアルをするかどうか
-bool g_isTutorial = true;
-
+bool g_isTutorial = false;
+bool g_isEndless = false;
 
 namespace
 {
     //スタートボタン位置
     constexpr float startButton_x = 650;
-    constexpr float startButton_y = 500;
+    constexpr float startButton_y = 550;
+
+    //チュートリアルスタートボタン位置
+    constexpr float tutorialStartButton_x = 650;
+    constexpr float tutorialStartButton_y = 450;
+
+    //エンドレススタートボタン位置
+    constexpr float endlessStartButton_x = 650;
+    constexpr float endlessStartButton_y = 350;
 
     //ルールボタン
     constexpr float ruleButton_x = 650;
-    constexpr float ruleButton_y = 600;
-    //スタートボタン位置
+    constexpr float ruleButton_y = 650;
+
+    //左のボタン（戻るなど）位置
     constexpr float leftButton_x = 200;
     constexpr float leftButton_y = 600;
-    //スタートボタン位置
+
+    //右のボタン（進むなど）位置
     constexpr float rightButton_x = 1100;
     constexpr float rightButton_y = 600;
 
@@ -97,6 +107,15 @@ bool SceneTitle::initialize()
     //pStartButton = new vnSprite(startButton_x, startButton_y, button_w, button_h, L"data/image/選択ボタン形.png");
     pStartButton = new vnSprite(startButton_x, startButton_y, button_w, button_h, L"data/image/無題.png");
     registerObject(pStartButton);
+
+    //チュートリアルスタートボタン
+    pTutorialStartButton = new vnSprite(tutorialStartButton_x, tutorialStartButton_y, button_w, button_h, L"data/image/無題.png");
+    registerObject(pTutorialStartButton);
+
+    //エンドレススタートボタン
+    pEndlessStartButton = new vnSprite(endlessStartButton_x, endlessStartButton_y, button_w, button_h, L"data/image/無題.png");
+    registerObject(pEndlessStartButton);
+
     //ルールボタン
     pRuleButton = new vnSprite(ruleButton_x, ruleButton_y, button_w, button_h, L"data/image/選択ボタン形.png");
     pRuleButton = new vnSprite(ruleButton_x, ruleButton_y, button_w, button_h, L"data/image/無題.png");
@@ -140,47 +159,88 @@ void SceneTitle::execute()
     case SceneTitle::TitleState::MAIN:
         pStartButton->setRenderEnable(true);
         pRuleButton->setRenderEnable(true);
+        pTutorialStartButton->setRenderEnable(true);
+        pEndlessStartButton->setRenderEnable(true);
+
         pRightButton->setRenderEnable(false);
         pLeftButton->setRenderEnable(false);
 
         if (!isStarting)
         {
-            if (UpdateButton(
+            if (Common::UpdateButton(
                 startButton_x,
                 startButton_y,
+                button_w,
+                button_h,
                 pStartButton,
                 isOnStartButton,
-                startButtonScale))
+                startButtonScale,
+                m_soundManager.get()))
             {
                 isStarting = true;
+                g_isTutorial = false;
+                g_isEndless = false;
                 m_soundManager->PlaySE(SE_TITLE_START);
+                startType = StartType::Normal;
             }
+            if (Common::UpdateButton(
+                tutorialStartButton_x,
+                tutorialStartButton_y,
+                button_w,
+                button_h,
+                pTutorialStartButton,
+                isOnTutorialStartButton,
+                tutorialStartButtonScale,
+                m_soundManager.get()))
+            {
+                isStarting = true;
+                g_isTutorial = true;
+                g_isEndless = false;
+                m_soundManager->PlaySE(SE_TITLE_START);
+                startType = StartType::Tutorial;
+            }
+
+            if (Common::UpdateButton(
+                endlessStartButton_x,
+                endlessStartButton_y,
+                button_w,
+                button_h,
+                pEndlessStartButton,
+                isOnEndlessStartButton,
+                endlessStartButtonScale,
+                m_soundManager.get()))
+            {
+                isStarting = true;
+                g_isTutorial = false;
+                g_isEndless = true;
+                m_soundManager->PlaySE(SE_TITLE_START);
+                startType = StartType::Endless;
+            }
+
         }
         //=============================
         // スタートボタンを押したら
         //=============================
         else {
+
             // --- 演出開始：回転しながら巨大化 ---
-
-            //ルールボタンは非表示
-            pRuleButton->setRenderEnable(false);
-
-            // 回転速度を徐々に上げる
-            titleRotation += 10.0f;
-
-            // スケールを指数関数的に増やす (1.1倍し続ける)
-            startButtonScale *= 1.05f;
-
-            // 適用
-            pStartButton->setScale(startButtonScale);
-            titleRotation += (startButtonScale * 2.0f);
-            pStartButton->rot = titleRotation; // 直接代入
-
-
-            // 画面を完全に覆うサイズになったら遷移
-            if (startButtonScale > 70.0f)
+            if (startType == StartType::Normal)
             {
-                switchScene(eSceneTable::Main);
+                OnStartButton(StartType::Normal,
+                    startButtonScale,
+                    pStartButton);
+            }
+            else if (startType == StartType::Tutorial)
+            {
+                OnStartButton(StartType::Tutorial,
+                    tutorialStartButtonScale,
+                    pTutorialStartButton);
+            }
+            else if (startType == StartType::Endless)
+            {
+                OnStartButton(StartType::Endless,
+                    endlessStartButtonScale,
+                    pEndlessStartButton);
             }
         }
         //-----------------------------
@@ -188,12 +248,15 @@ void SceneTitle::execute()
         if (!isStarting)
         {
             //ルールボタン押す
-            if (UpdateButton(
+            if (Common::UpdateButton(
                 ruleButton_x,
                 ruleButton_y,
+                button_w,
+                button_h,
                 pRuleButton,
                 isOnRuleButton,
-                ruleButtonScale))
+                ruleButtonScale,
+                m_soundManager.get()))
             {
 
                 m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
@@ -211,15 +274,20 @@ void SceneTitle::execute()
 
     case TitleState::RULE:
         pStartButton->setRenderEnable(false);
+        pTutorialStartButton->setRenderEnable(false);
+        pEndlessStartButton->setRenderEnable(false);
         pRuleButton->setRenderEnable(false);
 
         // 戻るボタン
-        if (UpdateButton(
+        if (Common::UpdateButton(
             leftButton_x,
             leftButton_y,
+            button_w,
+            button_h,
             pLeftButton,
             isOnLeftButton,
-            leftButtonScale))
+            leftButtonScale,
+            m_soundManager.get()))
         {
             m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
 
@@ -235,12 +303,15 @@ void SceneTitle::execute()
             }
         }
         // 進むボタン
-        if (UpdateButton(
+        if (Common::UpdateButton(
             rightButton_x,
             rightButton_y,
+            button_w,
+            button_h,
             pRightButton,
             isOnRightButton,
-            rightButtonScale))
+            rightButtonScale,
+            m_soundManager.get()))
         {
             m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
 
@@ -260,6 +331,8 @@ void SceneTitle::execute()
     }
 
 }
+
+
 
 //終了
 void SceneTitle::terminate()
@@ -283,6 +356,8 @@ void SceneTitle::terminate()
         deleteObject(m_pBackGround[i]);
     }
     deleteObject(pStartButton);
+    deleteObject(pTutorialStartButton);
+    deleteObject(pEndlessStartButton);
     deleteObject(pRuleButton);
     deleteObject(pLeftButton);
     deleteObject(pRightButton);
@@ -307,19 +382,66 @@ void SceneTitle::render()
             vnFont::print(250 + off, 200 + offsetY + off, shadowCol, L"『Chick vs Ghost』");
             vnFont::print(250, 200 + offsetY, GAME_COLOR_GOLD, L"『Chick vs Ghost』");
 
-            ChangeButtonTextSize(ruleButton_x, ruleButton_y, ruleButtonScale, isOnRuleButton, L"RULES");
+            Common::ChangeButtonTextSize(ruleButton_x+5, ruleButton_y, ruleButtonScale, isOnRuleButton, L"RULES");
 
         }
 
-        ChangeButtonTextSize(startButton_x, startButton_y, startButtonScale, isOnStartButton, L"START");
+        //===================================================
+        // --- ボタンの文字 ---
+        //===================================================
+        // 最初は常に表示
+        if (!isStarting)
+        {
+            Common::ChangeButtonTextSize(
+                startButton_x, startButton_y,
+                startButtonScale, isOnStartButton,
+                L"START");
+
+            Common::ChangeButtonTextSize(
+                tutorialStartButton_x + 15, tutorialStartButton_y,
+                tutorialStartButtonScale, isOnTutorialStartButton,
+                L"TUTORIAL");
+
+            Common::ChangeButtonTextSize(
+                endlessStartButton_x + 10, endlessStartButton_y,
+                endlessStartButtonScale, isOnEndlessStartButton,
+                L"ENDLESS");
+        }
+        else
+        {
+            switch (startType)
+            {
+            case StartType::Normal:
+                Common::ChangeButtonTextSize(
+                    startButton_x, startButton_y,
+                    startButtonScale, isOnStartButton,
+                    L"START");
+                break;
+
+            case StartType::Tutorial:
+                Common::ChangeButtonTextSize(
+                    tutorialStartButton_x + 15, tutorialStartButton_y,
+                    tutorialStartButtonScale, isOnTutorialStartButton,
+                    L"TUTORIAL");
+                break;
+
+            case StartType::Endless:
+                Common::ChangeButtonTextSize(
+                    endlessStartButton_x + 10, endlessStartButton_y,
+                    endlessStartButtonScale, isOnEndlessStartButton,
+                    L"ENDLESS");
+                break;
+            }
+        }
     }
-        break;
+       break;
+
     case SceneTitle::TitleState::RULE:
 
         // 左ボタン
         if (m_rulePage == 0)
         {
-            ChangeButtonTextSize(
+            Common::ChangeButtonTextSize(
                 leftButton_x - 10,
                 leftButton_y,
                 leftButtonScale,
@@ -328,7 +450,7 @@ void SceneTitle::render()
         }
         else
         {
-            ChangeButtonTextSize(
+            Common::ChangeButtonTextSize(
                 leftButton_x - 10,
                 leftButton_y,
                 leftButtonScale,
@@ -340,7 +462,7 @@ void SceneTitle::render()
         if (m_rulePage == ui_Title.size() - 2)
         {
             // 最後の説明ページ
-            ChangeButtonTextSize(
+            Common::ChangeButtonTextSize(
                 rightButton_x - 30,
                 rightButton_y,
                 rightButtonScale,
@@ -349,7 +471,7 @@ void SceneTitle::render()
         }
         else
         {
-            ChangeButtonTextSize(
+            Common::ChangeButtonTextSize(
                 rightButton_x - 10,
                 rightButton_y,
                 rightButtonScale,
@@ -364,60 +486,6 @@ void SceneTitle::render()
     vnScene::render();
 }
 
-//ボタン当たり判定
-bool SceneTitle::OnButton(float x, float y)
-{
-    int mx = vnMouse::getX();
-    int my = vnMouse::getY();
-
-    if (mx >= x - button_w / 2 && mx <= x + button_w / 2 &&
-        my >= y - button_h / 2 && my <= y + button_h / 2) // 中心座標からの判定
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-//ボタン処理（ボタン押したときにtrue）
-bool SceneTitle::UpdateButton(
-    float x,
-    float y,
-    vnSprite* pButton,
-    bool& isOnButton,
-    float& buttonScale)
-{
-    if (OnButton(x, y))
-    {
-        if (!isOnButton)
-        {
-            m_soundManager->PlaySE(SE_TITLE_CURSOR);
-        }
-
-        isOnButton = true;
-
-        buttonScale += (1.2f - buttonScale) * 0.2f;
-        pButton->setColor(V_GAME_COLOR_BLACK);
-
-        if (vnMouse::trgL())
-        {
-            return true;
-        }
-    }
-    else
-    {
-        isOnButton = false;
-
-        buttonScale += (1.0f - buttonScale) * 0.2f;
-        pButton->setColor(V_GAME_COLOR_YELLOW);
-    }
-
-    pButton->setScale(buttonScale);
-
-    return false;
-}
 
 //=====================
 // 背景の変更
@@ -437,47 +505,41 @@ void SceneTitle::ChangeBackGround(int index)
 
     m_currentUI = index;
 }
-//=========================================================
-// 文字の大きさ変更（ボタンに合わせた大きさにする）
-//=========================================================
-void SceneTitle::ChangeButtonTextSize(float x,float y,float fontScale, bool isOnButton, const WCHAR* text)
+
+
+
+void SceneTitle::OnStartButton(StartType type, float& buttonScale, vnSprite* pButton)
 {
-    float off = 4.0f; // 影のズレ幅
-    unsigned int shadowCol = GAME_COLOR_WHITE;
+    // --- 演出開始：回転しながら巨大化 ---
 
-    //文字数の取得
-    int len = wcslen(text);
+    //ルールボタンは非表示
+    pRuleButton->setRenderEnable(false);
 
-    // 現在のフォントサイズ
-    float currentFontSize = 45.0f * fontScale;
-    vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), (int)currentFontSize));
+    // 押していないボタンを消す
+    if (type != StartType::Normal)
+        pStartButton->setRenderEnable(false);
 
-    // --- 座標の補正計算 ---
-    // 1文字あたりの幅をざっくりフォントサイズの半分と仮定して、
-    // 「START」の5文字分が中心に来るように調整します。
-    //float textWidth = currentFontSize * 1.6f;
-    //float textHeight = currentFontSize * 0.5f; // 高さも調整
-    
-    float textWidth = currentFontSize * 0.65f * (len);
-    float textHeight = currentFontSize * 0.5f;
+    if (type != StartType::Tutorial)
+        pTutorialStartButton->setRenderEnable(false);
 
-    float tx = x - textWidth*0.5f;
-    float ty = y - textHeight;
+    if (type != StartType::Endless)
+        pEndlessStartButton->setRenderEnable(false);
 
-    // ボタンの中心(650, 500)から引く
-    //float tx = x - textWidth;
-    //float ty = y - textHeight;
+    // 回転速度を徐々に上げる
+    titleRotation += 10.0f;
 
-    // 影と本体を描画
-    vnFont::print(tx + off, ty + off*0.3, shadowCol, text);
-    if (isOnButton)
+    // スケールを指数関数的に増やす (1.1倍し続ける)
+    buttonScale *= 1.05f;
+
+    // 適用
+    pButton->setScale(buttonScale);
+    titleRotation += buttonScale * 2.0f;
+    pButton->rot = titleRotation;
+
+    // 画面を完全に覆うサイズになったら遷移
+    if (buttonScale > 80.0f)
     {
-        vnFont::print(tx, ty, GAME_COLOR_RED, text);
+        switchScene(eSceneTable::Main);
     }
-    else {
-        vnFont::print(tx, ty, GAME_COLOR_BLACK, text);
-    }
-
-
 
 }

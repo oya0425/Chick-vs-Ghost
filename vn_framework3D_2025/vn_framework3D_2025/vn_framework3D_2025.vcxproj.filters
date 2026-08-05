@@ -138,9 +138,6 @@
     <ClInclude Include="public\vn_collide.h">
       <Filter>public</Filter>
     </ClInclude>
-    <ClInclude Include="public\common.h">
-      <Filter>public</Filter>
-    </ClInclude>
     <ClInclude Include="public\vn_effect.h">
       <Filter>public</Filter>
     </ClInclude>
@@ -203,6 +200,9 @@
     </ClInclude>
     <ClInclude Include="public\scene\scene_main.h">
       <Filter>public\MainScript\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="public\common.h">
+      <Filter>public\MainScript</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -278,9 +278,6 @@
     <ClCompile Include="public\vn_collide.cpp">
       <Filter>public</Filter>
     </ClCompile>
-    <ClCompile Include="public\common.cpp">
-      <Filter>public</Filter>
-    </ClCompile>
     <ClCompile Include="public\vn_effect.cpp">
       <Filter>public</Filter>
     </ClCompile>
@@ -343,6 +340,9 @@
     </ClCompile>
     <ClCompile Include="public\scene\scene_title.cpp">
       <Filter>public\MainScript\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="public\common.cpp">
+      <Filter>public\MainScript</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

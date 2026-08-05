@@ -32,11 +32,13 @@ WaveManager::~WaveManager()
 //--------------------------------------------------------------
 // 初期化
 //--------------------------------------------------------------
-void WaveManager::Init(bool isTutorial)
+void WaveManager::Init(bool isTutorial,bool isEndless)
 {
     m_isTutorial = isTutorial;
+    m_isEndless = isEndless;
+    m_totalKillCount = 0;
     //チュートリアル時 WAVEを0スタートとする,最大はそのまま
-    m_currentWave = m_isTutorial ? 0 : 1;
+    m_currentWave = m_isTutorial||m_isEndless ? 0 : 1;
     m_maxWave = 5;
     m_state = WaveState::InProgress;
 
@@ -54,8 +56,8 @@ void WaveManager::Update(float deltaTime)
 
     if (m_state == WaveState::InProgress)
     {
-        //最終WAVEとチュートリアルは時間が減らない
-        if (!GetFinalWave()&&!m_isTutorial)
+        //最終WAVEとチュートリアル,エンドレスモードは時間が減らない
+        if (!GetFinalWave() && !(m_isTutorial || m_isEndless))
         {
             //m_waveTimer += deltaTime;
             m_waveTimer -= deltaTime;
@@ -159,18 +161,6 @@ void WaveManager::SetupWave()
     int startLimit = m_configMaxSimultaneous;
     int stepLimit = 25;
     m_spawnLimit = startLimit + (m_currentWave - 1) * stepLimit;
-
-
-    //int startLimit = m_configMaxSimultaneous;
-    //int targetLimit = 1000;
-
-    //int stepLimit = (targetLimit - startLimit) / 3;
-
-    //m_spawnLimit = startLimit + (m_currentWave - 1) * stepLimit;
-    
-    // 安全装置：もし在庫（150）を超えそうならカットする
-    //if (m_spawnLimit > 150) m_spawnLimit = 150;
-
 
     if (m_spawnLimit < 5)   // 下限を決める
         m_spawnLimit = 5;
