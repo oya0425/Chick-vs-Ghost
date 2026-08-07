@@ -17,15 +17,34 @@ extern bool g_isEndless;	//タイトルシーンのエンドレスモードに�
 // --- メンバ変数 ---
 namespace {
 
-	//ボタン設定用
+	//タイトルに戻るボタン
 	constexpr float titleBack_button_x = 1150.0f;
 	constexpr float titleBack_button_y = 650.0f;
+
+	//戻るボタン
+	constexpr float message_left_button_x = 1150.0f;
+	constexpr float message_left_button_y = 650.0f;
+
+	//進むボタン
+	constexpr float message_right_button_x = 1150.0f;
+	constexpr float message_right_button_y = 650.0f;
+
+	//はいボタン
+	constexpr float message_yes_button_x = 850.0f;
+	constexpr float message_yes_button_y = 600.0f;
+
+	//いいえボタン
+	constexpr float message_no_button_x = 450.0f;
+	constexpr float message_no_button_y = 600.0f;
 
 	//全ボタンサイズ
 	constexpr float button_w = 200;
 	constexpr float button_h = 70;
 
 
+
+
+	constexpr float underRespawnPos = -5.0f;
 
 	constexpr float playerModelScale = 1.2f;
 	constexpr float blackBackSpeed = 0.1f;	//黒い背景の拡大縮小する速度
@@ -34,14 +53,10 @@ namespace {
 	constexpr float operationUI_Y = 20.0f;	//操作説明のUIの基準の高さ
 	
 	
-
-	constexpr float underRespawnPos=-5.0f;
-	constexpr float enemyMax = 1;
 	FXMVECTOR enemyGhostModelSize = XMVectorSet(2, 2, 2, 0);
 	FXMVECTOR enemyGhostColSize = XMVectorSet(2, 2, 2, 0);
 	
-	constexpr float minSpawnRadius = 10.0f;
-	constexpr float spawnHeight	   = 40.0f;
+	constexpr float spawnHeight	   = 40.0f;	//敵のリスポーンする時の高さ
 	
 	constexpr int leaderCount = 50;	//リーダーを生成する幅（leaderCountごとにリーダーを作る）
 
@@ -61,6 +76,7 @@ namespace {
 	//constexpr float mainImgX = 110.0f;
 	//constexpr float mainImgY = 110.0f;
 
+	//レベルアップ時の選択肢のUI設定
 	constexpr float freamImgW = 1050.0f*0.9f;
 	constexpr float freamImgH = 150.0f*0.9f;
 	constexpr float backGroundImgW = 1020.0f*0.9f;
@@ -81,8 +97,7 @@ namespace {
 	constexpr float combo_img_y = 300.0f;
 
 
-
-
+	//UIバー設定（位置、サイズ）
 	// --- HPバー ---
 	constexpr float barLeftEdgeHp = 90.0f;
 	constexpr float barWidthHp = 400.0f;
@@ -125,8 +140,8 @@ namespace {
 	constexpr float barLeftEdgeAreaSkill = 55.0f;
 
 	// バーの「縦の位置（高さ）」を表すY座標（Expバーよりさらに下）
-	constexpr float heightYAreaSkill = 320.0f+ operationUI_Y;
-	
+	constexpr float heightYAreaSkill = 320.0f + operationUI_Y;
+
 	// クールタイムが最大のとき（使える状態）のバーの「最大横幅」
 	constexpr float maxWAreaSkill = 250.0f;
 
@@ -134,10 +149,10 @@ namespace {
 	// --- 2. 引き寄せスキル（Pull）用バー ---
 	// バーの「左端」のX座標（他のバーと綺麗に揃えるために 90.0f）
 	constexpr float barLeftEdgePullSkill = 55.0f;
-	
+
 	// バーの「縦の位置（高さ）」を表すY座標（範囲攻撃バーの40px下に配置）
-	constexpr float heightYPullSkill = 400.0f+ operationUI_Y;
-	
+	constexpr float heightYPullSkill = 400.0f + operationUI_Y;
+
 	// クールタイムが最大のとき（使える状態）のバーの「最大横幅」
 	constexpr float maxWPullSkill = 250.0f;
 
@@ -145,6 +160,8 @@ namespace {
 	// ポーズ中のバーの基準
 	constexpr float baseBarWidth = 300.0f;
 	constexpr float baseBarHeight = 12.0f;
+
+
 
 
 	// --- カメラ関係 ---
@@ -918,15 +935,80 @@ void SceneMain::InitializePauseUI()
 	enemyPool->SetRangeQus(CreateQuestionUI(L"：基本速度に加算", GAME_COLOR_NEON_MAGENTA, 0.6f));
 	enemyPool->SetPullQus(CreateQuestionUI(L"：無効確率に加算", GAME_COLOR_SKY_NEON, 0.6f));
 
+	//===============================================================
+	// --- 説明に関するUI ---
+	//===============================================================
+
+	//後ろの背景
+	m_messageBackground = new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth, screenHeight, L"BackGroundBlack.png");
+	registerObject(m_messageBackground);
+	m_messageBackground->setRenderEnable(false);
+	m_messageBackground->setColor(V_GAME_COLOR_BLACK);
+	m_messageBackground->setAlpha(0.6f);
 
 	//===============================================================
 	// --- ボタン設定（タイトルに戻るボタンなど）
 	//===============================================================
+	{
+		//タイトルに戻るボタン
+		{
+			m_buttonData[(int)UIButton::TITLEBACK].sprite = new vnSprite(titleBack_button_x, titleBack_button_y, button_w, button_h, L"data/image/無題.png");
+			registerObject(m_buttonData[(int)UIButton::TITLEBACK].sprite);
+			m_buttonData[(int)UIButton::TITLEBACK].sprite->setRenderEnable(false);
+			m_buttonData[(int)UIButton::TITLEBACK].position_x = titleBack_button_x;
+			m_buttonData[(int)UIButton::TITLEBACK].position_y = titleBack_button_y;
+			m_buttonData[(int)UIButton::TITLEBACK].text = L"Title";
+			m_buttonData[(int)UIButton::TITLEBACK].se_id = SE_TITLE_CHANGEPAGE;
+			m_buttonData[(int)UIButton::TITLEBACK].visible = false;
+		}
+		//戻るボタン
+		{
+			m_buttonData[(int)UIButton::MESSAGE_LEFT].sprite = new vnSprite(message_left_button_x, message_left_button_y, button_w, button_h, L"data/image/無題.png");
+			registerObject(m_buttonData[(int)UIButton::MESSAGE_LEFT].sprite);
+			m_buttonData[(int)UIButton::MESSAGE_LEFT].sprite->setRenderEnable(false);
+			m_buttonData[(int)UIButton::MESSAGE_LEFT].position_x = message_left_button_x;
+			m_buttonData[(int)UIButton::MESSAGE_LEFT].position_y = message_left_button_y;
+			m_buttonData[(int)UIButton::MESSAGE_LEFT].text = L"Back";
+			m_buttonData[(int)UIButton::MESSAGE_LEFT].se_id = SE_TITLE_CHANGEPAGE;
+			m_buttonData[(int)UIButton::MESSAGE_LEFT].visible = false;
+		}
+		//進むボタン
+		{
+			m_buttonData[(int)UIButton::MESSAGE_RIGHT].sprite = new vnSprite(message_right_button_x, message_right_button_y, button_w, button_h, L"data/image/無題.png");
+			registerObject(m_buttonData[(int)UIButton::MESSAGE_RIGHT].sprite);
+			m_buttonData[(int)UIButton::MESSAGE_RIGHT].sprite->setRenderEnable(false);
+			m_buttonData[(int)UIButton::MESSAGE_RIGHT].position_x = message_right_button_x;
+			m_buttonData[(int)UIButton::MESSAGE_RIGHT].position_y = message_right_button_y;
+			m_buttonData[(int)UIButton::MESSAGE_RIGHT].text = L"Next";
+			m_buttonData[(int)UIButton::MESSAGE_RIGHT].se_id = SE_TITLE_CHANGEPAGE;
+			m_buttonData[(int)UIButton::MESSAGE_RIGHT].visible = false;
+		}
+		//はいボタン
+		{
+			m_buttonData[(int)UIButton::MESSAGE_YES].sprite = new vnSprite(message_yes_button_x, message_yes_button_y, button_w, button_h, L"data/image/無題.png");
+			registerObject(m_buttonData[(int)UIButton::MESSAGE_YES].sprite);
+			m_buttonData[(int)UIButton::MESSAGE_YES].sprite->setRenderEnable(false);
+			m_buttonData[(int)UIButton::MESSAGE_YES].position_x = message_yes_button_x;
+			m_buttonData[(int)UIButton::MESSAGE_YES].position_y = message_yes_button_y;
+			m_buttonData[(int)UIButton::MESSAGE_YES].text = L"Yes";
+			m_buttonData[(int)UIButton::MESSAGE_YES].se_id = SE_TITLE_CHANGEPAGE;
+			m_buttonData[(int)UIButton::MESSAGE_YES].visible = false;
+		}
+		//いいえボタン
+		{
+			m_buttonData[(int)UIButton::MESSAGE_NO].sprite = new vnSprite(message_no_button_x, message_no_button_y, button_w, button_h, L"data/image/無題.png");
+			registerObject(m_buttonData[(int)UIButton::MESSAGE_NO].sprite);
+			m_buttonData[(int)UIButton::MESSAGE_NO].sprite->setRenderEnable(false);
+			m_buttonData[(int)UIButton::MESSAGE_NO].position_x = message_no_button_x;
+			m_buttonData[(int)UIButton::MESSAGE_NO].position_y = message_no_button_y;
+			m_buttonData[(int)UIButton::MESSAGE_NO].text = L"No";
+			m_buttonData[(int)UIButton::MESSAGE_NO].se_id = SE_TITLE_CHANGEPAGE;
+			m_buttonData[(int)UIButton::MESSAGE_NO].visible = false;
+		}
 
-	//タイトルに戻るボタン
-	m_buttonData[(int)UIButton::TITLEBACK].sprite = new vnSprite(titleBack_button_x, titleBack_button_y, button_w, button_h, L"data/image/無題.png");
-	registerObject(m_buttonData[(int)UIButton::TITLEBACK].sprite);
-	m_buttonData[(int)UIButton::TITLEBACK].sprite->setRenderEnable(false);
+	}
+
+
 
 
 }
@@ -1251,6 +1333,8 @@ void SceneMain::terminate()
 	deleteObject(pTimeBackGround);
 	pTimeBackGround = nullptr;
 
+	deleteObject(m_messageBackground);
+	m_messageBackground = nullptr;
 
 	//ボタン
 	for (int i = 0; i < (int)UIButton::MaxNum; i++)
@@ -1355,17 +1439,6 @@ void SceneMain::execute()
 	// チュートリアル更新
 	UpdateTutorial(deltaTime);
 
-	//if (Common::UpdateButton(titleBack_button_x, titleBack_button_y, button_w, button_h,
-	//	m_buttonData[(int)UIButton::TITLEBACK].sprite,
-	//	m_buttonData[(int)UIButton::TITLEBACK].isOn,
-	//	m_buttonData[(int)UIButton::TITLEBACK].scale,
-	//	soundManager.get()))
-	//{
-	//	switchScene(TITEL);
-	//}
-
-
-
 	//ゲーム開始前とゲーム中のみ操作説明を出す
 
 	//左側の表示
@@ -1416,10 +1489,16 @@ void SceneMain::execute()
 		m_pPauseFrame->setRenderEnable(true);
 		m_pPauseFrame2->setRenderEnable(true);
 
-		//ポーズ中にのみタイトルに戻るボタンを表示にしておく
-		m_buttonData[(int)UIButton::TITLEBACK].sprite->setRenderEnable(true);
+		if (m_returnTitleState == ReturnTitleState::None)
+		{
+			enemyPool->ShowHideUI(true);
+		}
+		else
+		{
+			enemyPool->ShowHideUI(false);
+		}
 
-		enemyPool->ShowHideUI(true);
+
 	}
 	else
 	{
@@ -1428,11 +1507,19 @@ void SceneMain::execute()
 		m_pPauseFrame2->setRenderEnable(false);
 		enemyPool->ShowHideUI(false);
 
-		//タイトルに戻るボタンは非表示にしておく
-		m_buttonData[(int)UIButton::TITLEBACK].sprite->setRenderEnable(false);
+		//ポーズ中以外は「タイトルに戻るボタン」を非表示にしておく
+		m_buttonData[(int)UIButton::TITLEBACK].visible = false;
 
 
 	}
+
+	//タイトルに戻るボタンは非表示にしておく
+	m_buttonData[(int)UIButton::TITLEBACK].sprite->setRenderEnable	  (m_buttonData[(int)UIButton::TITLEBACK].visible);
+	m_buttonData[(int)UIButton::MESSAGE_LEFT].sprite->setRenderEnable (m_buttonData[(int)UIButton::MESSAGE_LEFT].visible);
+	m_buttonData[(int)UIButton::MESSAGE_RIGHT].sprite->setRenderEnable(m_buttonData[(int)UIButton::MESSAGE_RIGHT].visible);
+	m_buttonData[(int)UIButton::MESSAGE_YES].sprite->setRenderEnable  (m_buttonData[(int)UIButton::MESSAGE_YES].visible);
+	m_buttonData[(int)UIButton::MESSAGE_NO].sprite->setRenderEnable   (m_buttonData[(int)UIButton::MESSAGE_NO].visible);
+
 
 	// --- WAVEの状態の切り替え(WAVEクリア→次のWAVEとか) ---
 	UpdateWaveTransition();
@@ -1910,19 +1997,41 @@ void SceneMain::render()
 		}
 
 	case Pause:
+	{
+
+		if (m_returnTitleState == ReturnTitleState::None)
 		{
-		vnFont::setFontSize(38, 20);
-		Common::ChangeButtonTextSize(
-			titleBack_button_x+25, titleBack_button_y,
-			m_buttonData[(int)UIButton::TITLEBACK].scale,
-			m_buttonData[(int)UIButton::TITLEBACK].isOn,
-			L"Title");
+			vnFont::setFontSize(38, 20);
+			Common::ChangeButtonTextSize(
+				m_buttonData[(int)UIButton::TITLEBACK].position_x + 25,
+				m_buttonData[(int)UIButton::TITLEBACK].position_y,
+				m_buttonData[(int)UIButton::TITLEBACK].scale,
+				m_buttonData[(int)UIButton::TITLEBACK].isOn,
+				m_buttonData[(int)UIButton::TITLEBACK].text);
+		}		
+		if (m_returnTitleState == ReturnTitleState::Confirm)
+		{
+			Common::ChangeButtonTextSize(
+				m_buttonData[(int)UIButton::MESSAGE_YES].position_x,
+				m_buttonData[(int)UIButton::MESSAGE_YES].position_y,
+				m_buttonData[(int)UIButton::MESSAGE_YES].scale,
+				m_buttonData[(int)UIButton::MESSAGE_YES].isOn,
+				m_buttonData[(int)UIButton::MESSAGE_YES].text);
+			Common::ChangeButtonTextSize(
+				m_buttonData[(int)UIButton::MESSAGE_NO].position_x,
+				m_buttonData[(int)UIButton::MESSAGE_NO].position_y,
+				m_buttonData[(int)UIButton::MESSAGE_NO].scale,
+				m_buttonData[(int)UIButton::MESSAGE_NO].isOn,
+				m_buttonData[(int)UIButton::MESSAGE_NO].text);
 
 		}
+
+
+	}
+
 		break;
 	}
 	//--プレイヤーのHP
-
 
 
 	vnScene::render();
@@ -2072,6 +2181,79 @@ void SceneMain::ShakeHpBar(
 }
 
 
+//======================================================================
+// --- ボタンの判定 ---
+//======================================================================
+bool SceneMain::UpdateButton(UIButton id)
+{
+	auto& button = m_buttonData[(int)id];
+	return Common::UpdateButton(
+		button.position_x,
+		button.position_y,
+		button_w,
+		button_h,
+		button.sprite,
+		button.isOn,
+		button.scale,
+		soundManager.get());
+}
+
+//======================================================================
+// --- 説明文の表示 ---
+//======================================================================
+bool SceneMain::UpdateMessageWindow(float targetScale,const WCHAR* text, WindowMode mode)
+{
+	float screenWidth = vnMainFrame::screenWidth;
+	float screenHeight = vnMainFrame::screenHeight;
+
+	switch (mode)
+	{
+		case WindowMode::Open:
+		{
+			m_messageBackground->setRenderEnable(true);
+
+			m_windowScale += (targetScale - m_windowScale) * 0.2f;
+			m_messageBackground->setScale(m_windowScale);
+
+			if (m_windowScale >= targetScale - 0.01f)
+			{
+				m_windowScale = targetScale;
+				m_messageBackground->setScale(m_windowScale);
+
+				if (m_returnTitleState == ReturnTitleState::Confirm)
+				{
+					vnFont::setFontSize(38, 40);
+					// ここで文字を表示
+					vnFont::print(screenWidth / 2 - 175, screenHeight / 2-25, GAME_COLOR_WHITE, text);
+				}
+
+				return true;
+			}
+
+			break;
+		}
+		case WindowMode::Close:
+		{
+			m_windowScale += (0.0f - m_windowScale) * 0.2f;
+			m_messageBackground->setScale(m_windowScale);
+
+			if (m_windowScale <= 0.01f)
+			{
+				m_windowScale = 0.0f;
+				m_messageBackground->setScale(m_windowScale);
+				m_messageBackground->setRenderEnable(false);
+
+				return true;
+			}
+
+			break;
+		}
+	}
+
+	return false;
+
+}
+
 
 #pragma region UIの表示非表示
 
@@ -2190,7 +2372,7 @@ void SceneMain::StartCameraRote()
 void SceneMain::UpdatePause()
 {
 
-	if (vnKeyboard::trg(DIK_TAB))
+	if (vnKeyboard::trg(DIK_TAB)&& m_returnTitleState == ReturnTitleState::None)
 	{
 		m_gameState = GameState::Play;
 	}
@@ -2200,27 +2382,85 @@ void SceneMain::UpdatePause()
 	//{
 	//	m_gameState = GameState::Play;
 	//}
-	if (waveManager->GetFinalWave())
+	if (m_returnTitleState == ReturnTitleState::None)
 	{
-		enemyPool->DebugBossPause();
-	}
-	else 
-	{
-		enemyPool->DebugPause();
+		if (waveManager->GetFinalWave())
+		{
+			enemyPool->DebugBossPause();
+		}
+		else
+		{
+			enemyPool->DebugPause();
+		}
 	}
 
 	//=================================
 	// --- タイトルに戻るボタン ---
 	//=================================
-	if (Common::UpdateButton(titleBack_button_x, titleBack_button_y, button_w, button_h,
-		m_buttonData[(int)UIButton::TITLEBACK].sprite,
-		m_buttonData[(int)UIButton::TITLEBACK].isOn,
-		m_buttonData[(int)UIButton::TITLEBACK].scale,
-		soundManager.get()))
+	auto& titleBack = m_buttonData[(int)UIButton::TITLEBACK];
+	auto& yesButton = m_buttonData[(int)UIButton::MESSAGE_YES];
+	auto& noButton = m_buttonData[(int)UIButton::MESSAGE_NO];
+	
+	if (m_returnTitleState == ReturnTitleState::None)
 	{
-		soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
-		m_gameState = GameFinish;
+		//タイトルに戻るボタンの表示
+		titleBack.visible = true;
+		//===============================
+		// --- タイトルボタンを押す ---
+		//===============================
+		if (UpdateButton(UIButton::TITLEBACK))
+		{
+			soundManager->PlaySE(titleBack.se_id);
+			//黒い背景を拡大して表示
+			m_windowMode = WindowMode::Open;
+			//タイトルに戻るかの確認するモードに切り替え
+			m_returnTitleState = ReturnTitleState::Confirm;
+			//タイトルボタンを隠して「Yes」「No」ボタンを表示
+			titleBack.visible = false;
+			yesButton.visible = true;
+			noButton.visible = true;
+		}
 	}
+	else if (m_returnTitleState == ReturnTitleState::Confirm)
+	{
+		if (m_windowMode == WindowMode::Open)
+		{
+			//黒い背景が目標値に到達したら文字を表示し
+			//「Yes」「No」ボタンを押せるようにする
+			if (UpdateMessageWindow(0.3f, L"本当に戻りますか？", WindowMode::Open))
+			{
+				if (UpdateButton(UIButton::MESSAGE_YES))
+				{
+					soundManager->PlaySE(yesButton.se_id);
+
+					yesButton.visible = false;
+					noButton.visible = false;
+
+					m_gameState = GameFinish;
+				}
+
+				if (UpdateButton(UIButton::MESSAGE_NO))
+				{
+					soundManager->PlaySE(noButton.se_id);
+
+					m_windowMode = WindowMode::Close;
+				}
+			}
+		}
+		else if (m_windowMode == WindowMode::Close)
+		{
+			if (UpdateMessageWindow(0.4f, L"", WindowMode::Close))
+			{
+				m_windowMode = WindowMode::None;
+
+				m_returnTitleState = ReturnTitleState::None;
+
+				yesButton.visible = false;
+				noButton.visible = false;
+			}
+		}
+	}
+
 
 
 

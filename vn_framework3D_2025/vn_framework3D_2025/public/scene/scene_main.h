@@ -65,6 +65,12 @@ private:
 		Finish,
 	};
 
+	//タイトルに戻るボタンを押したときに確認をするため
+	enum class ReturnTitleState
+	{
+		None,
+		Confirm
+	}m_returnTitleState = ReturnTitleState::None;
 
 	struct UIColor
 	{
@@ -79,8 +85,11 @@ private:
 	enum class UIButton
 	{
 		TITLEBACK = 0,		//タイトルに戻るボタン
-
-		MaxNum			//最大数
+		MESSAGE_LEFT,		//戻る
+		MESSAGE_RIGHT,		//進む・閉じる
+		MESSAGE_YES,		//はい
+		MESSAGE_NO,			//いいえ
+		MaxNum				//最大数
 	};
 	//ボタンの情報
 	struct ButtonData
@@ -88,7 +97,26 @@ private:
 		vnSprite* sprite = nullptr;
 		bool isOn = false;
 		float scale = 1.0f;
+
+
+		const WCHAR* text = L"";	 //表示文字
+
+		float position_x = 0;        //位置 X
+		float position_y = 0;        //位置 Y
+
+		bool visible = true;          //表示するか
+
+		SE_ID se_id = SE_ID::NONE;
 	};
+	bool UpdateButton(UIButton id);
+
+	//説明ウィンドウ
+	enum class WindowMode
+	{
+		None,
+		Open,
+		Close
+	} m_windowMode = WindowMode::None;
 
 	// --- 定数 (constexpr) ---
 	static constexpr float COMBO_BASE_TIME = 3.0f;
@@ -267,8 +295,13 @@ private:
 
 	bool m_isEndless = false;								//エンドレスモードかどうか（プレイヤーが死ぬまで終わらない）
 
-
-
+	//表示するウィンドウ（説明）
+	vnSprite* m_messageBackground;					//説明の画像の後ろの背景
+	float m_windowScale = 0.0f;
+	bool m_isOpen = false;
+	bool m_isClosing = false;
+	bool UpdateMessageWindow(float targetScale, const WCHAR* text, WindowMode mode);
+	
 	// デバッグ
 	int m_leaderCount = 0;
 	int m_activeCount = 0;

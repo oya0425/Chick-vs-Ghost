@@ -31,7 +31,8 @@ enum SE_ID
 	SE_TITLE_START,		//スタートボタン押したときの音
 	SE_TITLE_CURSOR,	//カーソルを併せたときの音
 	SE_TITLE_CHANGEPAGE,//ルール説明の画面の進むボタン等の音
-	SE_MAX
+	SE_MAX,
+	NONE,				//設定なし
 };
 
 class SoundManager
