@@ -114,7 +114,7 @@ public:
 
 		//КwПKТlВћН≈Се
 		float maxMeleeFear = 1.0f;
-		float maxRangeFear = 10.0f;
+		float maxRangeFear = 20.0f;
 		float maxPullResistance = 1.0f;
 
 		float maxBossMeleeFear = 50.0f;

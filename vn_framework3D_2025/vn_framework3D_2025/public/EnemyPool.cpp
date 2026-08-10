@@ -919,7 +919,7 @@ void EnemyPool::DrawGroupDebugInfo()
 
         // 最大値
         vnFont::print(x + lineXPitch * 2.8f, y + lineYPitch * 4, GAME_COLOR_SUNGLOW, L"/ % .0f%%", data->maxMeleeFear * 100.0f);
-        vnFont::print(x + lineXPitch * 2.8f, y + lineYPitch * 5, GAME_COLOR_NEON_MAGENTA, L"/ % .1f", data->maxRangeFear);
+        vnFont::print(x + lineXPitch * 2.8f, y + lineYPitch * 5, GAME_COLOR_NEON_MAGENTA, L"/ % .1f", data->maxRangeFear/2);
         vnFont::print(x + lineXPitch * 2.8f, y + lineYPitch * 6, GAME_COLOR_AQUA_GREEN, L"/ % .0f%%", data->maxPullResistance * 100.0f);
 
         // 棒グラフ（UIバー）の更新・描画

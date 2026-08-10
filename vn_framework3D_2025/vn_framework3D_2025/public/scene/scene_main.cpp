@@ -17,16 +17,23 @@ extern bool g_isEndless;	//タイトルシーンのエンドレスモードに�
 // --- メンバ変数 ---
 namespace {
 
+	//=====================================================
+	// --- ボタンの設定 ---
+	//=====================================================
 	//タイトルに戻るボタン
 	constexpr float titleBack_button_x = 1150.0f;
 	constexpr float titleBack_button_y = 650.0f;
 
+	//閉じるボタン
+	constexpr float message_close_button_x = 950.0f;
+	constexpr float message_close_button_y = 650.0f;
+
 	//戻るボタン
-	constexpr float message_left_button_x = 1150.0f;
+	constexpr float message_left_button_x = 450.0f;
 	constexpr float message_left_button_y = 650.0f;
 
 	//進むボタン
-	constexpr float message_right_button_x = 1150.0f;
+	constexpr float message_right_button_x = 950.0f;
 	constexpr float message_right_button_y = 650.0f;
 
 	//はいボタン
@@ -40,6 +47,13 @@ namespace {
 	//全ボタンサイズ
 	constexpr float button_w = 200;
 	constexpr float button_h = 70;
+
+	//=====================================================
+	// --- 説明画像の設定 ---
+	//=====================================================
+
+
+
 
 
 
@@ -398,6 +412,7 @@ bool SceneMain::initialize()
 	InitializeUI();
 	InitializePauseUI();
 	InitializeUpgradeUI();
+	InitializeExplanationUI();
 	InitializeFont();
 	InitializeSound();
 	InitializeTutorial();
@@ -703,6 +718,10 @@ void SceneMain::InitializeEffects()
 //UIの初期化
 void SceneMain::InitializeUI()
 {
+	float screenWidth = vnMainFrame::screenWidth;
+	float screenHeight = vnMainFrame::screenHeight;
+
+
 	//================================================
 	// --- HPバー ---
 	//================================================
@@ -869,14 +888,10 @@ void SceneMain::InitializeUI()
 	//===============================================================
 	//時間表示の後ろの背景
 	//===============================================================
-	pTimeBackGround = new vnSprite(vnMainFrame::screenWidth / 2, timeBackGround_y, timeBackGround_w, timeBackGround_h, L"data/image/TimeBackGround.png");
+	pTimeBackGround = new vnSprite(screenWidth / 2, timeBackGround_y, timeBackGround_w, timeBackGround_h, L"data/image/TimeBackGround.png");
 	registerObject(pTimeBackGround);
 	pTimeBackGround->setRenderEnable(false);
 
-
-	
-
-	
 }
 
 //ポーズ中に出るUI
@@ -935,16 +950,93 @@ void SceneMain::InitializePauseUI()
 	enemyPool->SetRangeQus(CreateQuestionUI(L"：基本速度に加算", GAME_COLOR_NEON_MAGENTA, 0.6f));
 	enemyPool->SetPullQus(CreateQuestionUI(L"：無効確率に加算", GAME_COLOR_SKY_NEON, 0.6f));
 
+
+
+
+}
+
+
+
+//レベルアップ時に出るUI関連
+void SceneMain::InitializeUpgradeUI()
+{
+	float screenWidth = vnMainFrame::screenWidth;
+	float screenHeight = vnMainFrame::screenHeight;
+
+	// 黒い幕
+	pBackGroundBlack = new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth, screenHeight, L"BackGroundBlack.png");
+	pBackGroundBlack->setColor(V_GAME_COLOR_BLACK);
+	registerObject(pBackGroundBlack);
+	pBackGroundBlack->setRenderEnable(false);
+	pBackGroundBlack->setScale(0);
+
+	// 経験値マネージャー
+	m_pExpManager = new ExperienceManager;
+	m_pExpManager->SetPlayer(m_pNewPlayer);
+
+	// アップグレードUI
+	m_pUpgradeUI = new UpgradeSelectionUI;
+	for (int i = 0; i < 3; i++)
+	{
+		const auto& resource = upgradeUIResources[i];
+
+		m_pUpgradeUI->SetFreamImg(i, new vnSprite(uiHidePosX, uiHidePosY, freamImgW, freamImgH, resource.framePath));
+		m_pUpgradeUI->SetBackGroundImg(i, new vnSprite(uiHidePosX, uiHidePosY, backGroundImgW, backGroundImgH, resource.backGroundPath));
+		m_pUpgradeUI->SetMainImg(i, new vnSprite(uiHidePosX, uiHidePosY, mainImgW, mainImgH, resource.mainPath));
+
+		registerObject(m_pUpgradeUI->GetFreamImg(i));
+		registerObject(m_pUpgradeUI->GetBackGroundImg(i));
+		registerObject(m_pUpgradeUI->GetMainImg(i));
+	}
+}
+
+//説明に関するUI
+void SceneMain::InitializeExplanationUI()
+{
+	float screenWidth = vnMainFrame::screenWidth;
+	float screenHeight = vnMainFrame::screenHeight;
+
+
 	//===============================================================
 	// --- 説明に関するUI ---
 	//===============================================================
 
 	//後ろの背景
-	m_messageBackground = new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth, screenHeight, L"BackGroundBlack.png");
+	m_messageBackground = new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth, screenHeight, L"BackGroundBlack_maru.png");
 	registerObject(m_messageBackground);
 	m_messageBackground->setRenderEnable(false);
 	m_messageBackground->setColor(V_GAME_COLOR_BLACK);
 	m_messageBackground->setAlpha(0.6f);
+
+
+	//=================================================================
+	// --- チュートリアル中に出てくる説明の画像 ---
+	//=================================================================
+	float offset_UI_size = 0.7f;
+	m_explanationUI[(int)ExplanationType::Exp].images.push_back(
+		new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth * offset_UI_size, screenHeight* offset_UI_size,
+			L"data/image/Rule1.png"));
+	m_explanationUI[(int)ExplanationType::Exp].images.push_back(
+		new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth* offset_UI_size, screenHeight * offset_UI_size,
+			L"data/image/Rule2.png"));
+
+
+
+
+
+	//設定した説明画像をまとめて登録
+	for (int i = 0; i < (int)ExplanationType::MaxNum; i++)
+	{
+		for (size_t j = 0; j < m_explanationUI[i].images.size(); j++)
+		{
+			registerObject(m_explanationUI[i].images[j]);
+		}
+		m_explanationUI[i].position_x = screenWidth / 2.0f;
+		m_explanationUI[i].position_y = screenHeight / 2.0f;
+		m_explanationUI[i].visible = false;
+	}
+
+
 
 	//===============================================================
 	// --- ボタン設定（タイトルに戻るボタンなど）
@@ -957,9 +1049,23 @@ void SceneMain::InitializePauseUI()
 			m_buttonData[(int)UIButton::TITLEBACK].sprite->setRenderEnable(false);
 			m_buttonData[(int)UIButton::TITLEBACK].position_x = titleBack_button_x;
 			m_buttonData[(int)UIButton::TITLEBACK].position_y = titleBack_button_y;
+			m_buttonData[(int)UIButton::TITLEBACK].font_pos_offset_x = 20.0f;
 			m_buttonData[(int)UIButton::TITLEBACK].text = L"Title";
 			m_buttonData[(int)UIButton::TITLEBACK].se_id = SE_TITLE_CHANGEPAGE;
 			m_buttonData[(int)UIButton::TITLEBACK].visible = false;
+
+		}
+		//閉じるボタン
+		{
+			m_buttonData[(int)UIButton::MESSAGE_CLOSE].sprite = new vnSprite(message_close_button_x, message_close_button_y, button_w, button_h, L"data/image/無題.png");
+			registerObject(m_buttonData[(int)UIButton::MESSAGE_CLOSE].sprite);
+			m_buttonData[(int)UIButton::MESSAGE_CLOSE].sprite->setRenderEnable(false);
+			m_buttonData[(int)UIButton::MESSAGE_CLOSE].position_x = message_close_button_x;
+			m_buttonData[(int)UIButton::MESSAGE_CLOSE].position_y = message_close_button_y;
+			m_buttonData[(int)UIButton::MESSAGE_CLOSE].font_pos_offset_x = 20;
+			m_buttonData[(int)UIButton::MESSAGE_CLOSE].text = L"Close";
+			m_buttonData[(int)UIButton::MESSAGE_CLOSE].se_id = SE_TITLE_CHANGEPAGE;
+			m_buttonData[(int)UIButton::MESSAGE_CLOSE].visible = false;
 		}
 		//戻るボタン
 		{
@@ -1010,41 +1116,8 @@ void SceneMain::InitializePauseUI()
 
 
 
-
 }
 
-//レベルアップ時に出るUI関連
-void SceneMain::InitializeUpgradeUI()
-{
-	float screenWidth = vnMainFrame::screenWidth;
-	float screenHeight = vnMainFrame::screenHeight;
-
-	// 黒い幕
-	pBackGroundBlack = new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth, screenHeight, L"BackGroundBlack.png");
-	pBackGroundBlack->setColor(V_GAME_COLOR_BLACK);
-	registerObject(pBackGroundBlack);
-	pBackGroundBlack->setRenderEnable(false);
-	pBackGroundBlack->setScale(0);
-
-	// 経験値マネージャー
-	m_pExpManager = new ExperienceManager;
-	m_pExpManager->SetPlayer(m_pNewPlayer);
-
-	// アップグレードUI
-	m_pUpgradeUI = new UpgradeSelectionUI;
-	for (int i = 0; i < 3; i++)
-	{
-		const auto& resource = upgradeUIResources[i];
-
-		m_pUpgradeUI->SetFreamImg(i, new vnSprite(uiHidePosX, uiHidePosY, freamImgW, freamImgH, resource.framePath));
-		m_pUpgradeUI->SetBackGroundImg(i, new vnSprite(uiHidePosX, uiHidePosY, backGroundImgW, backGroundImgH, resource.backGroundPath));
-		m_pUpgradeUI->SetMainImg(i, new vnSprite(uiHidePosX, uiHidePosY, mainImgW, mainImgH, resource.mainPath));
-
-		registerObject(m_pUpgradeUI->GetFreamImg(i));
-		registerObject(m_pUpgradeUI->GetBackGroundImg(i));
-		registerObject(m_pUpgradeUI->GetMainImg(i));
-	}
-}
 
 //フォントの初期化
 void SceneMain::InitializeFont()
@@ -1342,6 +1415,13 @@ void SceneMain::terminate()
 		deleteObject(m_buttonData[i].sprite);
 	}
 
+	for (int i = 0; i < (int)ExplanationType::MaxNum; i++)
+	{
+		for (size_t j = 0; j < m_explanationUI[i].images.size(); j++)
+		{
+			deleteObject(m_explanationUI[i].images[j]);
+		}
+	}
 
 	//レベルアップ時に出るUI
 	for (int i = 0; i < 3; i++)
@@ -1513,12 +1593,55 @@ void SceneMain::execute()
 
 	}
 
-	//タイトルに戻るボタンは非表示にしておく
-	m_buttonData[(int)UIButton::TITLEBACK].sprite->setRenderEnable	  (m_buttonData[(int)UIButton::TITLEBACK].visible);
-	m_buttonData[(int)UIButton::MESSAGE_LEFT].sprite->setRenderEnable (m_buttonData[(int)UIButton::MESSAGE_LEFT].visible);
-	m_buttonData[(int)UIButton::MESSAGE_RIGHT].sprite->setRenderEnable(m_buttonData[(int)UIButton::MESSAGE_RIGHT].visible);
-	m_buttonData[(int)UIButton::MESSAGE_YES].sprite->setRenderEnable  (m_buttonData[(int)UIButton::MESSAGE_YES].visible);
-	m_buttonData[(int)UIButton::MESSAGE_NO].sprite->setRenderEnable   (m_buttonData[(int)UIButton::MESSAGE_NO].visible);
+
+	//ボタンの表示非表示管理
+	for (int i = 0; i < (int)UIButton::MaxNum; i++)
+	{
+		m_buttonData[i].sprite->setRenderEnable(m_buttonData[i].visible);
+	}
+
+	//説明画像の表示非表示
+	for (int i = 0; i < (int)ExplanationType::MaxNum; i++)
+	{
+		for (size_t j = 0; j < m_explanationUI[i].images.size(); j++)
+		{
+			//説明のページのみを表示
+			bool isVisible = false;
+
+			// アニメーション中
+			if (m_explanationSlideState != ExplanationSlideState::None)
+			{
+				{
+					// 現在のページ
+					if (j == m_explanationSlidePage)
+					{
+						isVisible = true;
+					}
+
+					// 進むなら次のページも表示
+					if (m_explanationSlideState == ExplanationSlideState::SlideLeft &&
+						j == m_explanationSlidePage + 1)
+					{
+						isVisible = true;
+					}
+
+					// 戻るなら前のページも表示
+					if (m_explanationSlideState == ExplanationSlideState::SlideRight &&
+						j == m_explanationSlidePage - 1)
+					{
+						isVisible = true;
+					}
+				}
+			}
+			else
+			{
+				// 通常時は現在のページだけ
+				isVisible = m_explanationUI[i].visible &&
+					(j == m_explanationPage);
+			}
+			m_explanationUI[i].images[j]->setRenderEnable(isVisible);
+		}
+	}
 
 
 	// --- WAVEの状態の切り替え(WAVEクリア→次のWAVEとか) ---
@@ -1999,39 +2122,57 @@ void SceneMain::render()
 	case Pause:
 	{
 
-		if (m_returnTitleState == ReturnTitleState::None)
-		{
-			vnFont::setFontSize(38, 20);
-			Common::ChangeButtonTextSize(
-				m_buttonData[(int)UIButton::TITLEBACK].position_x + 25,
-				m_buttonData[(int)UIButton::TITLEBACK].position_y,
-				m_buttonData[(int)UIButton::TITLEBACK].scale,
-				m_buttonData[(int)UIButton::TITLEBACK].isOn,
-				m_buttonData[(int)UIButton::TITLEBACK].text);
-		}		
-		if (m_returnTitleState == ReturnTitleState::Confirm)
-		{
-			Common::ChangeButtonTextSize(
-				m_buttonData[(int)UIButton::MESSAGE_YES].position_x,
-				m_buttonData[(int)UIButton::MESSAGE_YES].position_y,
-				m_buttonData[(int)UIButton::MESSAGE_YES].scale,
-				m_buttonData[(int)UIButton::MESSAGE_YES].isOn,
-				m_buttonData[(int)UIButton::MESSAGE_YES].text);
-			Common::ChangeButtonTextSize(
-				m_buttonData[(int)UIButton::MESSAGE_NO].position_x,
-				m_buttonData[(int)UIButton::MESSAGE_NO].position_y,
-				m_buttonData[(int)UIButton::MESSAGE_NO].scale,
-				m_buttonData[(int)UIButton::MESSAGE_NO].isOn,
-				m_buttonData[(int)UIButton::MESSAGE_NO].text);
+		//if (m_returnTitleState == ReturnTitleState::None)
+		//{
+		//	vnFont::setFontSize(38, 20);
+		//	Common::ChangeButtonTextSize(
+		//		m_buttonData[(int)UIButton::TITLEBACK].position_x + 25,
+		//		m_buttonData[(int)UIButton::TITLEBACK].position_y,
+		//		m_buttonData[(int)UIButton::TITLEBACK].scale,
+		//		m_buttonData[(int)UIButton::TITLEBACK].isOn,
+		//		m_buttonData[(int)UIButton::TITLEBACK].text);
+		//}		
+		//if (m_returnTitleState == ReturnTitleState::Confirm)
+		//{
+		//	Common::ChangeButtonTextSize(
+		//		m_buttonData[(int)UIButton::MESSAGE_YES].position_x,
+		//		m_buttonData[(int)UIButton::MESSAGE_YES].position_y,
+		//		m_buttonData[(int)UIButton::MESSAGE_YES].scale,
+		//		m_buttonData[(int)UIButton::MESSAGE_YES].isOn,
+		//		m_buttonData[(int)UIButton::MESSAGE_YES].text);
+		//	Common::ChangeButtonTextSize(
+		//		m_buttonData[(int)UIButton::MESSAGE_NO].position_x,
+		//		m_buttonData[(int)UIButton::MESSAGE_NO].position_y,
+		//		m_buttonData[(int)UIButton::MESSAGE_NO].scale,
+		//		m_buttonData[(int)UIButton::MESSAGE_NO].isOn,
+		//		m_buttonData[(int)UIButton::MESSAGE_NO].text);
 
-		}
+		//}
 
 
 	}
+
 
 		break;
 	}
-	//--プレイヤーのHP
+
+	//ボタンが表示されてるとにそれに合った文字を表示する
+	for (int i = 0; i < (int)UIButton::MaxNum; i++)
+	{
+		auto& button = m_buttonData[i];
+
+		if (!button.visible)
+		{
+			continue;
+		}
+
+		Common::ChangeButtonTextSize(
+			button.position_x+button.font_pos_offset_x,
+			button.position_y,
+			button.scale,
+			button.isOn,
+			button.text);
+	}
 
 
 	vnScene::render();
@@ -2201,7 +2342,7 @@ bool SceneMain::UpdateButton(UIButton id)
 //======================================================================
 // --- 説明文の表示 ---
 //======================================================================
-bool SceneMain::UpdateMessageWindow(float targetScale,const WCHAR* text, WindowMode mode)
+bool SceneMain::UpdateMessageWindow(float targetScale,const WCHAR* text,WindowMode mode, ExplanationUIData* explanation)
 {
 	float screenWidth = vnMainFrame::screenWidth;
 	float screenHeight = vnMainFrame::screenHeight;
@@ -2212,33 +2353,65 @@ bool SceneMain::UpdateMessageWindow(float targetScale,const WCHAR* text, WindowM
 		{
 			m_messageBackground->setRenderEnable(true);
 
-			m_windowScale += (targetScale - m_windowScale) * 0.2f;
-			m_messageBackground->setScale(m_windowScale);
+			m_windowOpenTimer += vnScene::getDeltaTime();
+			//一定時間で拡大
+			const float openTime = 0.3f;
 
-			if (m_windowScale >= targetScale - 0.01f)
+			float t = m_windowOpenTimer / openTime;
+
+			if (t >= 1.0f)
+			{
+				t = 1.0f;
+			}
+
+			m_windowScale = targetScale * t;
+
+			m_messageBackground->setScale(m_windowScale);
+			if (t >= 1.0f)
 			{
 				m_windowScale = targetScale;
 				m_messageBackground->setScale(m_windowScale);
 
+				//「本当に戻りますか？」を表示
 				if (m_returnTitleState == ReturnTitleState::Confirm)
 				{
 					vnFont::setFontSize(38, 40);
-					// ここで文字を表示
-					vnFont::print(screenWidth / 2 - 175, screenHeight / 2-25, GAME_COLOR_WHITE, text);
+					vnFont::print(
+						screenWidth / 2 - 175,
+						screenHeight / 2 - 25,
+						GAME_COLOR_WHITE,
+						text);
+				}
+
+				// 説明画像
+				else
+				{
+					if (explanation != nullptr && !explanation->images.empty())
+					{
+						explanation->visible = true;
+					}
 				}
 
 				return true;
 			}
 
+
 			break;
 		}
 		case WindowMode::Close:
 		{
+			if (explanation != nullptr && !explanation->images.empty())
+			{
+				explanation->visible = false;
+			}
+
+
 			m_windowScale += (0.0f - m_windowScale) * 0.2f;
 			m_messageBackground->setScale(m_windowScale);
 
 			if (m_windowScale <= 0.01f)
 			{
+				m_windowOpenTimer = 0.0f;
 				m_windowScale = 0.0f;
 				m_messageBackground->setScale(m_windowScale);
 				m_messageBackground->setRenderEnable(false);
@@ -2253,6 +2426,216 @@ bool SceneMain::UpdateMessageWindow(float targetScale,const WCHAR* text, WindowM
 	return false;
 
 }
+
+
+//===============================================================
+// --- チュートリアルの説明を出してボタンの押して閉じるまで ---
+//===============================================================
+void SceneMain::UpdateExplanation(ExplanationType type)
+{
+	if (m_windowMode == WindowMode::Open)
+	{
+		if (UpdateMessageWindow(
+			0.8f,
+			L"",
+			WindowMode::Open,
+			&m_explanationUI[(int)type]))
+		{
+			auto& rightButton = m_buttonData[(int)UIButton::MESSAGE_RIGHT];
+			auto& leftButton = m_buttonData[(int)UIButton::MESSAGE_LEFT];
+			auto& closeButton = m_buttonData[(int)UIButton::MESSAGE_CLOSE];
+
+			UpdateExplanationButtons(type);
+		}
+	}
+	else if (m_windowMode == WindowMode::Close)
+	{
+		if (UpdateMessageWindow(
+			0.0f,
+			L"",
+			WindowMode::Close,
+			&m_explanationUI[(int)type]))
+		{
+
+			// ページを最初に戻す
+			m_explanationPage = 0;
+
+			// ボタンを非表示
+			m_buttonData[(int)UIButton::MESSAGE_RIGHT].visible = false;
+			m_buttonData[(int)UIButton::MESSAGE_LEFT].visible = false;
+			m_buttonData[(int)UIButton::MESSAGE_CLOSE].visible = false;
+
+			m_explanationUI[(int)type].isOne = true;
+			m_gameState = currentState;
+			m_windowMode = WindowMode::None;
+
+			//モードを初期に戻す
+			m_state_tutorial = TutorialState::None;
+		}
+	}
+
+}
+
+//チュートリアル中のボタンの制御
+void SceneMain::UpdateExplanationButtons(ExplanationType type)
+{
+	auto& rightButton = m_buttonData[(int)UIButton::MESSAGE_RIGHT];
+	auto& leftButton = m_buttonData[(int)UIButton::MESSAGE_LEFT];
+	auto& closeButton = m_buttonData[(int)UIButton::MESSAGE_CLOSE];
+
+	int pageCount = (int)m_explanationUI[(int)type].images.size();
+	auto& explanation = m_explanationUI[(int)type];
+
+
+	if (pageCount <= 1)
+	{
+		rightButton.visible = false;
+		leftButton.visible = false;
+		closeButton.visible = true;
+	}
+	else
+	{
+		rightButton.visible = (m_explanationPage < pageCount - 1);
+		leftButton.visible = (m_explanationPage > 0);
+		closeButton.visible = (m_explanationPage + 1 >= pageCount);
+	}
+
+	//アニメーションしてないときだけボタンを押せる
+	if (m_explanationSlideState == ExplanationSlideState::None)
+	{
+		// 進む
+		if (rightButton.visible && (UpdateButton(UIButton::MESSAGE_RIGHT) || vnKeyboard::trg(DIK_D)))
+		{
+			soundManager->PlaySE(rightButton.se_id);
+
+			//m_explanationPage++;
+			m_explanationSlidePage = m_explanationPage;
+			explanation.position_old_x = explanation.position_x;
+			explanation.position_old_y = explanation.position_y;
+			m_explanationSlideState = ExplanationSlideState::SlideLeft;
+			m_explanationSlideTime = 0.0f;
+		}
+
+		// 戻る
+		if (leftButton.visible && (UpdateButton(UIButton::MESSAGE_LEFT)||vnKeyboard::trg(DIK_A)))
+		{
+			soundManager->PlaySE(leftButton.se_id);
+
+			//m_explanationPage--;
+			m_explanationSlidePage = m_explanationPage;
+			explanation.position_old_x = explanation.position_x;
+			explanation.position_old_y = explanation.position_y;
+
+			m_explanationSlideState = ExplanationSlideState::SlideRight;
+			m_explanationSlideTime = 0.0f;
+		}
+
+		// 閉じる
+		if (closeButton.visible && (UpdateButton(UIButton::MESSAGE_CLOSE) || vnKeyboard::trg(DIK_SPACE)))
+		{
+			soundManager->PlaySE(closeButton.se_id);
+
+			m_windowMode = WindowMode::Close;
+		}
+
+	}
+
+
+
+	// アニメーション更新
+	UpdateExplanationSlide(type);
+}
+
+//---説明画像のアニメーション ---
+void SceneMain::UpdateExplanationSlide(ExplanationType type)
+{
+	if (m_explanationSlideState == ExplanationSlideState::None)
+		return;
+
+	//チュートリアルの種類を取る
+	auto& explanation = m_explanationUI[(int)type];
+
+	//アニメーションの時間を足す
+	m_explanationSlideTime += vnScene::getDeltaTime();
+
+	float t = m_explanationSlideTime / 0.6f;
+
+	if (t >= 1.0f)
+		t = 1.0f;
+
+	//移動量
+	float moveDistance = 1800.0f;
+
+	float x = explanation.position_old_x;
+
+	auto* currentImage = explanation.images[m_explanationSlidePage];
+	// 前の画像
+	auto* prevImage = explanation.images[m_explanationSlidePage - 1];
+
+	// 進む
+	if (m_explanationSlideState == ExplanationSlideState::SlideLeft)
+	{
+		// 現在の画像
+		currentImage->setPos(
+			explanation.position_old_x - moveDistance * t,
+			explanation.position_old_y
+		);
+
+		currentImage->setAlpha(1.0f - t);
+
+		// 次の画像
+		auto* nextImage = explanation.images[m_explanationSlidePage + 1];
+
+		nextImage->setPos(
+			explanation.position_old_x + moveDistance - moveDistance * t,
+			explanation.position_old_y
+		);
+
+		//nextImage->setAlpha(t);
+	}
+
+	// 戻る
+	else if (m_explanationSlideState == ExplanationSlideState::SlideRight)
+	{
+		// 現在の画像
+		currentImage->setPos(
+			explanation.position_old_x + moveDistance * t,
+			explanation.position_old_y
+		);
+
+		currentImage->setAlpha(1.0f - t);
+
+
+		prevImage->setPos(
+			explanation.position_old_x - moveDistance + moveDistance * t,
+			explanation.position_old_y
+		);
+
+		//prevImage->setAlpha(t);
+	}
+
+
+	// アニメーション終了
+	if (t >= 1.0f)
+	{
+		if (m_explanationSlideState == ExplanationSlideState::SlideLeft)
+		{
+
+			m_explanationPage++;
+			currentImage->setAlpha(t);
+		}
+		else if (m_explanationSlideState == ExplanationSlideState::SlideRight)
+		{
+			m_explanationPage--;
+			currentImage->setAlpha(t);
+		}
+
+		m_explanationSlideState = ExplanationSlideState::None;
+	}
+
+}
+
+
 
 
 #pragma region UIの表示非表示
@@ -2400,34 +2783,42 @@ void SceneMain::UpdatePause()
 	auto& titleBack = m_buttonData[(int)UIButton::TITLEBACK];
 	auto& yesButton = m_buttonData[(int)UIButton::MESSAGE_YES];
 	auto& noButton = m_buttonData[(int)UIButton::MESSAGE_NO];
-	
-	if (m_returnTitleState == ReturnTitleState::None)
+	switch (m_returnTitleState)
 	{
-		//タイトルに戻るボタンの表示
+	case ReturnTitleState::None:
+	{
+		// タイトルに戻るボタンの表示
 		titleBack.visible = true;
+
 		//===============================
 		// --- タイトルボタンを押す ---
 		//===============================
 		if (UpdateButton(UIButton::TITLEBACK))
 		{
 			soundManager->PlaySE(titleBack.se_id);
-			//黒い背景を拡大して表示
+
+			// 黒い背景を拡大して表示
 			m_windowMode = WindowMode::Open;
-			//タイトルに戻るかの確認するモードに切り替え
+
+			// タイトルに戻るかの確認するモードに切り替え
 			m_returnTitleState = ReturnTitleState::Confirm;
-			//タイトルボタンを隠して「Yes」「No」ボタンを表示
+
+			// タイトルボタンを隠して「Yes」「No」ボタンを表示
 			titleBack.visible = false;
 			yesButton.visible = true;
 			noButton.visible = true;
 		}
+
+		break;
 	}
-	else if (m_returnTitleState == ReturnTitleState::Confirm)
+	case ReturnTitleState::Confirm:
 	{
 		if (m_windowMode == WindowMode::Open)
 		{
-			//黒い背景が目標値に到達したら文字を表示し
-			//「Yes」「No」ボタンを押せるようにする
-			if (UpdateMessageWindow(0.3f, L"本当に戻りますか？", WindowMode::Open))
+			// 黒い背景が目標値に到達したら文字を表示し
+			// 「Yes」「No」ボタンを押せるようにする
+			if (UpdateMessageWindow(0.3f, L"本当に戻りますか？", WindowMode::Open,
+				&m_explanationUI[(int)ExplanationType::Exp]))
 			{
 				if (UpdateButton(UIButton::MESSAGE_YES))
 				{
@@ -2449,7 +2840,7 @@ void SceneMain::UpdatePause()
 		}
 		else if (m_windowMode == WindowMode::Close)
 		{
-			if (UpdateMessageWindow(0.4f, L"", WindowMode::Close))
+			if (UpdateMessageWindow(0.4f, L"", WindowMode::Close, &m_explanationUI[(int)ExplanationType::Exp]))
 			{
 				m_windowMode = WindowMode::None;
 
@@ -2459,9 +2850,10 @@ void SceneMain::UpdatePause()
 				noButton.visible = false;
 			}
 		}
+
+		break;
 	}
-
-
+	}
 
 
 }
@@ -2544,16 +2936,98 @@ void SceneMain::UpdatePlay(float deltaTime)
 //==================================================
 void SceneMain::UpdateTutorial(float deltaTime)
 {
+	//if (!m_isTutorial)return;
 	//ボタンを画面で押すかキーボードで押す（キーボードは仮）
 	if (vnKeyboard::trg(DIK_RETURN))
 	{
 		m_isTutorial = false;
 	}
-	if (m_isTutorial)return;
+	//if (m_isTutorial)return;
 	//HandleBackgroundFade(false, backGroundBlackScale, blackBackSpeed);
+	auto& rightButton = m_buttonData[(int)UIButton::MESSAGE_RIGHT];
+	auto& leftButton = m_buttonData[(int)UIButton::MESSAGE_LEFT];
+
+
+
+	switch (m_state_tutorial)
+	{
+	case TutorialState::None:
+		break;
+
+	case TutorialState::StartMessage:
+		break;
+
+	case TutorialState::WaitSkillUse:
+		break;
+
+	case TutorialState::WaitSkillSelect:
+		break;
+
+
+
+	//===================================================
+	// --- 説明UIが出る ---
+	//===================================================
+	case TutorialState::ExplainEnemyLeader:
+		break;
+
+	case TutorialState::ExplainExp:
+		//説明を出して閉じるまでの処理
+		UpdateExplanation(ExplanationType::Exp);
+
+		break;
+
+	case TutorialState::ExplainLevelUp:
+		break;
+
+	case TutorialState::ExplainSkills:
+		break;
+
+	case TutorialState::Finish:
+		break;
+	}
 
 }
 
+//説明UIがある状態の変更
+void SceneMain::ChangeTutorialState(ExplanationType type)
+{
+	//チュートリアルなら説明を出す
+	if (m_isTutorial && !m_explanationUI[(int)type].isOne)
+	{
+		//もとのゲームの状態を保存
+		currentState = m_gameState;
+		//時間停止する
+		m_gameState = TimeStop;
+
+
+		switch (type)
+		{
+		case ExplanationType::EnemyLeader:
+			m_state_tutorial = TutorialState::ExplainEnemyLeader;
+			break;
+
+		case ExplanationType::Exp:
+			m_state_tutorial = TutorialState::ExplainExp;
+			break;
+
+		case ExplanationType::LevelUp:
+			m_state_tutorial = TutorialState::ExplainLevelUp;
+			break;
+
+		case ExplanationType::Skills:
+			m_state_tutorial = TutorialState::ExplainSkills;
+			break;
+		default:
+			return;
+		}
+
+		//黒い画面を拡大する
+		m_windowMode = WindowMode::Open;
+
+	}
+
+}
 
 
 //==================================================
@@ -2782,7 +3256,16 @@ void SceneMain::UpdateEnemies(float deltaTime)
 			if (dir != None)
 			{
 				// --- 倒したとき ---
-				soundManager->PlaySE(SE_ENEMY_DEAD);
+				
+				//================================================
+				// --- チュートリアルなら説明を出す ---
+				//================================================
+				ChangeTutorialState(ExplanationType::Exp);
+
+
+
+
+			    soundManager->PlaySE(SE_ENEMY_DEAD);
 
 				pEmitter->setPosition(enemy->GetModel()->getPosition());
 				pEmitter->setPositionY(enemy->GetModel()->getPositionY() + 2.0f);

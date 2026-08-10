@@ -42,25 +42,25 @@ private:
 		GameFinish,
 		TimeStop,
 	};
+
 	
 	//チュートリアル用
 	enum class TutorialState
 	{
 		None,
 		StartMessage,          // 最初の説明表示「敵にたいあたりしよう！」
-		WaitFirstKill,         // 初めて敵を倒すまで
-
-		ExplainExp,            // 経験値・特攻・パニック説明
-		WaitLevelUp,           // レベルアップ待ち
-
-		ExplainUI,             // UI説明
+		WaitSkillUse,          // 両方1回ずつ使用
 		WaitSkillSelect,       // スキル選択待ち
 
-		ExplainSkills,         // 引き寄せ・範囲攻撃説明
-		WaitSkillUse,          // 両方1回ずつ使用
 
-		ExplainRushEnemy,      // 特攻状態の説明
-		WaitRushEnemyDefeat,   // 特攻敵を倒す
+		//説明UIを出すチュートリアルが頭に「Explain」をつける
+		ExplainEnemyLeader,    // 初めて敵を倒すまで
+
+		ExplainExp,            // 経験値・特攻・パニック説明
+		ExplainLevelUp,        // レベルアップ待ち
+
+		ExplainSkills,         // 引き寄せ・範囲攻撃説明
+
 
 		Finish,
 	};
@@ -86,7 +86,8 @@ private:
 	{
 		TITLEBACK = 0,		//タイトルに戻るボタン
 		MESSAGE_LEFT,		//戻る
-		MESSAGE_RIGHT,		//進む・閉じる
+		MESSAGE_CLOSE,		//閉じる
+		MESSAGE_RIGHT,		//進む
 		MESSAGE_YES,		//はい
 		MESSAGE_NO,			//いいえ
 		MaxNum				//最大数
@@ -104,6 +105,8 @@ private:
 		float position_x = 0;        //位置 X
 		float position_y = 0;        //位置 Y
 
+		float font_pos_offset_x = 0; //表示する文字の位置調整用
+
 		bool visible = true;          //表示するか
 
 		SE_ID se_id = SE_ID::NONE;
@@ -118,6 +121,43 @@ private:
 		Close
 	} m_windowMode = WindowMode::None;
 
+
+	// --- 説明のUI構造体 ---
+	enum class ExplanationType
+	{
+		EnemyLeader,    //リーダーを倒したときに出てくる敵の説明
+		Exp,			//敵を倒したときに出てくる説明（経験値獲得）
+		LevelUp,		//レベルアップ時に出てくる
+		Skills,			//スキルを獲得したときの説明
+
+		MaxNum
+	};
+	struct ExplanationUIData
+	{
+		std::vector<vnSprite*> images;
+		float position_x = 0.0f;
+		float position_y = 0.0f;
+
+		float position_old_x = 0.0f;	//もとの位置を保存しておく
+		float position_old_y = 0.0f;
+
+		bool visible = true;          //表示するか
+	
+		bool isOne = false;			  //一度表示したか
+	};
+
+	//説明の画像をスライドさせるアニメーション用
+	enum class ExplanationSlideState
+	{
+		None,
+		SlideLeft,
+		SlideRight
+	};
+
+
+
+
+
 	// --- 定数 (constexpr) ---
 	static constexpr float COMBO_BASE_TIME = 3.0f;
 	static constexpr float COMBO_MIN_TIME = 1.0f;
@@ -125,6 +165,7 @@ private:
 
 	// --- ゲーム全体の状態 ---
 	GameState m_gameState;
+	GameState currentState = m_gameState;
 	float     totalClearTime;
 	bool      isTimerActive;
 	bool      isWaveClear;
@@ -290,8 +331,10 @@ private:
 	//======================================================
 	// チュートリアル関係、エンドレスモード関係
 	//======================================================
+	float m_windowOpenTimer = 0;							//ウィンドウの拡大する時間（変化する変数）
 	bool m_isTutorial = false;								//チュートリアルかどうか
 	TutorialState m_state_tutorial = TutorialState::None;	//無しにして置き、タイトルでチュートリアルが選択されたときに設定する
+	void ChangeTutorialState(ExplanationType type);
 
 	bool m_isEndless = false;								//エンドレスモードかどうか（プレイヤーが死ぬまで終わらない）
 
@@ -300,8 +343,21 @@ private:
 	float m_windowScale = 0.0f;
 	bool m_isOpen = false;
 	bool m_isClosing = false;
-	bool UpdateMessageWindow(float targetScale, const WCHAR* text, WindowMode mode);
+	bool UpdateMessageWindow(float targetScale, const WCHAR* text, WindowMode mode, ExplanationUIData* explanation);
 	
+	//説明の画像の管理
+	ExplanationUIData m_explanationUI[(int)(ExplanationType::MaxNum)];
+	int m_explanationPage = 0;	//説明のページ（切り替えよう）
+	void UpdateExplanationButtons(ExplanationType type);	//説明の画像の切り替え用のボタンの制御
+	void UpdateExplanation(ExplanationType type);			//チュートリアルの説明の制御
+
+	//説明の画像のアニメーション用
+	ExplanationSlideState m_explanationSlideState = ExplanationSlideState::None;
+	float m_explanationSlideTime = 0.0f;
+	void UpdateExplanationSlide(ExplanationType type);
+	int m_explanationSlidePage = 0;					//もともとのページ
+
+
 	// デバッグ
 	int m_leaderCount = 0;
 	int m_activeCount = 0;
@@ -322,7 +378,7 @@ private:
 	void InitializeFont();           // フォント
 	void InitializeSound();          // サウンド
 	void InitializeTutorial();       // チュートリアルに関する設定
-
+	void InitializeExplanationUI();  // ボタン、説明の画像 UI
 
 	// --- 内部処理関数 (executeの分割) ---
 	void UpdateIdel();

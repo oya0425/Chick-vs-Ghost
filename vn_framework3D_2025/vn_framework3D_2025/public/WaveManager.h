@@ -120,6 +120,8 @@ private:
     int m_spawnLimit;        // 同時出現上限
     int m_aliveCount;        // 現在生存数
     int m_configMaxSimultaneous = 1000;   //最初の敵の最大数
+    int m_configMaxSimultaneous_endless = 1200;   //最初の敵の最大数
+    int m_startEnemyNum_endless = 600;   //最初の敵の最大数
 
     int m_spawnLimit_tutorial = 100;
 
@@ -128,6 +130,8 @@ private:
 
     WaveState m_state;
     int m_maxWave = 5;
+
+    float m_endless_time = 0;
 
 
     //チュートリアル時のクリア条件に変更する

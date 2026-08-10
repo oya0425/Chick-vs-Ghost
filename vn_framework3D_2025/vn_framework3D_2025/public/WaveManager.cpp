@@ -66,6 +66,25 @@ void WaveManager::Update(float deltaTime)
         {
             m_state = WaveState::ClearWait;
         }
+
+        if (m_isEndless)
+        {
+            m_endless_time += deltaTime;
+            if (m_endless_time >= 10.0f)
+            {
+                m_endless_time -= 10.0f;
+
+                if (m_spawnLimit < m_configMaxSimultaneous_endless)
+                {
+                    m_spawnLimit += 50;
+                    
+                }
+                else
+                {
+                    m_spawnLimit = m_configMaxSimultaneous_endless;
+                }
+            }
+        }
     }
 }
 
@@ -165,9 +184,15 @@ void WaveManager::SetupWave()
     if (m_spawnLimit < 5)   // 下限を決める
         m_spawnLimit = 5;
 
+    //チュートリアル中は敵の数を大幅に減らす
     if (m_isTutorial)
     {
         m_spawnLimit = m_spawnLimit_tutorial;
+    }
+    //エンドレスモードでは少し敵の数を増やす
+    if (m_isEndless)
+    {
+        m_spawnLimit = m_startEnemyNum_endless;
     }
 
     //時間制限でWAVEクリアにする
