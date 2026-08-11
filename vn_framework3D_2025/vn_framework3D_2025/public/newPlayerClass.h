@@ -37,7 +37,9 @@ public:
 	bool requestDestroy = false;
 
 	void SetPlayerMove(bool canMove);
-	bool GetPlayerMove() { return m_isMove; }
+	bool GetPlayerMove() { return m_isMove; }			//操作可能か
+	bool GetIsPlayerMoving()const { return m_isMoving; }//動いてる最中か
+
 
 	float GetBaseMoveSpeed() { return m_baseMoveSpeed; }
 
@@ -177,7 +179,7 @@ private:
 	bool  m_isMove;//動けるかどうか（操作可能か？）
 	bool  m_isJump;//ジャンプできるかどうか
 
-	bool m_isMoving;	//移動中かどうか？
+	bool m_isMoving=false;	//移動中かどうか？
 
 	XMVECTOR respawnPos = XMVectorSet(0, 5, 0, 0);
 

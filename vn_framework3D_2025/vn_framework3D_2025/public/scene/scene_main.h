@@ -61,16 +61,30 @@ private:
 
 		ExplainSkills,         // 引き寄せ・範囲攻撃説明
 
+		ExplainPlayerOperation,//プレイヤーの基本操作説明
+
+		ExplainPlayerDamage,   //プレイヤーがダメージを受けたとき
 
 		Finish,
 	};
-
+	
 	//タイトルに戻るボタンを押したときに確認をするため
 	enum class ReturnTitleState
 	{
 		None,
 		Confirm
 	}m_returnTitleState = ReturnTitleState::None;
+
+	//チュートリアル振り返りボタン（ポーズ中に出す）
+	enum class TutorialReviewState
+	{
+		None,
+		Select,
+		Explanation,
+
+	};
+
+
 
 	struct UIColor
 	{
@@ -90,6 +104,18 @@ private:
 		MESSAGE_RIGHT,		//進む
 		MESSAGE_YES,		//はい
 		MESSAGE_NO,			//いいえ
+
+		//チュートリアル振り返り用
+		TUTORIAL_REVIEW,			//振り返り
+		TUTORIAL_BACK,				//振り返りボタンを押した後に戻るよう
+		TUTORIAL_ENEMY_LEADER,		//リーダーを倒したときに出てくる敵の説明
+		TUTORIAL_EXP,				//敵を倒したときに出てくる説明（経験値獲得）
+		TUTORIAL_LEVEL_UP,			//レベルアップ時に出てくる説明
+		TUTORIAL_SKILLS,			//スキルを獲得したときの説明
+		TUTORIAL_PLAYER_OPERATION,	//プレイヤーの基本操作説明
+		TUTORIAL_PLAYER_DAMAGE,		//プレイヤーがダメージを受けたときの説明
+
+
 		MaxNum				//最大数
 	};
 	//ボタンの情報
@@ -111,6 +137,13 @@ private:
 
 		SE_ID se_id = SE_ID::NONE;
 	};
+	//ボタンの初期化
+	void InitButton(
+		UIButton type,
+		float x, float y,
+		const wchar_t* text,
+		float fontOffsetX = 0.0f);
+
 	bool UpdateButton(UIButton id);
 
 	//説明ウィンドウ
@@ -121,15 +154,15 @@ private:
 		Close
 	} m_windowMode = WindowMode::None;
 
-
 	// --- 説明のUI構造体 ---
 	enum class ExplanationType
 	{
-		EnemyLeader,    //リーダーを倒したときに出てくる敵の説明
-		Exp,			//敵を倒したときに出てくる説明（経験値獲得）
-		LevelUp,		//レベルアップ時に出てくる
-		Skills,			//スキルを獲得したときの説明
-
+		EnemyLeader,		//リーダーを倒したときに出てくる敵の説明
+		Exp,				//敵を倒したときに出てくる説明（経験値獲得）
+		LevelUp,			//レベルアップ時に出てくる
+		Skills,				//スキルを獲得したときの説明
+		PlayerOperation,	//プレイヤーの基本操作説明
+		PlayerDamage,		//プレイヤーがダメージを受けたときの説明
 		MaxNum
 	};
 	struct ExplanationUIData
@@ -138,8 +171,8 @@ private:
 		float position_x = 0.0f;
 		float position_y = 0.0f;
 
-		float position_old_x = 0.0f;	//もとの位置を保存しておく
-		float position_old_y = 0.0f;
+		float position_new_x = 0.0f;	//もとの位置を保存しておく
+		float position_new_y = 0.0f;
 
 		bool visible = true;          //表示するか
 	
@@ -334,9 +367,16 @@ private:
 	float m_windowOpenTimer = 0;							//ウィンドウの拡大する時間（変化する変数）
 	bool m_isTutorial = false;								//チュートリアルかどうか
 	TutorialState m_state_tutorial = TutorialState::None;	//無しにして置き、タイトルでチュートリアルが選択されたときに設定する
-	void ChangeTutorialState(ExplanationType type);
+	void ChangeTutorialState(ExplanationType type, bool isReview);
+
+	//振り返りボタンを押した後のボタンの表示非表示
+	void SetTutorialReviewButtonVisible(bool visible);
 
 	bool m_isEndless = false;								//エンドレスモードかどうか（プレイヤーが死ぬまで終わらない）
+
+	//チュートリアル振り返りボタン処理用
+	TutorialReviewState m_tutorialReviewState = TutorialReviewState::None;
+
 
 	//表示するウィンドウ（説明）
 	vnSprite* m_messageBackground;					//説明の画像の後ろの背景
@@ -344,7 +384,8 @@ private:
 	bool m_isOpen = false;
 	bool m_isClosing = false;
 	bool UpdateMessageWindow(float targetScale, const WCHAR* text, WindowMode mode, ExplanationUIData* explanation);
-	
+
+
 	//説明の画像の管理
 	ExplanationUIData m_explanationUI[(int)(ExplanationType::MaxNum)];
 	int m_explanationPage = 0;	//説明のページ（切り替えよう）

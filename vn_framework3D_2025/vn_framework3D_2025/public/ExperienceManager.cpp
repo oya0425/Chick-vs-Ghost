@@ -210,7 +210,7 @@ void ExperienceManager::ApplyUpgrade(int choiceIndex,bool isTurorial)
 	//チュートリアルの時は１回選択すると最大にして選択できないようにする
 	if (isTurorial)
 	{
-		m_upgradeMaster[(int)selectedType].currentLv += 50;
+		m_upgradeMaster[(int)selectedType].currentLv += 48;
 		if (m_upgradeMaster[(int)selectedType].currentLv >= m_upgradeMaster[(int)selectedType].maxLv)
 		{
 			m_upgradeMaster[(int)selectedType].currentLv = m_upgradeMaster[(int)selectedType].maxLv;

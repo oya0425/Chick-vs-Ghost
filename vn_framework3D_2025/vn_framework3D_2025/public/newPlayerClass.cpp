@@ -21,8 +21,8 @@ namespace
 NewPlayerClass::NewPlayerClass()
 	:CharacterBase(),
 	m_isMove(true),
-	m_isJump(true),
-	m_isMoving(true),
+	m_isJump(false),
+	m_isMoving(false),
 	m_boostSpeedMultiplier(1.0f)
 {
 	m_boostTime = 0.0f;

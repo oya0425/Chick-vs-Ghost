@@ -257,25 +257,25 @@ bool UpgradeSelectionUI::IsClosingFinished()
 
 void UpgradeSelectionUI::ResetPhase()
 {
-	// 1. フェーズを最初のロゴ表示（拡大演出）に戻す
+	// フェーズを最初のロゴ表示（拡大演出）に戻す
 	m_uiPhase = UIPhase::LogoFadeIn;
 
-	// 2. ロゴのスケールを 0 に戻して、次回また中央から広がるようにする
+	// ロゴのスケールを 0 に戻して、次回また中央から広がるようにする
 	m_logoScale = 0.0f;
 
-	// 3. もしロゴ表示にタイマーも併用している場合はリセット（使っていなければ不要）
+	// もしロゴ表示にタイマーも併用している場合はリセット（使っていなければ不要）
 	m_logoTimer = 0.0f;
 
-	// 4. 「強化する項目〜」の見出しテキストの座標も、画面外（上空）の初期位置に戻す
+	// 「強化する項目〜」の見出しテキストの座標も、画面外（上空）の初期位置に戻す
 	m_headerY = -100.0f;
 	m_headerTargetY = 150.0f;
 
-	// 5. フラグ類のリセット（UIが閉じている状態から、再度アニメーションを動かす状態へ）
+	// フラグ類のリセット（UIが閉じている状態から、再度アニメーションを動かす状態へ）
 	m_isClosingUI = false;
 	m_isAnimLvFinish = false;
 	m_isAnimation = true; // UIのUpdateを再度動かすために true にする
 
-	// 6. 3つの選択肢（スロット）の描画フラグをONに戻す
+	// 3つの選択肢（スロット）の描画フラグをONに戻す
 	// (前回のClosingフェーズで false にされたものを復活させます)
 	for (auto& slot : m_displaySlots)
 	{
