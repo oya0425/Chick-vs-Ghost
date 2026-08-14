@@ -42,8 +42,8 @@ public:
 	//？マークと吹き出しの表示
 	struct UIQuestionExplain
 	{
-		vnSprite* pQuestionIcon;  // ？マークの画像
-		vnSprite* pBalloonBg;     // 吹き出しの背景画像
+		vnSprite* pQuestionIcon = nullptr;  // ？マークの画像
+		vnSprite* pBalloonBg = nullptr;     // 吹き出しの背景画像
 
 		// 表示するテキスト情報
 		const WCHAR* explainText; // 表示したい説明文（L"：特攻確率に加算" など）
@@ -171,6 +171,9 @@ public:
 	//soundmanagerセット
 	void SetSoundManager(SoundManager* soundManager) { m_soundManager = soundManager; }
 
+	//敵の群れ情報の全初期化（チュートリアル終了時に呼ぶ）
+	void AllDataReset();
+
 private:
 	EnemyPool();
 	std::vector<NewEnemyClass*> _enemies;
@@ -206,18 +209,18 @@ private:
 
 
 	//ボタンの画像
-	vnSprite* m_ImageTab;
-	vnSprite* m_ImageA;
-	vnSprite* m_ImageD;
+	vnSprite* m_ImageTab=nullptr;
+	vnSprite* m_ImageA	=nullptr;
+	vnSprite* m_ImageD	=nullptr;
 
 	//スラッシュの画像
-	vnSprite* m_ImageSlash;
+	vnSprite* m_ImageSlash = nullptr;
 
 	//お化けの画像
-	vnSprite* m_ImageGhost;
+	vnSprite* m_ImageGhost = nullptr;
 
 	//メッセージの設定の黒い背景
-	vnSprite* m_UIBackGroundBlack;
+	vnSprite* m_UIBackGroundBlack = nullptr;
 
 	//？マークと吹き出し
 	UIQuestionExplain m_meleeQus;

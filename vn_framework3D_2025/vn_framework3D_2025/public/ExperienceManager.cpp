@@ -61,6 +61,11 @@ ExperienceManager::ExperienceManager()
 
 void ExperienceManager::AllLevelReset()
 {
+	m_currentLevel = 1;
+	m_currentExp = 0;
+	m_neededExp = 60.0f;
+	m_maxLevel = 999;
+
 	for (int i = 0; i < (int)UpgradeType::MaxCount; i++)
 	{
 		//移動速度アップのみLv１スタート

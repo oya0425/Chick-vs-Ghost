@@ -60,7 +60,7 @@ float CharacterBase::GetCurrentHp() const
     return m_currentHP;
 }
 
-void CharacterBase::AddHP(float value)
+void CharacterBase::AddHP(float value,bool isTutorial)
 {
     m_currentHP += value;
 
@@ -68,12 +68,16 @@ void CharacterBase::AddHP(float value)
         m_currentHP = m_maxHP;
     if (m_currentHP < 0)
         m_currentHP = 0;
+    if (isTutorial && m_currentHP <= 0.0f)
+    {
+        m_currentHP = 1.0f;
+    }
 }
 
-void CharacterBase::Damage(float value)
+void CharacterBase::Damage(float value,bool isTutoral)
 {
     //if (value > 0)
-        AddHP(-value);
+        AddHP(-value, isTutoral);
 }
 
 bool CharacterBase::IsDead() const

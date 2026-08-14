@@ -44,13 +44,17 @@ namespace {
 	constexpr float message_no_button_x = 450.0f;
 	constexpr float message_no_button_y = 600.0f;
 
+	//ゲームに戻るボタン
+	constexpr float playgame_back_button_x = 1150.0f;
+	constexpr float playgame_back_button_y = 450.0f;
+
 	//チュートリアル振り返りボタン
 	constexpr float tutorial_review_button_x = 1150.0f;
-	constexpr float tutorial_review_button_y = 500.0f;
+	constexpr float tutorial_review_button_y = 550.0f;
 
 	//振り返りボタンを押した後に出る戻るボタン
 	constexpr float tutorial_back_button_x = 1150.0f;
-	constexpr float tutorial_back_button_y = 500.0f;
+	constexpr float tutorial_back_button_y = 550.0f;
 
 	//敵の説明ボタン
 	constexpr float tutorial_enemy_leader_button_x = 400.0f;
@@ -435,6 +439,8 @@ EnemyPool::UIQuestionExplain SceneMain::CreateQuestionUI(const WCHAR* text, DWOR
 bool SceneMain::initialize()
 {
 	srand((unsigned int)time(nullptr));
+	// --- ウェーブマネージャー ---
+	waveManager = new WaveManager();
 
 	InitializeVariables();
 	InitializePlayer();
@@ -442,6 +448,7 @@ bool SceneMain::initialize()
 	InitializeField();
 	InitializeEffects();
 	InitializeUI();
+	InitializeMissionUI();
 	InitializePauseUI();
 	InitializeUpgradeUI();
 	InitializeExplanationUI();
@@ -483,6 +490,7 @@ void SceneMain::InitializeVariables()
 	isWaveClear = false;
 
 	oldWaveCount = 1;
+	m_comboCount = 0;
 	m_comboScale = 1.0f;
 	m_killCounter = 0;
 
@@ -494,8 +502,6 @@ void SceneMain::InitializeVariables()
 
 	FenceRadius = defalutFenceRadius;
 
-	// --- ウェーブマネージャー ---
-	waveManager = new WaveManager();
 
 }
 
@@ -926,6 +932,21 @@ void SceneMain::InitializeUI()
 
 }
 
+//ミッションのUIの初期化
+void SceneMain::InitializeMissionUI()
+{
+	AddMissionImage();
+	// ミッション内容のテキストを入れる
+	m_missionUI[(int)TutorialMission::StartMessage].text = L"敵を１体倒そう！";
+	m_missionUI[(int)TutorialMission::WaitSkill_Area].text = L"範囲攻撃を使おう！";
+	m_missionUI[(int)TutorialMission::WaitSkill_Pull].text = L"引き寄せ攻撃を使おう！";
+	m_missionUI[(int)TutorialMission::WaitLevelUp].text = L"レベルアップしよう！";
+	m_missionUI[(int)TutorialMission::WaitEnemyRange].text = L"敵を特攻状態にしよう！";
+	m_missionUI[(int)TutorialMission::WaitEnemyCount].text = L"敵を合計200体倒そう！";
+
+
+}
+
 //ポーズ中に出るUI
 void SceneMain::InitializePauseUI()
 {
@@ -1044,20 +1065,27 @@ void SceneMain::InitializeExplanationUI()
 	//=================================================================
 	// --- チュートリアル中に出てくる説明の画像 ---
 	//=================================================================
-	float offset_UI_size = 0.7f;
-	m_explanationUI[(int)ExplanationType::Exp].images.push_back(
-		new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth * offset_UI_size, screenHeight* offset_UI_size,
-			L"data/image/Rule1.png"));
-	m_explanationUI[(int)ExplanationType::Exp].images.push_back(
-		new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth* offset_UI_size, screenHeight * offset_UI_size,
-			L"data/image/Rule2.png"));
-	m_explanationUI[(int)ExplanationType::Exp].images.push_back(
-		new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth * offset_UI_size, screenHeight * offset_UI_size,
-			L"data/image/Rule3.png"));
+	//EnemyLeader,		//リーダーを倒したときに出てくる敵の説明
+	//Exp,				//敵を倒したときに出てくる説明（経験値獲得）
+	//LevelUp,			//レベルアップ時に出てくる
+	//Skills,			//スキルを獲得したときの説明
+	//PlayerOperation,	//プレイヤーの基本操作説明
+	//PlayerDamage,		//プレイヤーがダメージを受けたときの説明
 
+	AddExplanationImage(ExplanationType::EnemyLeader, L"data/image/tutorial_ExplainEnemyLeader.png");
+	AddExplanationImage(ExplanationType::EnemyLeader, L"data/image/tutorial_ExplainEnemyLeader2.png");
 
+	AddExplanationImage(ExplanationType::Exp, L"data/image/tutorial_ExplainExp.png");
+	
+	AddExplanationImage(ExplanationType::LevelUp, L"data/image/tutorial_ExplainLevelUp.png");
+	AddExplanationImage(ExplanationType::LevelUp, L"data/image/tutorial_ExplainLevelUp2.png");
 
+	AddExplanationImage(ExplanationType::Skills, L"data/image/tutorial_ExplainSkills.png");
 
+	AddExplanationImage(ExplanationType::PlayerOperation, L"data/image/tutorial_ExplainPlayerOperation.png");
+	AddExplanationImage(ExplanationType::PlayerOperation, L"data/image/tutorial_ExplainPlayerOperation2.png");
+
+	AddExplanationImage(ExplanationType::PlayerDamage, L"data/image/tutorial_ExplainPlayerDamage.png");
 
 	//設定した説明画像をまとめて登録
 	for (int i = 0; i < (int)ExplanationType::MaxNum; i++)
@@ -1077,70 +1105,81 @@ void SceneMain::InitializeExplanationUI()
 	// --- ボタン設定（タイトルに戻るボタンなど）
 	//===============================================================
 	//基本ボタン
+	float threeLetters = -15.0f;
 	{
+		//３文字のもののフォント位置の調整
+
 		//タイトルに戻るボタン
 		InitButton(UIButton::TITLEBACK,
-			titleBack_button_x, titleBack_button_y, L"Title", 20.0f);
+			titleBack_button_x, titleBack_button_y, L"タイトル");
 		//閉じるボタン
 		InitButton(UIButton::MESSAGE_CLOSE,
-			message_close_button_x, message_close_button_y, L"Close", 20.0f);
+			message_close_button_x, message_close_button_y, L"閉じる", threeLetters);
 		//戻るボタン
 		InitButton(UIButton::MESSAGE_LEFT,
-			message_left_button_x, message_left_button_y, L"Back");
+			message_left_button_x, message_left_button_y, L"戻る", -10.0f);
 		//進むボタン
 		InitButton(UIButton::MESSAGE_RIGHT,
-			message_right_button_x, message_right_button_y, L"Next");
+			message_right_button_x, message_right_button_y, L"次へ", -10.0f);
 		//はいボタン
 		InitButton(UIButton::MESSAGE_YES,
-			message_yes_button_x, message_yes_button_y, L"Yes");
+			message_yes_button_x, message_yes_button_y, L"はい" ,- 10.0f);
 		//いいえボタン
 		InitButton(UIButton::MESSAGE_NO,
-			message_no_button_x, message_no_button_y, L"No");
+			message_no_button_x, message_no_button_y, L"いいえ", threeLetters);
+		//ポーズ中のゲームに戻るボタン
+		InitButton(UIButton::PLAYGAME_BACK,
+			playgame_back_button_x, playgame_back_button_y, L"ゲームへ");
+		//ポーズ中のゲームに戻るボタン
+		InitButton(UIButton::MESSAGE_GAMEPLAY,
+			playgame_back_button_x, playgame_back_button_y, L"本番へ");
 	}
 	//チュートリアル振り返りボタン
 	{
 		//チュートリアル振り返り
 		InitButton(UIButton::TUTORIAL_REVIEW,
-			tutorial_review_button_x, tutorial_review_button_y, L"Review");
+			tutorial_review_button_x, tutorial_review_button_y, L"振り返り");
 
 		//振り返りボタンを押した後に出る戻るボタン
 		InitButton(UIButton::TUTORIAL_BACK,
-			tutorial_back_button_x, tutorial_back_button_y, L"Back");
+			tutorial_back_button_x, tutorial_back_button_y, L"戻る",-10.0f);
 
 		//敵の説明
 		InitButton(UIButton::TUTORIAL_ENEMY_LEADER,
-			tutorial_enemy_leader_button_x, tutorial_enemy_leader_button_y, L"Enemy");
+			tutorial_enemy_leader_button_x, tutorial_enemy_leader_button_y, L"敵",-5.0f);
 
 		//経験値の説明
 		InitButton(UIButton::TUTORIAL_EXP,
-			tutorial_exp_button_x, tutorial_exp_button_y, L"Exp");
+			tutorial_exp_button_x, tutorial_exp_button_y, L"経験値", threeLetters);
 
 		//レベルアップの説明
 		InitButton(UIButton::TUTORIAL_LEVEL_UP,
-			tutorial_level_up_button_x, tutorial_level_up_button_y, L"Level Up");
+			tutorial_level_up_button_x, tutorial_level_up_button_y, L"レベルアップ",-30.0f);
 
 		//スキルの説明
 		InitButton(UIButton::TUTORIAL_SKILLS,
-			tutorial_skills_button_x, tutorial_skills_button_y, L"Skills");
+			tutorial_skills_button_x, tutorial_skills_button_y, L"スキル", threeLetters);
 
 		//プレイヤー操作の説明
 		InitButton(UIButton::TUTORIAL_PLAYER_OPERATION,
-			tutorial_player_operation_button_x, tutorial_player_operation_button_y, L"Operation");
+			tutorial_player_operation_button_x, tutorial_player_operation_button_y, L"基本説明");
 
 		//プレイヤーダメージの説明
 		InitButton(UIButton::TUTORIAL_PLAYER_DAMAGE,
-			tutorial_player_damage_button_x, tutorial_player_damage_button_y, L"Damage");
+			tutorial_player_damage_button_x, tutorial_player_damage_button_y, L"ダメージ");
 	}
 
 
 }
 
+//ボタンの初期化
 void SceneMain::InitButton(
 	UIButton type,
 	float x, float y,
 	const wchar_t* text,
 	float fontOffsetX)
 {
+
 	m_buttonData[(int)type].sprite =
 		new vnSprite(x, y, button_w, button_h, L"data/image/無題.png");
 
@@ -1154,6 +1193,71 @@ void SceneMain::InitButton(
 	m_buttonData[(int)type].se_id = SE_TITLE_CHANGEPAGE;
 	m_buttonData[(int)type].visible = false;
 }
+
+//チュートリアルの説明の画像の入れる
+void SceneMain::AddExplanationImage(
+	ExplanationType type,
+	const wchar_t* path)
+{
+	float screenWidth = vnMainFrame::screenWidth;
+	float screenHeight = vnMainFrame::screenHeight;
+
+	float offset_UI_size = 0.85f;
+
+	vnSprite* image = new vnSprite(
+		screenWidth / 2,
+		screenHeight / 2,
+		screenWidth * offset_UI_size,
+		screenHeight * offset_UI_size,
+		path);
+
+	image->setRenderEnable(false);
+
+	m_explanationUI[(int)type].images.push_back(image);
+
+
+}
+//チュートリアルのミッションUIの画像の入れる
+void SceneMain::AddMissionImage()
+{
+	//ミッションのUIは同じ画像を使う
+	float screenWidth = vnMainFrame::screenWidth;
+	float screenHeight = vnMainFrame::screenHeight;
+
+	float offset_UI_size = 0.85f;
+	float sizeY = 40;
+	float posX = 1080;
+	for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
+	{
+		// 背景＋フレーム
+		m_missionUI[i].sprite_back = new vnSprite(
+			posX,
+			30+(i* sizeY),
+			400,
+			sizeY,
+			L"data/image/mission_frame.png");
+
+		m_missionUI[i].sprite_back->setRenderEnable(false);
+		m_missionUI[i].sprite_back->setAlpha(0.6f);
+		registerObject(m_missionUI[i].sprite_back);
+
+		m_missionUI[i].position_x = posX;
+		m_missionUI[i].position_y = 30 + (i * sizeY);
+
+		// チェック画像
+		m_missionUI[i].sprite_check = new vnSprite(
+			m_missionUI[i].position_x-150,
+			m_missionUI[i].position_y,
+			sizeY,
+			sizeY,
+			L"data/image/mark_check.png");
+
+		m_missionUI[i].sprite_check->setRenderEnable(false);
+		m_missionUI[i].sprite_check->setAlpha(0.6f);
+		registerObject(m_missionUI[i].sprite_check);
+	}
+}
+
 
 
 //フォントの初期化
@@ -1192,7 +1296,7 @@ void SceneMain::InitializeTutorial()
 	}
 
 	// チュートリアル開始
-	m_state_tutorial = TutorialState::StartMessage;
+	m_state_tutorial = TutorialState::None;
 }
 
 
@@ -1434,6 +1538,21 @@ void SceneMain::terminate()
 		m_pUIBackGroundBlack[i] = nullptr;
 	}
 
+	//ミッションの画像
+	for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
+	{
+		if (m_missionUI[i].sprite_back != nullptr)
+		{
+			deleteObject(m_missionUI[i].sprite_back);
+			m_missionUI[i].sprite_back= nullptr;
+		}
+		if (m_missionUI[i].sprite_check!= nullptr)
+		{
+			deleteObject(m_missionUI[i].sprite_check);
+			m_missionUI[i].sprite_check=nullptr;
+		}
+	}
+
 	// --- ポーズ中に出る奴 ---
 	deleteObject(m_pUIBackGroundBlackPause);
 	m_pUIBackGroundBlackPause = nullptr;
@@ -1553,6 +1672,11 @@ void SceneMain::execute()
 		break;
 	case TimeStop:
 		break;
+	case Restart:
+		HandleBackgroundFade(false, backGroundBlackScale, blackBackSpeed);
+
+		break;
+
 	case GameFinish:
 		HandleBackgroundFade(true, backGroundBlackScale, blackBackSpeed/2);
 		break;
@@ -1645,48 +1769,31 @@ void SceneMain::execute()
 	}
 
 	//説明画像の表示非表示
-	for (int i = 0; i < (int)ExplanationType::MaxNum; i++)
+	//チュートリアル中の画像のみを表示
+	UpdateExplanationImages();
+
+	UpdateMission();
+
+	//ミッションUIの表示
+	//ゲームプレイ中且つチュートリアルの時のみ
+	if (m_gameState == GameState::Play&&m_isTutorial)
 	{
-		for (size_t j = 0; j < m_explanationUI[i].images.size(); j++)
+		for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
 		{
-			//説明のページのみを表示
-			bool isVisible = false;
-
-			// アニメーション中
-			if (m_explanationSlideState != ExplanationSlideState::None)
-			{
-				{
-					// 現在のページ
-					if (j == m_explanationSlidePage)
-					{
-						isVisible = true;
-					}
-
-					// 進むなら次のページも表示
-					if (m_explanationSlideState == ExplanationSlideState::SlideLeft &&
-						j == m_explanationSlidePage + 1)
-					{
-						isVisible = true;
-					}
-
-					// 戻るなら前のページも表示
-					if (m_explanationSlideState == ExplanationSlideState::SlideRight &&
-						j == m_explanationSlidePage - 1)
-					{
-						isVisible = true;
-					}
-				}
-			}
-			else
-			{
-				// 通常時は現在のページだけ
-				isVisible = m_explanationUI[i].visible &&
-					(j == m_explanationPage);
-			}
-			m_explanationUI[i].images[j]->setRenderEnable(isVisible);
+			//ミッションをクリアするまで表示する
+			m_missionUI[i].sprite_back->setRenderEnable(!m_missionUI[i].isClear);
+			m_missionUI[i].sprite_check->setRenderEnable(!m_missionUI[i].isClear);
 		}
 	}
-
+	else if(m_gameState!=GameState::Play)
+	{
+		for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
+		{
+			//プレイ中以外は表示しない
+			m_missionUI[i].sprite_back->setRenderEnable(false);
+			m_missionUI[i].sprite_check->setRenderEnable(false);
+		}
+	}
 
 	// --- WAVEの状態の切り替え(WAVEクリア→次のWAVEとか) ---
 	UpdateWaveTransition();
@@ -1774,7 +1881,7 @@ void SceneMain::render()
 
 		printShadow(opX, opY + 70, GAME_COLOR_WHITE, L"移動      : W, A, S, D");
 		printShadow(opX, opY + 120, GAME_COLOR_WHITE, L"ジャンプ    : MOUSE");
-		printShadow(opX, opY + 170, GAME_COLOR_WHITE, L"群れ情報確認: TAB");
+		printShadow(opX, opY + 170, GAME_COLOR_WHITE, L"ポーズ: TAB");
 
 
 		// --- 3. 右側：ルール説明 ---
@@ -1835,9 +1942,10 @@ void SceneMain::render()
 		//============================================================
 		// --- 倒した敵の合計 ---
 		//============================================================
-		vnFont::setFontSize(38, 30);
-		vnFont::print(1000 + off, 500 + off, shadowCol, L"撃破数：%d体", waveManager->GetTotalKillCount());
-		vnFont::print(1000, 500, GAME_COLOR_WHITE, L"撃破数：%d体", waveManager->GetTotalKillCount());
+		vnFont::setFontSize(38, 25);
+
+		vnFont::print(420 + off, 70 + off, shadowCol, L"撃破数：%d体", waveManager->GetTotalKillCount());
+		vnFont::print(420, 70, GAME_COLOR_YELLOW, L"撃破数：%d体", waveManager->GetTotalKillCount());
 
 		//vnFont::print(950.0f + off, 20.0f + off, shadowCol, L"TIME: %02d:%02d", minutes, seconds); // 影
 		//vnFont::print(950.0f, 20.0f, GAME_COLOR_GREEN, L"TIME: %02d:%02d", minutes, seconds); // 本体
@@ -1923,7 +2031,7 @@ void SceneMain::render()
 			pImageQ->setPos(baseX + 55.5f, baseY + 232.5f);
 			pImageQ->setColor(qPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
-			vnFont::print(baseX-25, baseY-35 , GAME_COLOR_YELLOW, L"群れ情報：");
+			vnFont::print(baseX-25, baseY-35 , GAME_COLOR_YELLOW, L"ポーズ：");
 			pImageTab->setPos(baseX +150, baseY -25);
 			pImageTab->setColor(tabPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
@@ -2081,6 +2189,39 @@ void SceneMain::render()
 		}
 
 
+		//============================================
+		//ミッションの文字の表示
+		if (m_isTutorial)
+		{
+			vnFont::setFontSize(38, 25);
+			float missionTextX = m_missionUI[0].position_x - 125;
+			for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
+			{
+				auto& mission = m_missionUI[i];
+				//クリアしていないもののみ表示する
+				if (mission.isClear)
+				{
+					continue;
+				}
+
+				//影
+				vnFont::print(
+					missionTextX + mission.font_pos_offset_x + off,
+					mission.position_y - 10 + off,
+					GAME_COLOR_WHITE,
+					mission.text);
+				//本体
+				vnFont::print(
+					missionTextX + mission.font_pos_offset_x,
+					mission.position_y - 10,
+					GAME_COLOR_BLACK,
+					mission.text);
+
+
+			}
+
+		}
+
 	}
 	break;
 
@@ -2165,38 +2306,7 @@ void SceneMain::render()
 
 	case Pause:
 	{
-
-		//if (m_returnTitleState == ReturnTitleState::None)
-		//{
-		//	vnFont::setFontSize(38, 20);
-		//	Common::ChangeButtonTextSize(
-		//		m_buttonData[(int)UIButton::TITLEBACK].position_x + 25,
-		//		m_buttonData[(int)UIButton::TITLEBACK].position_y,
-		//		m_buttonData[(int)UIButton::TITLEBACK].scale,
-		//		m_buttonData[(int)UIButton::TITLEBACK].isOn,
-		//		m_buttonData[(int)UIButton::TITLEBACK].text);
-		//}		
-		//if (m_returnTitleState == ReturnTitleState::Confirm)
-		//{
-		//	Common::ChangeButtonTextSize(
-		//		m_buttonData[(int)UIButton::MESSAGE_YES].position_x,
-		//		m_buttonData[(int)UIButton::MESSAGE_YES].position_y,
-		//		m_buttonData[(int)UIButton::MESSAGE_YES].scale,
-		//		m_buttonData[(int)UIButton::MESSAGE_YES].isOn,
-		//		m_buttonData[(int)UIButton::MESSAGE_YES].text);
-		//	Common::ChangeButtonTextSize(
-		//		m_buttonData[(int)UIButton::MESSAGE_NO].position_x,
-		//		m_buttonData[(int)UIButton::MESSAGE_NO].position_y,
-		//		m_buttonData[(int)UIButton::MESSAGE_NO].scale,
-		//		m_buttonData[(int)UIButton::MESSAGE_NO].isOn,
-		//		m_buttonData[(int)UIButton::MESSAGE_NO].text);
-
-		//}
-
-
 	}
-
-
 		break;
 	}
 
@@ -2271,7 +2381,56 @@ void SceneMain::HandleBackgroundFade(bool isFadeOut, float& scale, float speed =
 
 
 
+//==================================================
+// --- チュートリアルの画像の制御 ---
+//==================================================
+void SceneMain::UpdateExplanationImages()
+{
+	if (m_currentExplanationType == ExplanationType::None)
+	{
+		return;
+	}
 
+	auto& explanation =
+		m_explanationUI[(int)m_currentExplanationType];
+
+	for (size_t j = 0; j < explanation.images.size(); j++)
+	{
+		bool isVisible = false;
+
+		// アニメーション中
+		if (m_explanationSlideState != ExplanationSlideState::None)
+		{
+			// 現在のページ
+			if (j == m_explanationSlidePage)
+			{
+				isVisible = true;
+			}
+
+			// 進むなら次のページも表示
+			if (m_explanationSlideState == ExplanationSlideState::SlideLeft &&
+				j == m_explanationSlidePage + 1)
+			{
+				isVisible = true;
+			}
+
+			// 戻るなら前のページも表示
+			if (m_explanationSlideState == ExplanationSlideState::SlideRight &&
+				j == m_explanationSlidePage - 1)
+			{
+				isVisible = true;
+			}
+		}
+		else
+		{
+			// 通常時は現在のページだけ
+			isVisible = explanation.visible &&
+				j == m_explanationPage;
+		}
+
+		explanation.images[j]->setRenderEnable(isVisible);
+	}
+}
 
 
 //=====================================================================
@@ -2480,7 +2639,7 @@ void SceneMain::UpdateExplanation(ExplanationType type)
 	if (m_windowMode == WindowMode::Open)
 	{
 		if (UpdateMessageWindow(
-			0.8f,
+			0.9f,
 			L"",
 			WindowMode::Open,
 			&m_explanationUI[(int)type]))
@@ -2608,7 +2767,7 @@ void SceneMain::UpdateExplanationSlide(ExplanationType type)
 	//アニメーションの時間を足す
 	m_explanationSlideTime += vnScene::getDeltaTime();
 
-	float t = m_explanationSlideTime / 0.6f;
+	float t = m_explanationSlideTime / 0.5f;
 
 	if (t >= 1.0f)
 		t = 1.0f;
@@ -2708,6 +2867,10 @@ void SceneMain::UpdateExplanationSlide(ExplanationType type)
 //説明UIがある状態の変更
 void SceneMain::ChangeTutorialState(ExplanationType type, bool isReview)
 {
+	if (m_state_tutorial != TutorialState::None)
+	{
+		return;
+	}
 	//チュートリアルなら説明を出す
 	if ((m_isTutorial && !m_explanationUI[(int)type].isOne) || isReview)
 	{
@@ -2716,6 +2879,8 @@ void SceneMain::ChangeTutorialState(ExplanationType type, bool isReview)
 		//時間停止する
 		m_gameState = TimeStop;
 
+		// 現在表示する説明を保存
+		m_currentExplanationType = type;
 
 		switch (type)
 		{
@@ -2725,6 +2890,10 @@ void SceneMain::ChangeTutorialState(ExplanationType type, bool isReview)
 
 		case ExplanationType::Exp:
 			m_state_tutorial = TutorialState::ExplainExp;
+			for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
+			{
+				m_missionUI[i].isClear = true;
+			}
 			break;
 
 		case ExplanationType::LevelUp:
@@ -2765,6 +2934,47 @@ void SceneMain::SetTutorialReviewButtonVisible(bool visible)
 }
 
 
+
+//==========================================================================================
+// --- チュートリアルのミッションが全て達成出来たら「タイトルに戻る」か「ゲームに移動」---
+//==========================================================================================
+//全てのミッションをクリアしたかどうか
+bool SceneMain::IsAllMissionClear()
+{
+	for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
+	{
+		if (!m_missionUI[i].isClear)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+void SceneMain::UpdateMission()
+{
+	if (IsAllMissionClear())
+	{
+		// ボタン表示
+
+
+		if (vnKeyboard::trg(DIK_RETURN))
+		{
+			soundManager->StopBGM(BGM_GAME);
+
+			m_isTutorial = false;
+			CleanUpScene();
+			InitializeVariables();
+			m_pNewPlayer->Init();
+			enemyPool->AllDataReset();
+			SetExpbarRender(false);
+			setHPbarRender(false);
+		}
+
+
+	}
+
+}
 
 #pragma region UIの表示非表示
 
@@ -2855,11 +3065,16 @@ void SceneMain::UpdateIdel()
 		//pSound[2]->play();
 		soundManager->PlaySE(SE_ENTER);
 
+		//スキルレベルなどの初期化
+		m_pExpManager->AllLevelReset();
+
 		waveManager->Init(m_isTutorial, m_isEndless);   //ここでWave開始
 		m_pBlockManager->RespawnBlocks(waveManager->GetCurrentWave(), FenceRadius, waveManager->GetFinalWave());
 
 		//開始と同時にプレイヤーの基本操作のチュートリアルを出す
+		
 		{
+			//チュートリアルのみ通る
 			ChangeTutorialState(ExplanationType::PlayerOperation,false);
 		}
 
@@ -2887,12 +3102,19 @@ void SceneMain::StartCameraRote()
 // ---------------------------------------
 void SceneMain::UpdatePause()
 {
+	//ゲームに戻るボタン
+	auto& playBackButton = m_buttonData[(int)UIButton::PLAYGAME_BACK];
 
-	if (vnKeyboard::trg(DIK_TAB)&& m_returnTitleState == ReturnTitleState::None&&m_tutorialReviewState==TutorialReviewState::None)
+	if (m_returnTitleState == ReturnTitleState::None&&m_tutorialReviewState==TutorialReviewState::None)
 	{
-		m_gameState = GameState::Play;
+		playBackButton.visible = true;
+		if (vnKeyboard::trg(DIK_TAB) || UpdateButton(UIButton::PLAYGAME_BACK))
+		{
+			soundManager->PlaySE(playBackButton.se_id);
+			playBackButton.visible = false;
+			m_gameState = GameState::Play;		
 
-		
+		}
 	}
 
 	//基本の役割：群の情報を出す
@@ -2906,6 +3128,10 @@ void SceneMain::UpdatePause()
 		{
 			enemyPool->DebugPause();
 		}
+	}
+	else
+	{
+		playBackButton.visible = false;
 	}
 
 	//=================================
@@ -3027,16 +3253,11 @@ void SceneMain::UpdatePause()
 			{
 				soundManager->PlaySE(tutorialReviewButton.se_id);
 
-
+				
 				tutorialReviewButton.visible = false;
 
 				// 振り返り用のボタンを表示
-				enemyLeaderButton.visible = true;
-				expButton.visible = true;
-				levelUpButton.visible = true;
-				skillsButton.visible = true;
-				playerOperationButton.visible = true;
-				playerDamageButton.visible = true;
+				SetTutorialReviewButtonVisible(true);
 
 				//閉じるボタンも表示
 				backButton.visible = true;
@@ -3145,27 +3366,6 @@ void SceneMain::UpdateTutorial(float deltaTime)
 
 	}
 	break;
-
-	case TutorialState::StartMessage:
-	{
-
-	}
-	break;
-
-	case TutorialState::WaitSkillUse:
-	{
-
-	}
-	break;
-
-	case TutorialState::WaitSkillSelect:
-	{
-
-	}
-	break;
-
-
-
 
 	//===================================================
 	// --- 説明UIが出る ---
@@ -3360,7 +3560,7 @@ void SceneMain::UpdatePlayer(float deltaTime)
 			}
 
 			//pPlayerTest->addHP(totalRecovery);
-			m_pNewPlayer->AddHP(totalRecovery/2);
+			m_pNewPlayer->AddHP(totalRecovery/2,m_isTutorial);
 			m_killCounter = 0;
 		}
 	}
@@ -3542,15 +3742,15 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				//================================================
 				if (!enemy->GetIsLeader())
 				{
-					//リーダーでなければ経験値の説明を書く
-					ChangeTutorialState(ExplanationType::Exp,false);
+					if (m_state_tutorial == TutorialState::None)
+					{
+						ChangeTutorialState(ExplanationType::Exp, false);
+					}
 				}
 				else
 				{
-					//リーダーであれば特攻状態とパニックの説明を書く
-					ChangeTutorialState(ExplanationType::EnemyLeader,false);
+					ChangeTutorialState(ExplanationType::EnemyLeader, false);
 				}
-
 
 
 
@@ -3568,7 +3768,7 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				{
 					if (!m_pNewPlayer->IsAreaAttack())
 					{
-						m_pNewPlayer->Damage(defualtDamage);
+						m_pNewPlayer->Damage(defualtDamage,m_isTutorial);
 
 					}
 				}
@@ -3990,6 +4190,10 @@ void SceneMain::SetWAVETree()
 //==================================================
 void SceneMain::UpdateLevelUp()
 {
+	if (m_state_tutorial != TutorialState::None)
+	{
+		return;
+	}
 
 
 	//敵を全て消す
@@ -4003,8 +4207,6 @@ void SceneMain::UpdateLevelUp()
 	m_pUpgradeUI->UpdateUI();
 
 
-	//チュートリアルの説明を挟む
-	ChangeTutorialState(ExplanationType::LevelUp,false);
 
 
 	// --- 1. 入力判定（UIがまだ消えていない時だけ受け付ける） ---
@@ -4046,6 +4248,9 @@ void SceneMain::UpdateLevelUp()
 		}
 
 	}
+	//チュートリアルの説明を挟む
+	ChangeTutorialState(ExplanationType::LevelUp, false);
+
 
 	// --- 2. アニメーション終了待ち判定（入力とは独立させる） ---
 	// HideUIが呼ばれた後、アニメーションが終わったかどうかを毎フレームチェックする
@@ -4334,7 +4539,7 @@ void SceneMain::UpdateBlocksCollision()
 		// 通常の衝突、マグマ接触
 		if (block->GetIsMagma() && (isColliding || isNearMagma))
 		{
-			m_pNewPlayer->Damage(defualtDamage * 0.05f);
+			m_pNewPlayer->Damage(defualtDamage * 0.05f,m_isTutorial);
 			isTouchingMagma = true;
 		}
 	}

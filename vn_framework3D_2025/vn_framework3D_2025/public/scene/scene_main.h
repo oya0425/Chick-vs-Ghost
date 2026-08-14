@@ -34,6 +34,7 @@ private:
 		Opening,
 		IdelPlay,
 		Play,
+		Restart,	//チュートリアル後の本番用
 		LevelUp,
 		Pause,
 		BossPause,	//ボス戦のボス情報
@@ -48,9 +49,6 @@ private:
 	enum class TutorialState
 	{
 		None,
-		StartMessage,          // 最初の説明表示「敵にたいあたりしよう！」
-		WaitSkillUse,          // 両方1回ずつ使用
-		WaitSkillSelect,       // スキル選択待ち
 
 
 		//説明UIを出すチュートリアルが頭に「Explain」をつける
@@ -67,6 +65,31 @@ private:
 
 		Finish,
 	};
+	enum class TutorialMission
+	{
+		StartMessage,          //「敵にたいあたりしよう！」
+		WaitSkill_Area,		   //「範囲攻撃を使おう！」
+		WaitSkill_Pull,		   //「引き寄せ攻撃を使おう！」
+		WaitLevelUp,		   //「レベルアップしよう!」
+		WaitEnemyRange,		   //「敵を特攻状態にしよう!」
+		WaitEnemyCount,		   //「敵を合計200体倒そう！」
+		MaxNum,	
+	};
+	struct MissionUI
+	{
+		vnSprite* sprite_back;		//背景＋フレーム
+		vnSprite* sprite_check;		//クリアしたかどうかのチェックの画像
+		bool isClear = false;		//クリアしたか
+
+		float position_x = 0;		//座標
+		float position_y = 0;
+
+		float font_pos_offset_x = 0; //表示する文字の位置調整用
+
+		const WCHAR* text = L"";	//ミッションの内容テキスト
+
+	};
+
 	
 	//タイトルに戻るボタンを押したときに確認をするため
 	enum class ReturnTitleState
@@ -105,6 +128,10 @@ private:
 		MESSAGE_YES,		//はい
 		MESSAGE_NO,			//いいえ
 
+		PLAYGAME_BACK,		//ポーズ中に出るゲームに戻るボタン
+
+		MESSAGE_GAMEPLAY,	//ゲーム本番に進むボタン（全ミッションクリア後に出現）
+
 		//チュートリアル振り返り用
 		TUTORIAL_REVIEW,			//振り返り
 		TUTORIAL_BACK,				//振り返りボタンを押した後に戻るよう
@@ -142,9 +169,10 @@ private:
 		UIButton type,
 		float x, float y,
 		const wchar_t* text,
-		float fontOffsetX = 0.0f);
+		float fontOffsetX = -20.0f);
 
 	bool UpdateButton(UIButton id);
+
 
 	//説明ウィンドウ
 	enum class WindowMode
@@ -163,7 +191,8 @@ private:
 		Skills,				//スキルを獲得したときの説明
 		PlayerOperation,	//プレイヤーの基本操作説明
 		PlayerDamage,		//プレイヤーがダメージを受けたときの説明
-		MaxNum
+		MaxNum,
+		None,
 	};
 	struct ExplanationUIData
 	{
@@ -187,7 +216,10 @@ private:
 		SlideRight
 	};
 
-
+	//チュートリアルの説明画像を入れる関数
+	void AddExplanationImage(
+		ExplanationType type,
+		const wchar_t* path);
 
 
 
@@ -388,9 +420,14 @@ private:
 
 	//説明の画像の管理
 	ExplanationUIData m_explanationUI[(int)(ExplanationType::MaxNum)];
+	ExplanationType m_currentExplanationType = ExplanationType::None;
 	int m_explanationPage = 0;	//説明のページ（切り替えよう）
 	void UpdateExplanationButtons(ExplanationType type);	//説明の画像の切り替え用のボタンの制御
 	void UpdateExplanation(ExplanationType type);			//チュートリアルの説明の制御
+
+	void UpdateExplanationImages();							//表示関係
+	void AddMissionImage();
+
 
 	//説明の画像のアニメーション用
 	ExplanationSlideState m_explanationSlideState = ExplanationSlideState::None;
@@ -399,6 +436,14 @@ private:
 	int m_explanationSlidePage = 0;					//もともとのページ
 
 
+	//右のミッション表示(チュートリアルのみ)
+	MissionUI m_missionUI[(int)TutorialMission::MaxNum];		//ミッションのUIの構造体の配列（ミッションの数分）
+
+	bool isAllMissionClear = true;								//全ミッションをクリアしたかどうか
+	bool IsAllMissionClear();
+
+
+	//==========================================================================================================================
 	// デバッグ
 	int m_leaderCount = 0;
 	int m_activeCount = 0;
@@ -414,6 +459,7 @@ private:
 	void InitializeField();          // 地形・木・フェンス
 	void InitializeEffects();        // エフェクト
 	void InitializeUI();             // HP・Exp・スキルUI
+	void InitializeMissionUI();		 // ミッションのUI
 	void InitializePauseUI();        // ポーズ画面
 	void InitializeUpgradeUI();      // レベルアップUI
 	void InitializeFont();           // フォント
@@ -438,7 +484,7 @@ private:
 	void UpdateGlobalSystems(float deltaTime);	// フェンス・タイマー・カメラ
 
 	void UpdateTutorial(float deltaTime);		//チュートリアル
-
+	void UpdateMission();						//ミッション関係（全てのミッションをクリアしたらタイトルに戻るか、本番か選択）
 
 	// --- GameOver,Clear処理 ---
 	void UpdateGameOver();	

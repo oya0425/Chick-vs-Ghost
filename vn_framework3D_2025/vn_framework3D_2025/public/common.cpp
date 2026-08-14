@@ -347,7 +347,7 @@ void Common::ChangeButtonTextSize(
 
     int len = wcslen(text);
 
-    float currentFontSize = 45.0f * buttonScale;
+    float currentFontSize = 30.0f * buttonScale;
 
     vnFont::setTextFormat(
         vnFont::create(

@@ -39,9 +39,8 @@ public:
     void SetCurrentHP(float currentHP);
     float GetCurrentHp() const;
     float GetMaxHp() const;
-    void AddHP(float addhp);
-    void Damage(float value);
-
+    void AddHP(float addhp,bool isTutorial);
+    void Damage(float value, bool isTutorial);
     // --- ê∂éÄ ---
     bool IsDead()const;
 

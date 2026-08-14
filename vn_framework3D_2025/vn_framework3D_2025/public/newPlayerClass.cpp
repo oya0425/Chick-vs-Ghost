@@ -39,6 +39,36 @@ NewPlayerClass::NewPlayerClass()
 
 }
 
+//ステータス初期化
+void NewPlayerClass::Init()
+{
+	//スキル関係
+	//範囲攻撃
+	m_areaAtkCoolTimer = 0.0f;
+	m_areaUseCount = 0;
+	m_areaAttackState = eSkillState::READY;
+	m_isHaveAreaAtkSkill = false;
+	m_isExpanding = false;
+	m_currentRadius = 1.0f;
+	m_expandTimer = 0.0f;			// 拡大用タイマー
+	m_maxAttackRadius = 20.0f;		
+
+	// --- 引き寄せ攻撃 ---
+	m_pullState = eSkillState::READY;	//現在の状態
+	m_isHavePullSkill = false;				//スキル獲得済みか？
+	m_pullRadius = 20.0f;			    //引き寄せ範囲
+	m_pullTimer = 0.0f;				    //吸引時間の計測用
+	m_pullCooldownTimer = 0.0f;				    //クールタイムの計測用
+	
+	m_isLevelUp = false;	//レベルアップ中はスキルの時間を止める
+	GetModel()->setMotion(NULL);
+
+	GetModel()->setPosition(&respawnPos);
+	GetModel()->setRotationY(0);
+
+	SetCurrentHP(100);
+}
+
 //スキルのクールタイムのリセット
 void NewPlayerClass::ResetSkillCoolTime()
 {

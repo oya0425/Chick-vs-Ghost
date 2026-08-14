@@ -70,8 +70,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        //メインフレームの実行
-        vnMainFrame::execute();
+
+        // 自分のウィンドウがアクティブなときだけゲームを更新
+        if (GetForegroundWindow() == hWnd)
+        {
+            vnMainFrame::execute();
+        }
+        else
+        {
+            Sleep(10);
+        }
+        ////メインフレームの実行
+        //vnMainFrame::execute();
     }
 
 END:

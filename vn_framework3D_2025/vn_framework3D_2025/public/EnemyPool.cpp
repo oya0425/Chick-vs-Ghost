@@ -24,6 +24,21 @@ EnemyPool::~EnemyPool()
     //_enemies.clear();
 }
 
+//全ての耐性をリセット
+void EnemyPool::AllDataReset()
+{
+    for (size_t i = 0; i < m_groupDatas.size(); i++)
+    {
+        //近接、引き寄せ、範囲の耐性をリセット
+        m_groupDatas[i].get()->meleeFear = 0.0f;
+        m_groupDatas[i].get()->oldMeleeFear = 0.0f;
+        m_groupDatas[i].get()->pullResistance= 0.0f;
+        m_groupDatas[i].get()->oldPullResistance = 0.0f;
+        m_groupDatas[i].get()->rangeFear = 0.0f;
+        m_groupDatas[i].get()->oldRangeFear = 0.0f;
+    }
+}
+
 void EnemyPool::ReleaseQuestionUI(vnScene* scene)
 {
     if (!scene) return;

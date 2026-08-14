@@ -91,23 +91,10 @@ void SoundManager::PlayBGM(BGM_ID id)
 }
 void SoundManager::StopBGM(BGM_ID id)
 {
-	if (id == currentBGM)
+	if (currentBGM != -1 && pBGM[currentBGM])
 	{
-		return;
-	}
-	else
-	{
-		if (currentBGM != -1)
-		{
-			pBGM[currentBGM]->stop();
-
-		}
-	}
-
-	if (!pBGM[id]->isPlaying())
-	{
-		pBGM[id]->play(true);
-		currentBGM = id;
+		pBGM[currentBGM]->stop();
+		currentBGM = -1;
 	}
 
 

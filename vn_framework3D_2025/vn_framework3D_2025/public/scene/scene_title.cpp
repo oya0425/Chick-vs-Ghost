@@ -382,7 +382,10 @@ void SceneTitle::render()
             vnFont::print(250 + off, 200 + offsetY + off, shadowCol, L"『Chick vs Ghost』");
             vnFont::print(250, 200 + offsetY, GAME_COLOR_GOLD, L"『Chick vs Ghost』");
 
-            Common::ChangeButtonTextSize(ruleButton_x+5, ruleButton_y, ruleButtonScale, isOnRuleButton, L"RULES");
+
+            vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 40));
+
+            Common::ChangeButtonTextSize(ruleButton_x-15, ruleButton_y, ruleButtonScale, isOnRuleButton, L"ルール");
 
         }
 
@@ -393,45 +396,45 @@ void SceneTitle::render()
         if (!isStarting)
         {
             Common::ChangeButtonTextSize(
-                startButton_x, startButton_y,
+                startButton_x-15, startButton_y,
                 startButtonScale, isOnStartButton,
-                L"START");
+                L"スタート");
 
             Common::ChangeButtonTextSize(
-                tutorialStartButton_x + 15, tutorialStartButton_y,
+                tutorialStartButton_x-40, tutorialStartButton_y,
                 tutorialStartButtonScale, isOnTutorialStartButton,
-                L"TUTORIAL");
+                L"チュートリアル");
 
             Common::ChangeButtonTextSize(
-                endlessStartButton_x + 10, endlessStartButton_y,
+                endlessStartButton_x-25, endlessStartButton_y,
                 endlessStartButtonScale, isOnEndlessStartButton,
-                L"ENDLESS");
+                L"エンドレス");
         }
         else
         {
-            switch (startType)
-            {
-            case StartType::Normal:
-                Common::ChangeButtonTextSize(
-                    startButton_x, startButton_y,
-                    startButtonScale, isOnStartButton,
-                    L"START");
-                break;
+            //switch (startType)
+            //{
+            //case StartType::Normal:
+            //    Common::ChangeButtonTextSize(
+            //        startButton_x, startButton_y,
+            //        startButtonScale, isOnStartButton,
+            //        L"スタート");
+            //    break;
 
-            case StartType::Tutorial:
-                Common::ChangeButtonTextSize(
-                    tutorialStartButton_x + 15, tutorialStartButton_y,
-                    tutorialStartButtonScale, isOnTutorialStartButton,
-                    L"TUTORIAL");
-                break;
+            //case StartType::Tutorial:
+            //    Common::ChangeButtonTextSize(
+            //        tutorialStartButton_x, tutorialStartButton_y,
+            //        tutorialStartButtonScale, isOnTutorialStartButton,
+            //        L"チュートリアル");
+            //    break;
 
-            case StartType::Endless:
-                Common::ChangeButtonTextSize(
-                    endlessStartButton_x + 10, endlessStartButton_y,
-                    endlessStartButtonScale, isOnEndlessStartButton,
-                    L"ENDLESS");
-                break;
-            }
+            //case StartType::Endless:
+            //    Common::ChangeButtonTextSize(
+            //        endlessStartButton_x, endlessStartButton_y,
+            //        endlessStartButtonScale, isOnEndlessStartButton,
+            //        L"エンドレス");
+            //    break;
+            //}
         }
     }
        break;
@@ -529,7 +532,7 @@ void SceneTitle::OnStartButton(StartType type, float& buttonScale, vnSprite* pBu
     titleRotation += 10.0f;
 
     // スケールを指数関数的に増やす (1.1倍し続ける)
-    buttonScale *= 1.05f;
+    buttonScale *= 1.07f;
 
     // 適用
     pButton->setScale(buttonScale);
