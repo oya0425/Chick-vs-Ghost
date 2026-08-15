@@ -58,6 +58,9 @@ public:
 
 	bool AllIsMaxLv();
 
+	// --- レベルアップした回数 ---
+	int GetLevelUpCount()const { return m_currentLevel-1; }
+
 	// --- 項目のレベルを全てリセット ---
 	void AllLevelReset();
 

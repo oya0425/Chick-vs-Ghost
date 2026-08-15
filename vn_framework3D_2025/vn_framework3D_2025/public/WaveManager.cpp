@@ -120,6 +120,11 @@ void WaveManager::OnEnemyKilled()
     if (m_aliveCount < 0)
         m_aliveCount = 0;
 }
+void WaveManager::OnEnemyLeaderKilled()
+{
+    m_killedLeaderCount++;
+}
+
 
 //--------------------------------------------------------------
 // oŒ»’Ê’m

@@ -376,6 +376,7 @@ void NewPlayerClass::UpdateAreaAttackSkill(float deltaTime)
 		{
 			//”ÍˆÍUŒ‚Žž‚É‰¹‚ð–Â‚ç‚·
 			m_sound->PlaySE(SE_AREA_ATTACK);
+			m_areaUseCount++;
 
 			m_isExpanding = true;
 			m_expandTimer = 0.0f;
@@ -454,7 +455,7 @@ void NewPlayerClass::UpdatePullSkill(float deltaTime)
 		{
 			//ˆø‚«Šñ‚¹UŒ‚Žž‚É‰¹‚ð–Â‚ç‚·
 			m_sound->PlaySE(SE_PULL_ATTACK);
-
+			m_pullUseCount++;
 			m_pullState = eSkillState::ACTIVE;
 			m_pullTimer = m_pullDuration;
 

@@ -110,6 +110,9 @@ public:
 	void DrawGroupDebugArrow();
 	void ChangeDebugGroupIndex(int direction);	//•\¦‚·‚éŒQ‚ê‚ğ•ÏX
 	void DebugPause();
+	
+	int GetChargeCount();				//ŒQ‚ª“ÁUó‘Ô‚É‚È‚Á‚½‰ñ”
+
 
 	void ReStartEnemyGroupData();
 
@@ -191,6 +194,10 @@ private:
 	void ChangeDisplayMode(eDisplayMode nextMode);
 
 	int	m_debugGroupIndex = 0;//•\¦‚·‚é
+
+
+	//“ÁUó‘Ô‚É‚È‚Á‚½‰ñ”
+	int m_chargeCount = 0;
 
 
 	//‰¹

@@ -48,6 +48,10 @@ namespace {
 	constexpr float playgame_back_button_x = 1150.0f;
 	constexpr float playgame_back_button_y = 450.0f;
 
+	//ゲーム本番ボタン
+	constexpr float gamePlay_button_x = 1000.0f;
+	constexpr float gamePlay_button_y = 250.0f;
+
 	//チュートリアル振り返りボタン
 	constexpr float tutorial_review_button_x = 1150.0f;
 	constexpr float tutorial_review_button_y = 550.0f;
@@ -937,14 +941,31 @@ void SceneMain::InitializeMissionUI()
 {
 	AddMissionImage();
 	// ミッション内容のテキストを入れる
-	m_missionUI[(int)TutorialMission::StartMessage].text = L"敵を１体倒そう！";
-	m_missionUI[(int)TutorialMission::WaitSkill_Area].text = L"範囲攻撃を使おう！";
-	m_missionUI[(int)TutorialMission::WaitSkill_Pull].text = L"引き寄せ攻撃を使おう！";
-	m_missionUI[(int)TutorialMission::WaitLevelUp].text = L"レベルアップしよう！";
-	m_missionUI[(int)TutorialMission::WaitEnemyRange].text = L"敵を特攻状態にしよう！";
-	m_missionUI[(int)TutorialMission::WaitEnemyCount].text = L"敵を合計200体倒そう！";
+	m_missionUI[(int)TutorialMission::WaitEnemyLeaderKill].text = L"リーダーを１体倒そう";
+	m_missionUI[(int)TutorialMission::WaitSkill_Area].text = L"範囲攻撃を使おう";
+	m_missionUI[(int)TutorialMission::WaitSkill_Pull].text = L"引き寄せ攻撃を使おう";
+	m_missionUI[(int)TutorialMission::WaitLevelUp].text = L"レベルアップしよう";
+	m_missionUI[(int)TutorialMission::WaitEnemyRange].text = L"敵を特攻状態にしよう";
+	m_missionUI[(int)TutorialMission::WaitEnemyCount].text = L"敵を合計200体倒そう";
 
+	// ミッションの状況を設定
+	m_missionUI[(int)TutorialMission::WaitEnemyLeaderKill].current = 0;
+	m_missionUI[(int)TutorialMission::WaitEnemyLeaderKill].target = 1;
 
+	m_missionUI[(int)TutorialMission::WaitSkill_Area].current = 0;
+	m_missionUI[(int)TutorialMission::WaitSkill_Area].target = 1;
+
+	m_missionUI[(int)TutorialMission::WaitSkill_Pull].current = 0;
+	m_missionUI[(int)TutorialMission::WaitSkill_Pull].target = 1;
+
+	m_missionUI[(int)TutorialMission::WaitLevelUp].current = 0;
+	m_missionUI[(int)TutorialMission::WaitLevelUp].target = 1;
+
+	m_missionUI[(int)TutorialMission::WaitEnemyRange].current = 0;
+	m_missionUI[(int)TutorialMission::WaitEnemyRange].target = 1;
+
+	m_missionUI[(int)TutorialMission::WaitEnemyCount].current = 0;
+	m_missionUI[(int)TutorialMission::WaitEnemyCount].target = 200;
 }
 
 //ポーズ中に出るUI
@@ -1130,9 +1151,9 @@ void SceneMain::InitializeExplanationUI()
 		//ポーズ中のゲームに戻るボタン
 		InitButton(UIButton::PLAYGAME_BACK,
 			playgame_back_button_x, playgame_back_button_y, L"ゲームへ");
-		//ポーズ中のゲームに戻るボタン
+		//ミッション終了時のゲームに戻るボタン
 		InitButton(UIButton::MESSAGE_GAMEPLAY,
-			playgame_back_button_x, playgame_back_button_y, L"本番へ");
+			gamePlay_button_x, gamePlay_button_y, L"本番へ");
 	}
 	//チュートリアル振り返りボタン
 	{
@@ -1226,34 +1247,47 @@ void SceneMain::AddMissionImage()
 
 	float offset_UI_size = 0.85f;
 	float sizeY = 40;
-	float posX = 1080;
+	float posX = 1050;
 	for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
 	{
 		// 背景＋フレーム
 		m_missionUI[i].sprite_back = new vnSprite(
 			posX,
-			30+(i* sizeY),
-			400,
+			60+(i* sizeY),
+			450,
 			sizeY,
 			L"data/image/mission_frame.png");
 
 		m_missionUI[i].sprite_back->setRenderEnable(false);
-		m_missionUI[i].sprite_back->setAlpha(0.6f);
+		m_missionUI[i].sprite_back->setAlpha(0.7f);
 		registerObject(m_missionUI[i].sprite_back);
 
 		m_missionUI[i].position_x = posX;
-		m_missionUI[i].position_y = 30 + (i * sizeY);
+		m_missionUI[i].position_y = 60 + (i * sizeY);
+
+		// チェックボックス画像
+		m_missionUI[i].sprite_check_box = new vnSprite(
+			m_missionUI[i].position_x-175,
+			m_missionUI[i].position_y,
+			sizeY-10,
+			sizeY-10,
+			L"data/image/checkBox.png");
+
+		m_missionUI[i].sprite_check_box->setRenderEnable(false);
+		m_missionUI[i].sprite_check_box->setAlpha(0.7f);
+		registerObject(m_missionUI[i].sprite_check_box);
 
 		// チェック画像
 		m_missionUI[i].sprite_check = new vnSprite(
-			m_missionUI[i].position_x-150,
+			m_missionUI[i].position_x-175,
 			m_missionUI[i].position_y,
 			sizeY,
 			sizeY,
-			L"data/image/mark_check.png");
+			L"data/image/checkMark.png");
 
 		m_missionUI[i].sprite_check->setRenderEnable(false);
-		m_missionUI[i].sprite_check->setAlpha(0.6f);
+		m_missionUI[i].sprite_check->setAlpha(1.0f);
+		m_missionUI[i].sprite_check->setColor(V_GAME_COLOR_RED);
 		registerObject(m_missionUI[i].sprite_check);
 	}
 }
@@ -1546,6 +1580,11 @@ void SceneMain::terminate()
 			deleteObject(m_missionUI[i].sprite_back);
 			m_missionUI[i].sprite_back= nullptr;
 		}
+		if (m_missionUI[i].sprite_check_box!= nullptr)
+		{
+			deleteObject(m_missionUI[i].sprite_check_box);
+			m_missionUI[i].sprite_check_box =nullptr;
+		}
 		if (m_missionUI[i].sprite_check!= nullptr)
 		{
 			deleteObject(m_missionUI[i].sprite_check);
@@ -1772,7 +1811,6 @@ void SceneMain::execute()
 	//チュートリアル中の画像のみを表示
 	UpdateExplanationImages();
 
-	UpdateMission();
 
 	//ミッションUIの表示
 	//ゲームプレイ中且つチュートリアルの時のみ
@@ -1780,10 +1818,19 @@ void SceneMain::execute()
 	{
 		for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
 		{
-			//ミッションをクリアするまで表示する
-			m_missionUI[i].sprite_back->setRenderEnable(!m_missionUI[i].isClear);
-			m_missionUI[i].sprite_check->setRenderEnable(!m_missionUI[i].isClear);
+			//クリア演出が終わるまで表示する
+			m_missionUI[i].sprite_back->setRenderEnable(!m_missionUI[i].visible);
+			m_missionUI[i].sprite_check_box->setRenderEnable(!m_missionUI[i].visible);
+			m_missionUI[i].sprite_check->setRenderEnable(!m_missionUI[i].visible&&m_missionUI[i].isClear);
+
 		}
+
+		//全てのミッションをクリアしたら本番へボタンを表示
+		if (IsAllMissionClear())
+		{
+			m_buttonData[(int)UIButton::MESSAGE_GAMEPLAY].visible = true;
+		}
+
 	}
 	else if(m_gameState!=GameState::Play)
 	{
@@ -1791,8 +1838,11 @@ void SceneMain::execute()
 		{
 			//プレイ中以外は表示しない
 			m_missionUI[i].sprite_back->setRenderEnable(false);
+			m_missionUI[i].sprite_check_box->setRenderEnable(false);
 			m_missionUI[i].sprite_check->setRenderEnable(false);
 		}
+		m_buttonData[(int)UIButton::MESSAGE_GAMEPLAY].visible = false;
+
 	}
 
 	// --- WAVEの状態の切り替え(WAVEクリア→次のWAVEとか) ---
@@ -2193,31 +2243,81 @@ void SceneMain::render()
 		//ミッションの文字の表示
 		if (m_isTutorial)
 		{
-			vnFont::setFontSize(38, 25);
-			float missionTextX = m_missionUI[0].position_x - 125;
+			vnFont::setFontSize(38, 22);
+
 			for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
 			{
+				float missionTextX = m_missionUI[i].position_x - 150;
+				float missionProgressX = m_missionUI[i].position_x + 110;
+
 				auto& mission = m_missionUI[i];
 				//クリアしていないもののみ表示する
-				if (mission.isClear)
+				if (mission.visible)
 				{
 					continue;
 				}
 
+				//ミッション内容
 				//影
 				vnFont::print(
 					missionTextX + mission.font_pos_offset_x + off,
 					mission.position_y - 10 + off,
 					GAME_COLOR_WHITE,
-					mission.text);
+					mission.GetMissionText().c_str());
 				//本体
 				vnFont::print(
 					missionTextX + mission.font_pos_offset_x,
 					mission.position_y - 10,
 					GAME_COLOR_BLACK,
-					mission.text);
+					mission.GetMissionText().c_str());
 
 
+				//ミッションの進捗
+				//影
+				vnFont::print(
+					missionProgressX + mission.font_pos_offset_x + off,
+					mission.position_y - 10 + off,
+					GAME_COLOR_WHITE,
+					mission.GetMissionProgress().c_str());
+				//本体
+				vnFont::print(
+					missionProgressX + mission.font_pos_offset_x,
+					mission.position_y - 10,
+					GAME_COLOR_BLACK,
+					mission.GetMissionProgress().c_str());
+
+			}
+
+			//全てのミッションをクリア
+			if (IsAllMissionClear())
+			{
+				vnFont::setFontSize(38, 40);
+				vnFont::print(
+					800 + off,
+					100+ off,
+					GAME_COLOR_BLACK,
+					L"ミッションALL CLEAR");
+				//本体
+				vnFont::print(
+					800,
+					100,
+					GAME_COLOR_YELLOW,
+					L"ミッションALL CLEAR");
+			}
+			else
+			{
+				vnFont::setFontSize(38, 25);
+				vnFont::print(
+					850 + off,
+					15 + off,
+					GAME_COLOR_BLACK,
+					L"ミッション");
+				//本体
+				vnFont::print(
+					850,
+					15,
+					GAME_COLOR_YELLOW,
+					L"ミッション");
 			}
 
 		}
@@ -2390,7 +2490,6 @@ void SceneMain::UpdateExplanationImages()
 	{
 		return;
 	}
-
 	auto& explanation =
 		m_explanationUI[(int)m_currentExplanationType];
 
@@ -2713,7 +2812,7 @@ void SceneMain::UpdateExplanationButtons(ExplanationType type)
 	if (m_explanationSlideState == ExplanationSlideState::None)
 	{
 		// 進む
-		if (rightButton.visible && (UpdateButton(UIButton::MESSAGE_RIGHT) || vnKeyboard::trg(DIK_D)))
+		if (rightButton.visible && (UpdateButton(UIButton::MESSAGE_RIGHT) /*|| vnKeyboard::trg(DIK_D)*/))
 		{
 			soundManager->PlaySE(rightButton.se_id);
 
@@ -2726,7 +2825,7 @@ void SceneMain::UpdateExplanationButtons(ExplanationType type)
 		}
 
 		// 戻る
-		if (leftButton.visible && (UpdateButton(UIButton::MESSAGE_LEFT)||vnKeyboard::trg(DIK_A)))
+		if (leftButton.visible && (UpdateButton(UIButton::MESSAGE_LEFT)/*||vnKeyboard::trg(DIK_A)*/))
 		{
 			soundManager->PlaySE(leftButton.se_id);
 
@@ -2740,7 +2839,7 @@ void SceneMain::UpdateExplanationButtons(ExplanationType type)
 		}
 
 		// 閉じる
-		if (closeButton.visible && (UpdateButton(UIButton::MESSAGE_CLOSE) || vnKeyboard::trg(DIK_SPACE)))
+		if (closeButton.visible && (UpdateButton(UIButton::MESSAGE_CLOSE) /*|| vnKeyboard::trg(DIK_SPACE)*/))
 		{
 			soundManager->PlaySE(closeButton.se_id);
 
@@ -2779,8 +2878,13 @@ void SceneMain::UpdateExplanationSlide(ExplanationType type)
 
 	auto* currentImage = explanation.images[m_explanationSlidePage];
 	// 前の画像
-	auto* prevImage = explanation.images[m_explanationSlidePage - 1];
+	vnSprite* prevImage = nullptr;
 
+	if (m_explanationSlidePage > 0 &&
+		m_explanationSlidePage - 1 < explanation.images.size())
+	{
+		prevImage = explanation.images[m_explanationSlidePage - 1];
+	}
 	// 進む（今表示されてる画像は左に行く、表示したい画像は右（画面外）から左に来る）
 	if (m_explanationSlideState == ExplanationSlideState::SlideLeft)
 	{
@@ -2890,10 +2994,6 @@ void SceneMain::ChangeTutorialState(ExplanationType type, bool isReview)
 
 		case ExplanationType::Exp:
 			m_state_tutorial = TutorialState::ExplainExp;
-			for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
-			{
-				m_missionUI[i].isClear = true;
-			}
 			break;
 
 		case ExplanationType::LevelUp:
@@ -2951,13 +3051,61 @@ bool SceneMain::IsAllMissionClear()
 
 	return true;
 }
-void SceneMain::UpdateMission()
+void SceneMain::UpdateMission(float deltaTime)
 {
+	if (!m_isTutorial)return;
+	//ミッションの状況の更新
+	//WaitEnemyLeaderKill,	   //「リーダーを１体倒そう！」
+	//WaitSkill_Area,		   //「範囲攻撃を使おう！」
+	//WaitSkill_Pull,		   //「引き寄せ攻撃を使おう！」
+	//WaitLevelUp,			   //「レベルアップしよう!」
+	//WaitEnemyRange,		   //「敵を特攻状態にしよう!」
+	//WaitEnemyCount,		   //「敵を合計200体倒そう！」
+	m_missionUI[(int)TutorialMission::WaitEnemyLeaderKill].current = waveManager->GetKillLeaderCount();
+	m_missionUI[(int)TutorialMission::WaitSkill_Area].current = m_pNewPlayer->GetAreaAttackCount();
+	m_missionUI[(int)TutorialMission::WaitSkill_Pull].current = m_pNewPlayer->GetPullUseCount();
+	m_missionUI[(int)TutorialMission::WaitLevelUp].current = m_pExpManager->GetLevelUpCount();
+	m_missionUI[(int)TutorialMission::WaitEnemyRange].current = enemyPool->GetChargeCount();
+	m_missionUI[(int)TutorialMission::WaitEnemyCount].current = waveManager->GetKillCount();
+
+	//クリアしたミッションをアニメーションしてから消えるようにする
+	for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
+	{
+		auto& mission = m_missionUI[i];
+
+		if (!mission.isClear &&
+			mission.current >= mission.target)
+		{
+			//ミッションUIの初期化（アニメーション処理するための）
+			mission.isClear = true;
+			mission.animTimer = 0.0f;
+			mission.checkScale = 0.0f;
+			mission.oldPosition_x = mission.position_x;
+			mission.oldPosition_y = mission.position_y;
+			mission.sprite_check->setScale(0.0f);
+			mission.animState = MissionAnimState::CheckWait;
+		}
+	}
+	
+	UpdateMissionAnimation(deltaTime);
+
 	if (IsAllMissionClear())
 	{
-		// ボタン表示
 
+		if (UpdateButton(UIButton::MESSAGE_GAMEPLAY))
+		{
+			soundManager->StopBGM(BGM_GAME);
+			m_buttonData[(int)UIButton::MESSAGE_GAMEPLAY].visible = false;
 
+			m_isTutorial = false;
+			CleanUpScene();
+			InitializeVariables();
+			m_pNewPlayer->Init();
+			enemyPool->AllDataReset();
+			SetExpbarRender(false);
+			setHPbarRender(false);
+
+		}
 		if (vnKeyboard::trg(DIK_RETURN))
 		{
 			soundManager->StopBGM(BGM_GAME);
@@ -2975,6 +3123,149 @@ void SceneMain::UpdateMission()
 	}
 
 }
+//ミッションクリアしたときのアニメーション処理
+void SceneMain::UpdateMissionAnimation(float deltaTime)
+{
+	//少し待つ
+	// →チェックを拡大縮小する
+	// 　→UI全体を左に移動する
+	//   　→UI全体を右に移動し画面外に行く
+	//       →残ってるミッションUIを上に詰める
+	for (auto& mission : m_missionUI)
+	{
+		switch (mission.animState)
+		{
+		case MissionAnimState::CheckWait:
+		{
+			mission.animTimer += deltaTime;
+
+			// ほんの少し待つ
+			if (mission.animTimer >= 0.3f)
+			{
+				soundManager->PlaySE(SE_AREA_ATTACK);
+				mission.animTimer = 0.0f;
+
+				mission.animState = MissionAnimState::Check;
+			}
+
+			break;
+		}
+		case MissionAnimState::Check:
+
+		{
+			// チェックの画像を拡大して戻す
+			mission.checkScale +=
+				(1.5f - mission.checkScale) * 0.2f;
+
+			mission.sprite_check->setScale(mission.checkScale);
+
+			if (mission.checkScale >= 1.49f)
+			{
+				mission.checkScale = 1.2f;
+				mission.animTimer = 0.0f;
+				mission.sprite_check->setScale(mission.checkScale);
+
+
+				mission.animState = MissionAnimState::MoveLeft;
+			}
+
+			break;
+		}
+
+		case MissionAnimState::ClearText:
+			// CLEAR表示
+
+			break;
+
+		case MissionAnimState::MoveLeft:
+		{
+			//ミッションの１項目のUI全体を左に少し移動する
+			mission.animTimer += deltaTime;
+			float targetX = mission.oldPosition_x - 500.0f;
+
+			if (MoveMissionUI(mission, targetX, 0.2f))
+			{
+				mission.position_x = targetX;
+				mission.animState = MissionAnimState::MoveRight;
+			}
+
+
+			break;
+		}
+		case MissionAnimState::MoveRight:
+			// 右へ
+		{
+			// ミッションのUI全体を右へ移動
+			mission.animTimer += deltaTime;
+
+			float targetX = vnMainFrame::screenWidth + 300.0f;
+
+			if (MoveMissionUI(mission, targetX, 0.15f))
+			{
+				mission.position_x = targetX;
+				mission.visible = true;
+				mission.animState = MissionAnimState::Finished;
+			}
+
+			break;
+		}
+		}
+	}
+
+	// 残っているミッションを上に詰める
+	// 基準の高さ（ミッションの初期状態で一番上にあるやつ）
+	float targetY = m_missionUI[0].position_y;
+
+	for (auto& mission : m_missionUI)
+	{
+		if (mission.animState == MissionAnimState::Finished)
+			continue;
+
+		mission.position_y +=
+			(targetY - mission.position_y) * 0.2f;
+
+		mission.sprite_back->setPos(
+			mission.position_x,
+			mission.position_y);
+
+		mission.sprite_check_box->setPos(
+			mission.position_x - 175,
+			mission.position_y);
+
+		mission.sprite_check->setPos(
+			mission.position_x - 175,
+			mission.position_y);
+
+		targetY += 40.0f;
+	}
+
+
+}
+
+
+bool SceneMain::MoveMissionUI(
+	MissionUI& mission,
+	float targetX,
+	float speed)
+{
+	mission.position_x +=
+		(targetX - mission.position_x) * speed;
+
+	mission.sprite_back->setPos(
+		mission.position_x,
+		mission.position_y);
+
+	mission.sprite_check_box->setPos(
+		mission.position_x,
+		mission.position_y);
+
+	mission.sprite_check->setPos(
+		mission.position_x,
+		mission.position_y);
+
+	return fabs(mission.position_x - targetX) < 1.0f;
+}
+
 
 #pragma region UIの表示非表示
 
@@ -3447,6 +3738,9 @@ void SceneMain::UpdatePlay(float deltaTime)
 	// グローバルな更新（フェンスの拡大、カメラ追従、タイマー加算）
 	UpdateGlobalSystems(deltaTime);
 
+	//ミッション
+	UpdateMission(deltaTime);
+
 
 	// レベルアップチェック//毎フレーム呼ばれるのを防ぐ
 	if (m_pExpManager && m_pExpManager->GetLevelUpStock() > 0)
@@ -3749,6 +4043,7 @@ void SceneMain::UpdateEnemies(float deltaTime)
 				}
 				else
 				{
+					waveManager->OnEnemyLeaderKilled();
 					ChangeTutorialState(ExplanationType::EnemyLeader, false);
 				}
 

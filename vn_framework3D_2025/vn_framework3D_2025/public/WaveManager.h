@@ -27,6 +27,8 @@ public:
     void OnEnemyKilled();      // 撃破通知
     void OnEnemySpawned();     // 出現通知
 
+    void OnEnemyLeaderKilled();//リーダーの撃破通知
+
     bool IsWaveClear() const;
 
     bool CanSpawn() const;  //スポーンできるか?
@@ -39,6 +41,8 @@ public:
     int GetKillCount()const { return m_killedCount; };    //現在の撃破数
     int GetCurrentWave() const;                         //現在のWAVE数
     int GetKillTargetCount()const { return m_killTarget; }//必要撃破数
+
+    int GetKillLeaderCount()const { return m_killedLeaderCount; } //撃破したリーダーの数
 
     int GetTotalKillCount()const { return m_totalKillCount; }   //倒した敵の合計
 
@@ -103,6 +107,7 @@ private:
 
     int m_killTarget;        // 必要撃破数
     int m_killedCount;       // 現在撃破数
+    int m_killedLeaderCount=0; //リーダーの撃破数
 
     int m_totalKillCount;    // 全体の撃破数
 

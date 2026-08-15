@@ -67,7 +67,7 @@ private:
 	};
 	enum class TutorialMission
 	{
-		StartMessage,          //「敵にたいあたりしよう！」
+		WaitEnemyLeaderKill,   //「リーダーを１体倒そう！」
 		WaitSkill_Area,		   //「範囲攻撃を使おう！」
 		WaitSkill_Pull,		   //「引き寄せ攻撃を使おう！」
 		WaitLevelUp,		   //「レベルアップしよう!」
@@ -75,19 +75,55 @@ private:
 		WaitEnemyCount,		   //「敵を合計200体倒そう！」
 		MaxNum,	
 	};
+	//ミッションクリア時に起きるアニメーション用
+	enum class MissionAnimState
+	{
+		None,			// 通常
+		CheckWait,		// 少しタイムラグが起きるように
+		Check,			// チェック拡大
+		ClearText,		// CLEAR表示
+		MoveLeft,		// 左へ移動
+		MoveRight,		// 右へ消える
+		Finished		// 演出終了
+	};
 	struct MissionUI
 	{
 		vnSprite* sprite_back;		//背景＋フレーム
-		vnSprite* sprite_check;		//クリアしたかどうかのチェックの画像
+		vnSprite* sprite_check_box;		//クリアしたかどうかのチェックボックスの画像
+		vnSprite* sprite_check;		//チェック（クリアしたときに拡大して出す）
 		bool isClear = false;		//クリアしたか
+		bool visible = false;		//表示用
 
 		float position_x = 0;		//座標
 		float position_y = 0;
 
-		float font_pos_offset_x = 0; //表示する文字の位置調整用
+		float oldPosition_x = 0;
+		float oldPosition_y = 0;
 
-		const WCHAR* text = L"";	//ミッションの内容テキスト
+		float font_pos_offset_x = 0;	//表示する文字の位置調整用
 
+		const WCHAR* text = L"";		//ミッションの内容テキスト
+
+		int current = 0;			//現在の進行状況
+		int target = 1;				//達成に必要な数
+
+		//アニメーション
+		MissionAnimState animState = MissionAnimState::None;
+		float animTimer = 0.0f;
+
+		float checkScale = 1.0f;
+
+		//表示する文字
+		std::wstring GetMissionText() const
+		{
+			return std::wstring(text);
+		}
+		//表示する数値
+		std::wstring GetMissionProgress() const
+		{
+			return std::to_wstring(current) + L"/" +
+				std::to_wstring(target);
+		}
 	};
 
 	
@@ -428,6 +464,9 @@ private:
 	void UpdateExplanationImages();							//表示関係
 	void AddMissionImage();
 
+	void UpdateMissionAnimation(float deltaTime);			//ミッションUIのアニメーション処理
+	bool MoveMissionUI(MissionUI& mission,float targetX,float speed);//ミッションクリア時にUI全体を左右移動できる
+
 
 	//説明の画像のアニメーション用
 	ExplanationSlideState m_explanationSlideState = ExplanationSlideState::None;
@@ -484,7 +523,7 @@ private:
 	void UpdateGlobalSystems(float deltaTime);	// フェンス・タイマー・カメラ
 
 	void UpdateTutorial(float deltaTime);		//チュートリアル
-	void UpdateMission();						//ミッション関係（全てのミッションをクリアしたらタイトルに戻るか、本番か選択）
+	void UpdateMission(float deltaTime);		//ミッション関係（全てのミッションをクリアしたらタイトルに戻るか、本番か選択）
 
 	// --- GameOver,Clear処理 ---
 	void UpdateGameOver();	

@@ -15,6 +15,7 @@ EnemyPool::EnemyPool()
     m_groupDatas.reserve(100);
 
     m_isFinalWave = false;
+    m_chargeCount = 0;
 
     //_enemies.reserve(30);
 }
@@ -313,6 +314,8 @@ void EnemyPool::ShowHideUI(bool isShow)
 void EnemyPool::ReStartEnemyGroupData()
 {
     m_groupDatas.clear();
+    m_chargeCount = 0;
+
 }
 
 // --- 敵を追加 ---
@@ -351,6 +354,7 @@ void EnemyPool::Update(float deltaTime)
                 break;
 
             case NewEnemyClass::eGroupMode::Charge:
+                m_chargeCount++;
                 m_soundManager->PlaySE(SE_ENEMY_CHARGE);
                 break;
             }
@@ -673,6 +677,11 @@ NewEnemyClass::GroupData* EnemyPool::GetGroupData(int id)
     //見つからなかった場合
     return nullptr; 
 
+}
+
+int EnemyPool::GetChargeCount()
+{
+    return m_chargeCount;
 }
 
 //======================================
