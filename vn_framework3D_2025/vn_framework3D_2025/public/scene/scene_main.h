@@ -34,7 +34,7 @@ private:
 		Opening,
 		IdelPlay,
 		Play,
-		Restart,	//チュートリアル後の本番用
+		TutorialClear,	//チュートリアルクリア
 		LevelUp,
 		Pause,
 		BossPause,	//ボス戦のボス情報
@@ -42,6 +42,7 @@ private:
 		GameClear,
 		GameFinish,
 		TimeStop,
+
 	};
 
 	
@@ -91,7 +92,7 @@ private:
 		vnSprite* sprite_back;		//背景＋フレーム
 		vnSprite* sprite_check_box;		//クリアしたかどうかのチェックボックスの画像
 		vnSprite* sprite_check;		//チェック（クリアしたときに拡大して出す）
-		bool isClear = false;		//クリアしたか
+		bool isClear = true;		//クリアしたか
 		bool visible = false;		//表示用
 
 		float position_x = 0;		//座標
@@ -251,6 +252,37 @@ private:
 		SlideLeft,
 		SlideRight
 	};
+
+	//チュートリアルクリア時に出てくる文字・ウィンドウの制御
+	enum class TutorialClearState
+	{
+		None,
+		ScaleUp,    // 中央から拡大
+		MoveUp,     // 上へ移動
+		Float,      // 上下に浮遊
+		Confirm     // ウィンドウ表示
+	};
+	//チュートリアルクリア時のアニメーション処理用の構造体
+	struct TutorialClearUI
+	{
+		float position_x = 0.0f;
+		float position_y = 0.0f;
+
+		float oldPosition_x = 0;
+		float oldPosition_y = 0;
+
+		float textScale = 0.0f;    // 文字を拡大する用
+		float animTime = 0.0f;
+
+		const WCHAR* text = L"";	 //表示文字（「チュートリアルクリア」）
+
+		TutorialClearState state = TutorialClearState::None;
+		bool isOne = false;	//一度文字を表示したか
+		bool visible = false;
+
+		bool isPlay = true;    // 本番へ進むボタンを押したか
+	};
+	TutorialClearUI m_tutorialClearUI;
 
 	//チュートリアルの説明画像を入れる関数
 	void AddExplanationImage(
@@ -466,7 +498,7 @@ private:
 
 	void UpdateMissionAnimation(float deltaTime);			//ミッションUIのアニメーション処理
 	bool MoveMissionUI(MissionUI& mission,float targetX,float speed);//ミッションクリア時にUI全体を左右移動できる
-
+	void TutorialClearAnim(float deltaTime);				//チュートリアルクリアのアニメーション処理
 
 	//説明の画像のアニメーション用
 	ExplanationSlideState m_explanationSlideState = ExplanationSlideState::None;
