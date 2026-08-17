@@ -37,13 +37,13 @@ namespace
 
     // --- リーダー・群れ設定 ---
     constexpr float leaderScaleMultiplier   = 2.0f;     // リーダーの大きさの倍率
-    constexpr float leaderSpeedBoost        = 3.0f;     // リーダー専用速度
+    constexpr float leaderSpeedBoost        = 4.0f;     // リーダー専用速度
     constexpr float leaderSenseRadius       = 10.0f;    // プレイヤーを感知して逃げ始める距離
     constexpr float leaderStopRetreatRadius = 20.0f;    // プレイヤーから十分に離れて逃げやめる距離
     constexpr float leaderRepelRadius       = 50.0f;    // リーダー同士が重ならないように反発する距離（排他範囲）
 
     constexpr float followerStopDistBase    = 5.0f;    // リーダーに対して停止する基本距離
-    constexpr float followerSpeedBoost      = leaderSpeedBoost*0.8;    // 一般個体の速度倍率
+    constexpr float followerSpeedBoost      = leaderSpeedBoost*0.9;    // 一般個体の速度倍率
     constexpr float followerSearchRadius    = 100.0f;  // リーダーを探し出す索敵範囲
     constexpr int   stopDistRandomRange     = 50;      // 停止距離にバラつきを出すための乱数範囲（0～4.9f）
 
@@ -70,14 +70,14 @@ NewEnemyClass::~NewEnemyClass()
 
 }
 
-
-// static変数の実体化
+//======================================================================
+// --- static変数の実体化 (データの入力)---
+//======================================================================
 const NewEnemyClass::EnemyData NewEnemyClass::MasterTable[] = {
     { EnemyType::GHOST,    L"data/model/Ghost2/",       L"Ghost.bone",    1200/*150/*200*/, ghostSize, {ghostSize, ghostSize, ghostSize} },
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMon/", L"MushroomMon.bone", 0 , 1.5f, {1.0f, 1.0f,1.0f}},
     //{ EnemyType::MUSHROOM, L"data/model/MushroomMonster/", L"MushroomMonster.bone", 150 , 5.0f, {1.0f, 1.0f, 1.0f}},
 };
-
 
 std::vector<NewEnemyClass::GroupColorData> NewEnemyClass::m_availableColors;
 //色の配列の初期化
@@ -105,8 +105,10 @@ std::vector<NewEnemyClass::GroupColorData> NewEnemyClass::g_LeaderColorPalette =
     { 20, V_GAME_COLOR_WINE,      L"ワインレッド" } 
 };
 
-
-NewEnemyClass::GroupColorData NewEnemyClass::GetRandomGroupData()
+//======================================================================
+// --- ランダムな色を通ってくる ---
+//======================================================================
+NewEnemyClass::GroupColorData NewEnemyClass::GetRandomGroupDataColor()
 {
     //リストが空になったら補充
     if (m_availableColors.empty())
@@ -124,12 +126,14 @@ NewEnemyClass::GroupColorData NewEnemyClass::GetRandomGroupData()
     return res;
 }
 
-
-// データの個数を計算
+//======================================================================
+// --- データの個数を計算 --- 
+//======================================================================
 const int NewEnemyClass::MasterTableCount = sizeof(NewEnemyClass::MasterTable) / sizeof(NewEnemyClass::EnemyData);
 
-
+//======================================================================
 // --- 敵の種類によってクラスを返す ---
+//======================================================================
 NewEnemyClass* NewEnemyClass::CreateEnemyByType(EnemyType type)
 {
     switch (type) {
@@ -139,6 +143,10 @@ NewEnemyClass* NewEnemyClass::CreateEnemyByType(EnemyType type)
     }
 }
 
+
+//======================================================================
+// --- 座標をもとに出現 --- 
+//======================================================================
 void NewEnemyClass::Spawn(const XMVECTOR& pos)
 {
     //if (isActive)return;
@@ -196,49 +204,11 @@ void NewEnemyClass::Spawn(const XMVECTOR& pos)
 
 
 }
-void NewEnemyClass::Spawn(const XMVECTOR& pos,bool isFinal)
-{
-    //if (isActive)return;
-    GetModel()->setRenderEnable(true);
-    m_pMyLeader = nullptr;
-    for (int i = 0; i < GetModel()->getPartsNum(); i++)
-    {
-        GetModel()->getParts(i)->setRenderEnable(true);
-    }
-
-    GetModel()->setPosition(&pos);
-    GetModel()->setRotation(0, 0, 0);
-    m_kbData.active = false;
-    m_isActive = true;
-    auto& rb = GetRigidbody();
-    rb.SetVerticalVelocity(0.0f);
-    rb.SetIsGround(false);
-    rb.SetIsUseGravity(true);
-    m_isCharge = true;
-
-    if (isFinal)
-    {
-        m_state = eState::Charge;
-    }
-    else
-    {
-        m_state = eState::Idle; // 待機状態に戻す
-    }
 
 
-
-    // --- 調整用変数初期化(不具合防止用) ---
-    m_isPullChecked = false;    //引き寄せで全員が同じ判定にならないようにする
-
-    m_panicRecoveryStartTime = 0.5f;
-
-    SetMark(m_pChargeMark, false);
-    SetMark(m_pPanicMark, false);
-
-
-
-}
-
+//======================================================================
+// --- 消して初期化 ---
+//======================================================================
 void NewEnemyClass::DeSpawn()
 {
     m_isActive = false;
@@ -270,7 +240,10 @@ void NewEnemyClass::DeSpawn()
 
 }
 
-//頭の上にマークを表示する
+
+//======================================================================
+// --- 頭の上にマークを表示する ---
+//======================================================================
 void NewEnemyClass::SetMark(vnSprite* sprite, bool isVisible)
 {
     float x, y;
@@ -288,13 +261,19 @@ void NewEnemyClass::SetMark(vnSprite* sprite, bool isVisible)
     sprite->setRenderEnable(isVisible);
 }
 
+
+//======================================================================
+// --- 持ってるデータを消す ---
+//======================================================================
 void NewEnemyClass::ReStartEnemy()
 {
     m_pGroupData = nullptr;
 }
 
 
-
+//======================================================================
+// --- 更新 ---
+//======================================================================
 void NewEnemyClass::Update(float deltaTime)
 {
     if (!m_isActive) return;
@@ -303,8 +282,6 @@ void NewEnemyClass::Update(float deltaTime)
     XMVECTOR enemyPos = *GetModel()->getPosition();
     XMVECTOR toPlayer = *m_pPlayer->GetModel()->getPosition() - enemyPos; // 敵からプレイヤーへの方向
     float distance = XMVectorGetX(XMVector3Length(toPlayer));
-    // 【最適化！】ルート計算をしない「距離の2乗」を求める
-    //float distanceSq = XMVectorGetX(XMVector3LengthSq(toPlayer));
 
     EnemyPool::GetInstance().GetGroupData(GetGroupID());
 
@@ -329,9 +306,12 @@ void NewEnemyClass::Update(float deltaTime)
     //待機状態以外で出てくるのを防ぐ用
     m_panicRecoveryStartTime -= deltaTime;
 }
-//============================================================
-// 頭上にあるマークの表示切り替え
-//============================================================
+
+
+
+//======================================================================
+// --- 頭上にあるマークの表示切り替え ---
+//======================================================================
 void NewEnemyClass::UpdateMark()
 {
     switch (m_state)
@@ -354,7 +334,10 @@ void NewEnemyClass::UpdateMark()
     }
 }
 
-//状態の更新
+
+//======================================================================
+// --- 状態の更新 --- 
+//======================================================================
 void NewEnemyClass::UpdateState(
     float deltaTime,
     float distance,
@@ -406,7 +389,10 @@ void NewEnemyClass::UpdateState(
 
 }
 
-// プレイヤーと当たった時にノックバック状態にする
+
+//======================================================================
+// --- プレイヤーと当たった時にノックバック状態にする --- 
+//======================================================================
 void NewEnemyClass::UpdateHitPlayer()
 {
     // --- playerと当たった時
@@ -441,7 +427,9 @@ void NewEnemyClass::UpdateHitPlayer()
 }
 
 
-//物理更新
+//======================================================================
+// --- 物理更新 --- 
+//======================================================================
 void NewEnemyClass::UpdatePhysics(float deltaTime)
 {
     //障害物が目の前に来たらジャンプ
@@ -458,16 +446,19 @@ void NewEnemyClass::UpdatePhysics(float deltaTime)
     }
 }
 
+
+//======================================================================
+// --- 速度変化 ---
+//======================================================================
 void NewEnemyClass::ChangeSpeed(float speed)
 {
 
     m_waveBoostSpeedMultiplier = speedAdjustmentRate * speed;
 }
 
-// ---------------------------------------------------------------
-// 引き寄せ攻撃されたときの処理
-// ---------------------------------------------------------------
-
+//======================================================================
+// --- 引き寄せ攻撃されたときの処理 ---
+//======================================================================
 void NewEnemyClass::UpdateAttracted(float deltaTime, XMVECTOR toPlayer, float distance)
 {
 
@@ -482,10 +473,12 @@ void NewEnemyClass::UpdateAttracted(float deltaTime, XMVECTOR toPlayer, float di
     }
 
 }
-// ---------------------------------------------------------------------------------
-//   引き寄せ状態に入ったかどうか
-// ---------------------------------------------------------------------------------
 
+
+
+//======================================================================
+// --- 引き寄せ状態に入ったかどうか ---
+//======================================================================
 void NewEnemyClass::CheckPullTrigger(bool isPlayerPulling, float pullRadius, float distanceSq)
 {
     // 状態チェック：死亡、ノックバック、または既に引き寄せ中なら早期リターン
@@ -515,17 +508,17 @@ void NewEnemyClass::CheckPullTrigger(bool isPlayerPulling, float pullRadius, flo
         pData = m_pMyLeader->GetGroupData();
     }
 
-    // 2. データの存在チェックと確率判定
+    // データの存在チェックと確率判定
     if (pData)
     {
-        float resistance = pData->pullResistance;    //テスト用で0.8低いとほぼ誤差
+        float resistance = pData->pullResistance;   
         if (resistance > 0)
         {
             resistance += m_individualPullResist;
         }
         if (GetRandomFloat() < resistance)
         {
-            // 1. 前フレームから状態が変わった瞬間を検知（エッジトリガー）
+            // 前フレームから状態が変わった瞬間を検知（エッジトリガー）
 
             if (m_isPullChecked)
             {
@@ -553,24 +546,19 @@ void NewEnemyClass::CheckPullTrigger(bool isPlayerPulling, float pullRadius, flo
         m_pullAtkMessage.SetState(eShowUISelect::Text3);
     }
 
-    // 3. 判定失敗、またはデータなしの場合は引き寄せ状態へ
+    // 判定失敗、またはデータなしの場合は引き寄せ状態へ
     m_state = Attracted;
     m_pullAtkMessage.SetState(eShowUISelect::Text3);
 
 }
 
-// ---------------------------------------------------------------
 
 
 
 
-
-
-
-
-// --------------------------------------------------------
-//  ノックバック処理
-// --------------------------------------------------------
+//======================================================================
+// --- ノックバック処理 --- 
+//======================================================================
 void NewEnemyClass::StartKnockback(
     const XMVECTOR& dir,
     float dist,
@@ -595,7 +583,9 @@ void NewEnemyClass::StartKnockback(
     GetModel()->setScale(&m_defaultScale);
 }
 
-
+//======================================================================
+// --- ノックバック更新 ---
+//======================================================================
 void NewEnemyClass::UpdateKnockback(float deltaTime)
 {
     if (!m_kbData.active)
@@ -607,21 +597,20 @@ void NewEnemyClass::UpdateKnockback(float deltaTime)
     // --- 回転のバリエーション ---
     if (m_knockbackRotationPatternRnd < rotationThreshold1)
     {
-        // パターン1：横にきりもみ回転
+        // 横にきりもみ回転
         GetModel()->addRotationY(knockbackRotationY);
         //GetModel()->addRotationZ(knockbackRotationZ);
     }
     else if (m_knockbackRotationPatternRnd < rotationThreshold2)
     {
-        // パターン2：縦にバク転気味に回転
+        //縦にバク転気味に回転
         GetModel()->addRotationX(knockbackRotationX);
-        //GetModel()->addRotationY(knockbackRotationY);
     }
     else
     {
-        // パターン3：全軸でぐちゃぐちゃに回転（今の設定に近い）
-        //GetModel()->addRotationX(knockbackRotationX);
-        //GetModel()->addRotationY(knockbackRotationY);
+        // 全軸でぐちゃぐちゃに回転
+        GetModel()->addRotationX(knockbackRotationX);
+        GetModel()->addRotationY(knockbackRotationY);
         GetModel()->addRotationZ(knockbackRotationZ);
     }
 
@@ -681,10 +670,10 @@ void NewEnemyClass::UpdateKnockback(float deltaTime)
 
 }
 
-// ---------------------------------------------------------
 
-
-//InPlayerArea(a,b)a以内に入ったら逃走開始、bより遠くへ行ったら止まる
+//=============================================================================
+// --- InPlayerArea(a,b)a以内に入ったら逃走開始、bより遠くへ行ったら止まる ---
+//=============================================================================
 bool NewEnemyClass::InPlayerArea(float escapeStartDist,float escapeStopDist)//逃げ始める距離、やめる距離
 {
     if (!m_pPlayer || !GetModel()) return false;
@@ -696,7 +685,7 @@ bool NewEnemyClass::InPlayerArea(float escapeStartDist,float escapeStopDist)//�
         XMVectorGetX(XMVector3Length(diff));
     float distanceSq = XMVectorGetX(XMVector3LengthSq(diff));
 
-    //--１.逃走中
+    // 逃走中
     if (m_isEscaping)
     {
         float stopDistSq = escapeStopDist * escapeStopDist;
@@ -705,7 +694,7 @@ bool NewEnemyClass::InPlayerArea(float escapeStartDist,float escapeStopDist)//�
             m_isEscaping = false;
         }
     }
-    //--２.待機中
+    // 待機中
     else
     {
         float startDistSq = escapeStartDist * escapeStartDist;
@@ -720,7 +709,9 @@ bool NewEnemyClass::InPlayerArea(float escapeStartDist,float escapeStopDist)//�
 }
 
 
-// 回転・速度・移動
+//======================================================================
+// --- 回転・速度・移動 ---
+//======================================================================
 void NewEnemyClass::ApplyMovement(float deltaTime, const XMVECTOR moveDir)
 {
 
@@ -733,10 +724,10 @@ void NewEnemyClass::ApplyMovement(float deltaTime, const XMVECTOR moveDir)
     }
 
     // 速度計算
-    // 1. 基礎速度の計算（WAVE補正など）
+    // 基礎速度の計算（WAVE補正など）
     float finalSpeed = m_baseMoveSpeed * m_boostSpeedMultiplier * m_waveBoostSpeedMultiplier;
 
-    // 2. 所属グループの学習データ(Fear)を取得
+    // 所属グループの学習データ(Fear)を取得
     // リーダーなら自分、部下なら m_pMyLeader からデータを取る
     GroupData* data = GetIsLeader() ? GetGroupData() : (m_pMyLeader ? m_pMyLeader->GetGroupData() : nullptr);
 
@@ -745,13 +736,13 @@ void NewEnemyClass::ApplyMovement(float deltaTime, const XMVECTOR moveDir)
     //float meleeFear = data ? data->meleeFear : 0.0f;
     //float rangeFear = data ? data->rangeFear : 0.0f;
 
-    //// 3. 役割（リーダー/部下）に応じたベース倍率の決定
+    //// 役割（リーダー/部下）に応じたベース倍率の決定
     //float roleMultiplier = GetIsLeader() ? m_leaderSpeedMultiplier : m_otherSpeedMultiplier;
 
     //// 学習データ(近接への恐怖)をベース倍率に加算
     //roleMultiplier += meleeFear;
 
-    //// 4. 状況に応じた追加ブースト（パニック等）の計算
+    //// 状況に応じた追加ブースト（パニック等）の計算
     //float situationBoost = 1.0f;
     //if (data /*&& rangeFear > 0.0f && GetPlayer()->IsAreaAttack()*/)
     //{
@@ -776,7 +767,7 @@ void NewEnemyClass::ApplyMovement(float deltaTime, const XMVECTOR moveDir)
     //群のそれぞれに応じたベース倍率の決定
     float roleMultiplier = GetIsLeader() ? m_leaderSpeedMultiplier : m_otherSpeedMultiplier;
 
-    // 2. 範囲攻撃の学習データ（基礎速度アップ）をそのまま加算
+    // 範囲攻撃の学習データ（基礎速度アップ）をそのまま加算
     roleMultiplier += rangeFear;
 
     float chargeMultiplier = GetState() == eState::Charge ? chargeMultiplierOffset : 0;
@@ -785,15 +776,17 @@ void NewEnemyClass::ApplyMovement(float deltaTime, const XMVECTOR moveDir)
 #pragma endregion
 
 
-    // 5. 最終速度の適用
+    // 最終速度の適用
     finalSpeed *= (roleMultiplier);
-    //finalSpeed *= (roleMultiplier * situationBoost);
     //速度適応
     GetRigidbody().SetBaseVelocity(moveDir * finalSpeed);
 
 }
 
+
+//======================================================================
 // --- ジャンプ処理（移動中にブロックが目の前にある時に発動）---
+//======================================================================
 void NewEnemyClass::Jump()
 {
     // 壁に当たっている 且つ まだジャンプしていないなら
@@ -822,9 +815,9 @@ void NewEnemyClass::Jump()
     }
 }
 
-// ------------------------------------------------------
-//   プレイヤーの範囲攻撃の範囲外に出る(使用していない)
-// ------------------------------------------------------
+//======================================================================
+// --- プレイヤーの範囲攻撃の範囲外に出る(使用していない) ---
+//======================================================================
 void NewEnemyClass::EscapeAreaAttack()
 {
     if (!GetIsLeader()) return;
@@ -854,27 +847,18 @@ void NewEnemyClass::EscapeAreaAttack()
 
 
 
-// ------------------------------------------------------
-//  伸び縮みするアニメーション
-// ------------------------------------------------------
+//======================================================================
+// --- 伸び縮みするアニメーション ---
+//======================================================================
 void NewEnemyClass::UpdateSquashAndStretch(float deltaTime)
 {
     //時間を進める
-    //m_livingTime += deltaTime*2;
-    //if (m_state != eState::KnockBack)
-    //{
-    //    //sin(累計時間*速さ)*強さ
-    //    float wave = sinf(m_livingTime * m_animSpeed);
-
-    //    GetModel()->setScaleY(XMVectorGetY(m_defaultScale)+ (wave * m_animMagnitude));
-    //}
-
     m_livingTime += (deltaTime*0.8f);
     if (m_state != eState::KnockBack)
     {
         float wave = sinf(m_livingTime * m_animSpeed);
 
-        //伸縮の強さ（ここを大きくすればするほど、極端にビヨンビヨンします）
+        //伸縮の強さ
         float stretchAmount = m_animMagnitude * 3.0f;
 
         // デフォルトのスケールを取得
@@ -887,16 +871,17 @@ void NewEnemyClass::UpdateSquashAndStretch(float deltaTime)
         float newScaleX = defaultX - (wave * stretchAmount * 0.5f); // 横の縮み具合は少し抑えめに調整
         float newScaleZ = defaultZ - (wave * stretchAmount * 0.5f);
 
-        // モデルに反映（※もし setScale(x, y, z) のような一括設定関数があればそれを使うとスマートです）
+        // モデルに反映
         GetModel()->setScale(newScaleX, newScaleY, newScaleZ);
 
     }
 }
+//======================================================================
 
-// -------------------------------------------------------
+
+//======================================================================
 //  敵の設定
-// -------------------------------------------------------
-
+//======================================================================
 // --- リーダー設定 ---
 void NewEnemyClass::SettingLeader(GroupData* groupData)
 {
@@ -909,7 +894,7 @@ void NewEnemyClass::SettingLeader(GroupData* groupData)
     //最初の色を保存しておく
     m_defaultLeaderColor = GetModel()->GetAllPartsDiffuse();
 
-    // 10.0f 〜 11.0f の間で、0.01刻みの細かい個体差を出す場合
+    //アニメーションの速度少し違いをつける
     m_animSpeed = 10.0f + (rand() % 101) / 100.0f;
 
     //リーダー同士の距離設定
@@ -969,17 +954,6 @@ void NewEnemyClass::SettingOther()
 
 
     //個体ごとのばらつき距離
-    /*
-    1. rand() % 5 の場合
-    この書き方だと、得られる整数は 0, 1, 2, 3, 4 の 5種類だけ になります。
-    これをそのまま使ったり、あるいは 5 を足したりしても、
-    結果は 5.0, 6.0, 7.0, 8.0, 9.0 といった具合に、カチカチとした整数値しか出てきません。
-
-    2. rand() % 50 / 10.0f の場合
-    50 で割る余りを使うことで、内部的には 0, 1, 2, ... 49 という 50種類 の数値を持っています。
-    これを 10 で割ることで、以下のような「小数点第1位」までのバリエーションが生まれます。
-    0.1, 0.2, 0.3 ... 4.8, 4.9*/
-
     m_myStopDist = static_cast<float>(rand() % stopDistRandomRange) / 10;
 
     // --- 引き寄せ攻撃への抵抗値 ---
@@ -1018,7 +992,7 @@ void NewEnemyClass::SettingBoss(GroupData* groupData)
     m_leaderRetreatStopRadius = leaderStopRetreatRadius;
 
     //少し速度をあげる
-    m_leaderSpeedMultiplier = 5.0f;
+    m_leaderSpeedMultiplier = 1.0f;
     m_defalutLeaderSpeedMultiplier = m_leaderSpeedMultiplier;
 
     //少しモデルのサイズと当たり判定を大きくする
@@ -1045,10 +1019,12 @@ void NewEnemyClass::SettingBoss(GroupData* groupData)
 
 }
 
+//======================================================================
 
-// ======================================================================
-//  死因を取る
-// ======================================================================
+
+//======================================================================
+// --- 死因を取る ---
+//======================================================================
 void NewEnemyClass::OnDie(DamageSource source)
 {
     if (!GetGroupData() && !GetIsLeader() || !GetGroupData() && GetIsBoss())return;
@@ -1076,16 +1052,13 @@ void NewEnemyClass::OnDie(DamageSource source)
 
 
 
-
-
-
-// -----------------------------------------------------------------------
-//   敵のメッセージ表示
-// -----------------------------------------------------------------------
+//======================================================================
+// --- 敵のメッセージ表示 ---
+//======================================================================
 void NewEnemyClass::UpdateEnemyMessage(float deltaTime)
 { 
     //フォントの設定
-    vnFont::setFontSize(31, 25);
+    //vnFont::setFontSize(pFormat, 25);
 
 
 #pragma region その他の敵の範囲攻撃から逃げるメッセージ
@@ -1168,7 +1141,10 @@ void NewEnemyClass::UpdateEnemyMessage(float deltaTime)
 
     ShowMessage();
 }
-//スポーン時の最初に何が強化されたか出す
+
+//======================================================================
+// --- スポーン時の最初に何が強化されたか出す ---
+//======================================================================
 void NewEnemyClass::CheckEvolutionOnSpawn()
 {
     if (!GetGroupData())return;
@@ -1216,17 +1192,19 @@ void NewEnemyClass::CheckEvolutionOnSpawn()
 
 }
 
+//======================================================================
+// --- メッセージ表示 ---
+//======================================================================
 void NewEnemyClass::ShowMessage()
 {
     //全体のモードを確認し、出すべきでないなら終了
-
     bool isLeader = GetIsLeader();
 
     //現在のモードを取得
     auto currentMode = EnemyPool::GetInstance().GetDisplayMode();
 
     bool shouldShow = false;
-    vnFont::setFontSize(31, 22);
+    //vnFont::setFontSize(pFormat, 22);
 
     switch (currentMode)
     {
@@ -1237,7 +1215,7 @@ void NewEnemyClass::ShowMessage()
     }
 
     if (!shouldShow)return;
-    // 1. 表示すべきメッセージ情報を保持する構造体
+    // 表示すべきメッセージ情報を保持する構造体
     struct MsgInfo { std::wstring text; unsigned int color; };
     MsgInfo areaMsg = { L"", 0 };       //範囲攻撃に関するメッセージ
     MsgInfo pullMsg = { L"", 0 };       //引き寄せ攻撃
@@ -1248,7 +1226,7 @@ void NewEnemyClass::ShowMessage()
     MsgInfo runMsg = { L"", 0 };        //リーダー逃走中
 
 
-    // 2. 範囲攻撃メッセージのテキスト決定
+    // 範囲攻撃メッセージのテキスト決定
     switch (m_areaAtkMessage.uiState) {
     case eShowUISelect::Text1:
         areaMsg = { isLeader ? L"射程範囲内" : L"逃",GAME_COLOR_NEON_MAGENTA };
@@ -1258,7 +1236,7 @@ void NewEnemyClass::ShowMessage()
         break;
     }
 
-    // 3. 引き寄せ攻撃メッセージのテキスト決定
+    // 引き寄せ攻撃メッセージのテキスト決定
     switch (m_pullAtkMessage.uiState) {
     case eShowUISelect::Text1:
         pullMsg = { L"無効化",GAME_COLOR_AQUA_GREEN };
@@ -1271,7 +1249,7 @@ void NewEnemyClass::ShowMessage()
         break;
     }
 
-    // 4.パニック状態
+    // パニック状態
     switch (m_panicMessage.uiState)
     {
     case eShowUISelect::Text1:
@@ -1285,7 +1263,7 @@ void NewEnemyClass::ShowMessage()
     }
 
 
-    // 5.特攻状態
+    // 特攻状態
     switch (m_chargeMessage.uiState)
     {
     case eShowUISelect::Text1:
@@ -1298,7 +1276,6 @@ void NewEnemyClass::ShowMessage()
         chargeMsg = { L"",isLeader ? GAME_COLOR_YELLOW : GAME_COLOR_CYAN };
     }
 
-    // 6.
     switch (m_patrolMessage.uiState)
     {
     case eShowUISelect::Text1:
@@ -1371,8 +1348,9 @@ void NewEnemyClass::ShowMessage()
 }
 
 
-
-//0.0～1.0の値を返す
+//======================================================================
+// --- 0.0～1.0の値を返す ---
+//======================================================================
 float NewEnemyClass::GetRandomFloat()
 {
     return static_cast<float>((rand()) / static_cast<float>(RAND_MAX));
@@ -1382,7 +1360,9 @@ float NewEnemyClass::GetRandomRange(float min, float max)
     return min + (max - min) * GetRandomFloat();
 }
 
-
+//======================================================================
+// --- ランダムな方向を返す ---
+//======================================================================
 XMVECTOR NewEnemyClass::GetRandomDirection()
 {
     //-1.0～1.0の間でXZを抽選

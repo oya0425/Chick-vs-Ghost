@@ -27,24 +27,24 @@ void Bullet::Update(float deltaTime)
 {
 	if (!m_isActive || !GetModel()) return;
 
-	// ① 現在の座標と速度を取得
+	// 現在の座標と速度を取得
 	XMVECTOR pos = *GetModel()->getPosition();
 	XMVECTOR vel = GetVelocity();
 
-	// ② 移動（仮移動）
+	// 移動
 	pos += vel * (deltaTime)*m_currentSpeed;
 
-	// ③ 反射判定（壁に当たっていたら）
+	// 反射判定（壁に当たっていたら）
 	if (m_isHitWall)
 	{
 		if (m_bounceCount < m_maxBounce)
 		{
 			/*
-			① speed保存
-			② 方向を変える（反転 or 反射）
-			③ ランダム回転
-			④ 正規化＋速度戻す
-			⑤ 制約（Y補正など）
+			speed保存
+			方向を変える（反転 or 反射）
+			ランダム回転
+			正規化＋速度戻す
+			制約（Y補正など）
 			*/
 			// 元の速度保存
 			float speed = XMVectorGetX(XMVector3Length(vel));
@@ -76,16 +76,6 @@ void Bullet::Update(float deltaTime)
 			m_bounceCount++;
 			m_isHitWall = false; // フラグを戻す
 		}
-		else
-		{
-			//// 消滅処理
-			//for (int i = 0; i < GetModel()->getPartsNum(); i++)
-			//{
-			//	GetModel()->getParts(i)->setRenderEnable(false);
-			//}
-			//m_isActive = false;
-			//return; // 死亡したらここで終了
-		}
 	}
 	if (m_bounceCount >= m_maxBounce)
 	{
@@ -99,8 +89,8 @@ void Bullet::Update(float deltaTime)
 		return; // 死亡したらここで終了
 
 	}
-	// ④ モデルへの最終反映（ここが重要！）
-	// 反射してようがしてまいが、最後に確定した pos と vel から向きをセットする
+	// モデルへの最終反映
+	// posとvelから向きをセットする
 	GetModel()->setPosition(&pos);
 
 	// 向きの更新（速度ベクトルから角度を算出）
@@ -125,8 +115,7 @@ void Bullet::Shoot(XMVECTOR playerPos,XMVECTOR playerDir,float playerRotY)
 
 			m_isHitWall = false;
 			// プレイヤー位置から発射
-			//XMVECTOR currentPlayerPos = playerPos;
-			// 2. 今の座標に足し算する
+			// 今の座標に足し算する
 			XMVECTOR currentPlayerPos = XMVectorAdd(playerPos, offset);
 
 			XMVECTOR dir = playerDir;
@@ -141,15 +130,11 @@ void Bullet::Shoot(XMVECTOR playerPos,XMVECTOR playerDir,float playerRotY)
 				float rotY = playerRotY;
 
 				// 入力ないときは向いている方向
-				//float rotY = GetModel()->getRotationY();
-				//float rotY = XMVectorGetY(dir);
 				SetVelocity(XMVectorSet(sinf(rotY), 0, cosf(rotY), 0) * 10.0f);
 			}
 
-			// 初期設定
-			// b->m_radius = 1.0f; // CharacterBaseの半径を使うならそちらをセット
+			// バウンドの回数を初期化
 			m_bounceCount = -1;
-			//m_maxBounce = 3;  // ここをレベルアップで変えられるようにすると4番に繋がります
 			SetIsActive(true);
 
 			GetModel()->setPosition(&currentPlayerPos);

@@ -69,6 +69,7 @@ namespace Common {
         float y,
         float buttonScale,
         bool isOnButton,
-        const WCHAR* text);
+        const WCHAR* text,
+        IDWriteTextFormat* pFormat);
 
 }

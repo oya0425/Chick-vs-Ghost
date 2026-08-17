@@ -6,21 +6,21 @@ class UpgradeSelectionUI
 public:
 	struct SlotUI
 	{
-		vnSprite* backGroundImg = nullptr;
-		vnSprite* freamImg = nullptr;
-		vnSprite* mainImg = nullptr;
+		vnSprite* backGroundImg = nullptr;		//一番後ろの背景
+		vnSprite* freamImg = nullptr;			//フレーム
+		vnSprite* mainImg = nullptr;			//強化項目のアイコン
 
-		float currentY;
-		float targetY;
+		float currentY;							//現在位置
+		float targetY;							//目標位置
 
-		const wchar_t* label;
-		const wchar_t* suffix;
+		const wchar_t* label;					//強化の項目（速度など）
+		const wchar_t* suffix;					//付属（～％アップなど）
+			
+		const wchar_t* explanation;				//軽い説明（速度が速くなるぞ　など）
 
-		const wchar_t* explanation;
-
-		float value;
-		int currentLv;
-		int maxLv;
+		float value;							//強化される量（10など）
+		int currentLv;							//現在のスキルのレベル
+		int maxLv;								//最大のスキルレベル
 	};
 
 
@@ -37,10 +37,6 @@ public:
 	void SetFreamImg(int index, vnSprite* img);
 	void SetMainImg(int index, vnSprite* img);
 
-
-	//void SetBackGroundImg(vnSprite* img) { m_backGroundImg = img; }
-	//void SetFreamImg(vnSprite* img) { m_freamImg = img; }
-	//void SetMainImg(vnSprite* img) { m_mainImg= img; }
 
 	vnSprite* GetBackGroundImg(int index);
 	vnSprite* GetFreamImg(int index);
@@ -61,7 +57,7 @@ public:
 	void HideUI();
 
 	//レベルアップ時に上にUIをスーって出す
-	void UpdateUI();
+	void UpdateUI(IDWriteTextFormat* pFormat);
 
 	void ResetPhase();
 
@@ -74,9 +70,6 @@ public:
 	void SetUiPhase(UIPhase uiPhase) { m_uiPhase = uiPhase; }
 
 private:
-	//vnSprite* m_backGroundImg;
-	//vnSprite* m_freamImg;
-	//vnSprite* m_mainImg;
 	static constexpr int MAX_SKILL_NUM = 5;
 	std::array<SlotUI,3> m_slots;
 	std::array<SlotUI, 3> m_displaySlots;	//画面に表示する用
@@ -85,7 +78,7 @@ private:
 	float   m_logoTimer = 0.0f;          // ロゴの表示時間を計るタイマー
 	float   m_logoScale = 0.0f;          // ロゴの拡大率（演出用）
 
-	// 「強化する項目を〜」のテキスト用座標（これもイージングで出すと綺麗です）
+	// 「強化する項目を〜」のテキスト用座標
 	float   m_headerY = -100.0f;
 	float   m_headerTargetY = 150.0f; // 画面上部の定位置
 
@@ -98,9 +91,9 @@ private:
 
 
 	// --- 役割分け関数 ---
-	void UpdateLogo();
-	void UpdateSlots();
+	void UpdateLogo(IDWriteTextFormat* pFormat);
+	void UpdateSlots(IDWriteTextFormat* pFormat);
 	void FinishClosing();
-	void UpdateHeader();
+	void UpdateHeader(IDWriteTextFormat* pFormat);
 	bool IsClosingFinished();
 };

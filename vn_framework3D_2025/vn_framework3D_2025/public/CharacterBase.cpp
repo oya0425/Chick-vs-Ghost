@@ -7,7 +7,9 @@ CharacterBase::CharacterBase()
 {
 
 }
+//======================================================================
 // --- モデル ---
+//======================================================================
 void CharacterBase::SetModel(vnCharacter* model)
 {
     m_pModel = model;
@@ -18,8 +20,9 @@ vnCharacter* CharacterBase::GetModel() const
 {
     return m_pModel;
 }
-
+//======================================================================
 // --- 物理 ---
+//======================================================================
 RigidbodyComponent& CharacterBase::GetRigidbody()
 {
     return m_rigidBody;
@@ -29,6 +32,9 @@ const RigidbodyComponent& CharacterBase::GetRigidbody() const
 {
     return m_rigidBody;
 }
+//======================================================================
+// --- 当たり判定 ---
+//======================================================================
 CollisionComponent& CharacterBase::GetCollision()
 {
     return m_collision;
@@ -38,8 +44,9 @@ const CollisionComponent& CharacterBase::GetCollision() const
 {
     return m_collision;
 }
-
+//======================================================================
 // --- HP ---
+//======================================================================
 void CharacterBase::SetMaxHp(float maxHP)
 {
     m_maxHP = maxHP;
@@ -59,7 +66,9 @@ float CharacterBase::GetCurrentHp() const
 {
     return m_currentHP;
 }
-
+//======================================================================
+// --- HPの増減 ---
+//======================================================================
 void CharacterBase::AddHP(float value,bool isTutorial)
 {
     m_currentHP += value;
@@ -73,7 +82,9 @@ void CharacterBase::AddHP(float value,bool isTutorial)
         m_currentHP = 1.0f;
     }
 }
-
+//======================================================================
+// --- ダメージ ---
+//======================================================================
 void CharacterBase::Damage(float value,bool isTutoral)
 {
     //if (value > 0)
@@ -85,8 +96,9 @@ bool CharacterBase::IsDead() const
     return m_currentHP <= 0;
 }
 
-
+//======================================================================
 // --- 向き ---
+//======================================================================
 void CharacterBase::SetMoveDirection(const XMVECTOR& dir)
 {
     m_moveDir = dir;

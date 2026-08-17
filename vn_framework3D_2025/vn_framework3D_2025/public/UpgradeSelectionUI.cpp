@@ -17,6 +17,10 @@ UpgradeSelectionUI::~UpgradeSelectionUI()
 {
 
 }
+
+//======================================================================
+// --- 選ばれた３つの選択肢のUIを設定する ---
+//======================================================================
 void UpgradeSelectionUI::SettingUI(
 	const ExperienceManager::UpgradeUIData& data,
 	int uiIndex,
@@ -105,7 +109,13 @@ void UpgradeSelectionUI::SettingUI(
 	m_isAnimation = true;
 }
 
-void UpgradeSelectionUI::UpdateUI()
+
+
+
+//======================================================================
+// --- UIの更新 ---
+//======================================================================
+void UpgradeSelectionUI::UpdateUI(IDWriteTextFormat* pFormat)
 {
 	// UIアニメーションが無効なら更新しない
 	if (!m_isAnimation) return;
@@ -116,20 +126,20 @@ void UpgradeSelectionUI::UpdateUI()
 	// ロゴ表示演出
 	//=====================================================
 	case UIPhase::LogoFadeIn:
-		UpdateLogo();
+		UpdateLogo(pFormat);
 		break;
 	
 	//=====================================================
 	// 選択肢表示
 	//=====================================================
 	case UIPhase::SlotsSlideIn:
-		UpdateHeader();// ヘッダーの更新・描画
-		UpdateSlots(); // 選択肢UIの更新・描画
+		UpdateHeader(pFormat);// ヘッダーの更新・描画
+		UpdateSlots(pFormat); // 選択肢UIの更新・描画
 		break;
 
 	case UIPhase::Closing:
-		UpdateHeader();// ヘッダーを画面外へ移動
-		UpdateSlots(); // 選択肢を画面外へ移動
+		UpdateHeader(pFormat);// ヘッダーを画面外へ移動
+		UpdateSlots(pFormat); // 選択肢を画面外へ移動
 
 		// 全てのUIが画面外へ移動したら終了処理
 		if (IsClosingFinished())
@@ -141,28 +151,35 @@ void UpgradeSelectionUI::UpdateUI()
 	}
 
 }
-void UpgradeSelectionUI::UpdateLogo()
+
+//======================================================================
+// --- ロゴの表示 ---
+//======================================================================
+void UpgradeSelectionUI::UpdateLogo(IDWriteTextFormat* pFormat)
 {
 	// ロゴのスケールを滑らかに拡大
 	m_logoScale += (1.0f - m_logoScale) * 0.1f;
 
-	float baseFontSize = 172.0f;
-	float currentFontSize = baseFontSize * m_logoScale;
+	// アニメーション中のフォントサイズ
+	float baseFontSize = 150.0f;
+	int currentFontSize = static_cast<int>(baseFontSize * m_logoScale);
 
-	if (currentFontSize > 1.0f)
+	if (currentFontSize > 1)
 	{
-		vnFont::setTextFormat(
-			vnFont::create(vnFont::getFontName(31), (int)currentFontSize)
-		);
+		vnFont::setFontSize(pFormat, currentFontSize);
 	}
 
-	float textWidth = currentFontSize * 2.5f;
-	float textHeight = currentFontSize * 0.5f;
+	// 文の中心から拡大するようにする
+	float estimatedTextWidth = currentFontSize * 10.0f * 0.65f/*１文字の幅*/;
+	float estimatedTextHeight = (float)currentFontSize;
 
-	float tx = 640.0f - textWidth;
-	float ty = 360.0f - textHeight;
-
+	// 画面中心から文字幅の半分を引いて中央にする
+	float tx = 640.0f - (estimatedTextWidth * 0.5f);
+	float ty = 300.0f - (estimatedTextHeight * 0.5f);
+	// 影
 	float off = 5.0f * m_logoScale;
+
+	// 描画
 	vnFont::print(tx + off, ty + off, GAME_COLOR_BLACK, L"LEVEL UP !");
 	vnFont::print(tx, ty, GAME_COLOR_GOLD_LIGHT, L"LEVEL UP !");
 
@@ -171,12 +188,18 @@ void UpgradeSelectionUI::UpdateLogo()
 		m_logoScale = 1.0f;
 		m_uiPhase = UIPhase::SlotsSlideIn;
 	}
-
 }
-void UpgradeSelectionUI::UpdateSlots()
+
+
+
+
+//======================================================================
+// --- 決めた場所まで選択肢のUIを移動する（文字を含む）---
+//======================================================================
+void UpgradeSelectionUI::UpdateSlots(IDWriteTextFormat* pFormat)
 {
 	// スロットの更新と描画
-	vnFont::setFontSize(31, 25);
+	vnFont::setFontSize(pFormat, 25);
 	for (int i = 0; i < m_displaySlots.size(); i++)
 	{
 		auto& slot = m_displaySlots[i];
@@ -202,6 +225,12 @@ void UpgradeSelectionUI::UpdateSlots()
 
 
 }
+
+
+
+//======================================================================
+// --- 選択された後閉じる ---
+//======================================================================
 void UpgradeSelectionUI::FinishClosing()
 {
 	if (m_displaySlots.size() > 0 && m_uiPhase == UIPhase::Closing)
@@ -215,7 +244,13 @@ void UpgradeSelectionUI::FinishClosing()
 		m_isClosingUI = true;
 	}
 }
-void UpgradeSelectionUI::UpdateHeader()
+
+
+
+//======================================================================
+// --- ヘッダーの位置更新 ---
+//======================================================================
+void UpgradeSelectionUI::UpdateHeader(IDWriteTextFormat* pFormat)
 {
 	// ヘッダーの移動
 	m_headerY += (m_headerTargetY - m_headerY) * 0.1f;
@@ -224,7 +259,7 @@ void UpgradeSelectionUI::UpdateHeader()
 	if (m_headerY > -50.0f)
 	{
 		float off = 3.0f;
-		vnFont::setFontSize(31, 30);
+		vnFont::setFontSize(pFormat, 30);
 		vnFont::print(420 + off, (int)m_headerY + off,
 			GAME_COLOR_BLACK,
 			L"強化する項目を選択してください");
@@ -234,6 +269,11 @@ void UpgradeSelectionUI::UpdateHeader()
 			L"強化する項目を選択してください");
 	}
 }
+
+
+//======================================================================
+// --- ヘッダーが画面外に行ったかどうか ---
+//======================================================================
 bool UpgradeSelectionUI::IsClosingFinished()
 {
 	// ヘッダーがまだ画面内なら終了していない
@@ -255,6 +295,9 @@ bool UpgradeSelectionUI::IsClosingFinished()
 }
 
 
+//======================================================================
+// --- 状態をリセットする ---
+//======================================================================
 void UpgradeSelectionUI::ResetPhase()
 {
 	// フェーズを最初のロゴ表示（拡大演出）に戻す
@@ -266,7 +309,7 @@ void UpgradeSelectionUI::ResetPhase()
 	// もしロゴ表示にタイマーも併用している場合はリセット（使っていなければ不要）
 	m_logoTimer = 0.0f;
 
-	// 「強化する項目〜」の見出しテキストの座標も、画面外（上空）の初期位置に戻す
+	// ヘッダー(強化する項目～)の見出しテキストの座標も、画面外の初期位置に戻す
 	m_headerY = -100.0f;
 	m_headerTargetY = 150.0f;
 
@@ -276,7 +319,6 @@ void UpgradeSelectionUI::ResetPhase()
 	m_isAnimation = true; // UIのUpdateを再度動かすために true にする
 
 	// 3つの選択肢（スロット）の描画フラグをONに戻す
-	// (前回のClosingフェーズで false にされたものを復活させます)
 	for (auto& slot : m_displaySlots)
 	{
 		if (slot.freamImg)      slot.freamImg->setRenderEnable(true);
@@ -284,6 +326,10 @@ void UpgradeSelectionUI::ResetPhase()
 		if (slot.mainImg)       slot.mainImg->setRenderEnable(true);
 	}
 }
+
+//======================================================================
+// --- UIを全て隠す ---
+//======================================================================
 void UpgradeSelectionUI::HideUI()
 {
 	m_headerTargetY = -300.0f; // スロットより少し手前で消え始めるイメージ
@@ -299,6 +345,10 @@ void UpgradeSelectionUI::HideUI()
 }
 
 
+
+//======================================================================
+// --- 画像のセット ---
+//======================================================================
 void UpgradeSelectionUI::SetBackGroundImg(int index, vnSprite* img)
 {
 	m_slots[index].backGroundImg = img;

@@ -7,7 +7,9 @@ namespace
 	constexpr int expOffset = 1.2;		//レベルアップで増える量を増やす（N倍）
 
 }
-
+//======================================================================
+// --- データの入力 ---
+//======================================================================
 static const ExperienceManager::UpgradeUIData MASTER_DATA[] =
 {
 	//「速度」「攻撃範囲」
@@ -58,7 +60,9 @@ ExperienceManager::ExperienceManager()
 	}
 
 }
-
+//======================================================================
+// --- チュートリアル後にレベルをリセットする用 ---
+//======================================================================
 void ExperienceManager::AllLevelReset()
 {
 	m_currentLevel = 1;
@@ -80,7 +84,9 @@ void ExperienceManager::AllLevelReset()
 	}
 }
 
-
+//======================================================================
+// --- 経験値を獲得 ---
+//======================================================================
 void ExperienceManager::GainExp(float exp)
 {
 	if (!m_player)return;
@@ -88,13 +94,13 @@ void ExperienceManager::GainExp(float exp)
 	m_currentExp += exp;
 	while (m_currentExp >= m_neededExp)
 	{
-		//1.余った経験値を次に持ち越す
+		//余った経験値を次に持ち越す
 		m_currentExp -= m_neededExp;
 
-		//2.レベルアップ
+		//レベルアップ
 		m_currentLevel++;
 		m_levelUpStock++;
-		//3.次の必要経験値を計算
+		//次の必要経験値を計算
 		m_neededExp = m_neededExp * 1.2f;
 
 
@@ -105,7 +111,7 @@ void ExperienceManager::GainExp(float exp)
 			break;
 		}
 	}
-	//4.通知を送る
+	//通知を送る
 	if (m_levelUpStock&& OnLevelUp)
 	{
 		GenerateLevelUpOptions();
@@ -114,6 +120,9 @@ void ExperienceManager::GainExp(float exp)
 
 }
 
+//======================================================================
+// --- 直接レベルアップ ---
+//======================================================================
 void ExperienceManager::GainLevel(int level)
 {
 	if (!m_player)return;
@@ -139,9 +148,13 @@ void ExperienceManager::GainLevel(int level)
 }
 
 
+
+//======================================================================
+// --- 強化項目を選出 ---
+//======================================================================
 void ExperienceManager::GenerateLevelUpOptions()
 {
-	//1.候補リストを作成（最大レベルに達していないものだけを入れる）
+	//候補リストを作成（最大レベルに達していないものだけを入れる）
 	std::vector<UpgradeType>candidates;
 	// まず最大レベルでないものだけ追加
 	for (int i = 0; i < (int)UpgradeType::MaxCount; i++)
@@ -164,7 +177,7 @@ void ExperienceManager::GenerateLevelUpOptions()
 	}
 
 
-	//2.シャッフルして先頭から３つ選ぶ（またはランダムに抽出）
+	// シャッフルして先頭から３つ選ぶ（またはランダムに抽出）
 	for (int i = 0; i < canSelectCount; i++)
 	{
 		if (candidates.empty())break;//選ぶものがなかったら終了
@@ -202,6 +215,10 @@ void ExperienceManager::GenerateLevelUpOptions()
 
 }
 
+
+//======================================================================
+// --- 項目選択後、項目のレベルを上げプレイヤーに適用する ---
+//======================================================================
 void ExperienceManager::ApplyUpgrade(int choiceIndex,bool isTurorial)
 {
 	//範囲外チェック
@@ -211,8 +228,8 @@ void ExperienceManager::ApplyUpgrade(int choiceIndex,bool isTurorial)
 	UpgradeType selectedType = m_currentSelectedTypes[choiceIndex];
 	if (selectedType == UpgradeType::MaxCount)return;
 
-	//1.マスターデータレベルを上げる
-	//チュートリアルの時は１回選択すると最大にして選択できないようにする
+	// マスターデータレベルを上げる
+	// チュートリアルの時は１回選択すると最大にして選択できないようにする
 	if (isTurorial)
 	{
 		m_upgradeMaster[(int)selectedType].currentLv += 48;
@@ -226,7 +243,7 @@ void ExperienceManager::ApplyUpgrade(int choiceIndex,bool isTurorial)
 		m_upgradeMaster[(int)selectedType].currentLv += 1;
 	}
 
-	//2.プレイヤーのステータスに反映(この前にあげる値を変更する)
+	// プレイヤーのステータスに反映(この前にあげる値を変更する)
 	m_choiceIndex = rand() % 5;
 	float boost = MASTER_DATA[(int)selectedType].value[m_choiceIndex];
 
@@ -242,7 +259,7 @@ void ExperienceManager::ApplyUpgrade(int choiceIndex,bool isTurorial)
 		//攻撃範囲の強化
 		m_rangeBoost += boost;  
 		m_player->SetRangeMultiplier(1.0f + (m_rangeBoost / 100.0f));
-		// 2. もしこれが「最初のレベル（Lv1）」なら、スキルを有効化する
+		// もしこれが「最初のレベル（Lv1）」なら、スキルを有効化する
 		if (m_upgradeMaster[(int)selectedType].currentLv >= 1)
 		{
 			m_player->UnlockAreaAttackSkill(true);
@@ -268,18 +285,18 @@ void ExperienceManager::ApplyUpgrade(int choiceIndex,bool isTurorial)
 	}
 
 
-	//3.レベルアップ可能のストックを減らす
+	// レベルアップ可能のストックを減らす
 	if (m_levelUpStock > 0)
 	{
 		m_levelUpStock--;
 	}
 
-	//4.まだレベルアップストックがあるなら、次の抽選をする
+	// まだレベルアップストックがあるなら、次の抽選をする
 	if (m_levelUpStock > 0)
 	{
 		GenerateLevelUpOptions();
 		// 連続レベルアップさせるなら、もう一度 OnLevelUp を通知して
-		// UIを出し直す（または開いたまま中身を更新する）必要があります
+		// UIを出し直す
 		if (OnLevelUp)
 		{
 			OnLevelUp();
@@ -295,11 +312,19 @@ void ExperienceManager::ApplyUpgrade(int choiceIndex,bool isTurorial)
 		}
 	}
 }
+
+
+//===============================================================================
+// --- レベルアップできる回数を返す（１回でレベルが２回上がるときに２になる）---
+//===============================================================================
 int ExperienceManager::GetLevelUpStock()
 {
 	return m_levelUpStock;
 }
 
+//======================================================================
+// --- 全ての項目がレベル最大かどうか ---
+//======================================================================
 bool ExperienceManager::AllIsMaxLv()
 {
 
@@ -315,7 +340,9 @@ bool ExperienceManager::AllIsMaxLv()
 	return true;
 }
 
-
+//======================================================================
+// --- プレイヤーのステータスを強化するためにプレイヤーの情報を保持 ---
+//======================================================================
 void ExperienceManager::SetPlayer(NewPlayerClass* player)
 {
 	m_player = player;

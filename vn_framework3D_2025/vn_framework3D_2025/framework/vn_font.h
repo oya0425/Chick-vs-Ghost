@@ -6,6 +6,8 @@
 //--------------------------------------------------------------//
 #pragma once
 #include <map>
+#include<string>
+
 #define vnFontSTRING_MAX	(0x0400)	//1フレームで実行できるrenderの数
 //#define vnFontCHARACTER_MAX	(0x2000)	//1フレームで描画できる文字の数
 #define vnFontCHARACTER_MAX	(0x8000)	//1フレームで描画できる文字の数
@@ -47,7 +49,7 @@ private:
 	static void registerString(const WCHAR *string, UINT32 count);
 	
 	// 外部からサイズごとにフォントを管理するマップ（サイズ, インスタンス）
-	static std::map<int, IDWriteTextFormat*> fontCache;
+	static std::map<std::wstring, IDWriteTextFormat*> fontCache;
 
 public:
 
@@ -97,6 +99,6 @@ public:
 	//ワールド座標をスクリーン座標に変換する
 	static bool CalculateScreenPosition(DirectX::XMVECTOR worldPos, float* outX, float* outY);
 
-	static void setFontSize(int index, int size);
+	static void setFontSize(IDWriteTextFormat* pFormat, int size);
 
 };

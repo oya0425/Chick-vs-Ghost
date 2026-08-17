@@ -6,6 +6,7 @@
 //--------------------------------------------------------------//
 #include "../framework.h"
 #include "vn_environment.h"
+#include <dwrite_3.h>
 
 WCHAR vnFont::fontName[256][64];
 int vnFont::fontNum = 0;
@@ -27,7 +28,7 @@ WCHAR		*vnFont::currentPtr=NULL;
 
 IDWriteTextFormat *vnFont::currentTextFormat = NULL;
 
-std::map<int, IDWriteTextFormat*> vnFont::fontCache;
+std::map<std::wstring, IDWriteTextFormat*> vnFont::fontCache;
 
 bool vnFont::initialize()
 {
@@ -185,11 +186,47 @@ IDWriteTextFormat *vnFont::create(const WCHAR *fontname, int size)
 {
 	HRESULT hr;
 	IDWriteTextFormat* ret = NULL;
+	IDWriteFontCollection* pFontCollection = NULL;
 
+	// -----------------------------------------------------------------------------
+	// 【概要】指定したTTFファイルから直接フォントを読み込み、TextFormatを生成する
+	// 【背景】AddFontResourceEx(GDI) では DirectWrite 側にフォントが認識されないため、
+	//         IDWriteFactory5 を使ってファイルから直接 FontCollection を動的構築している。
+	// -----------------------------------------------------------------------------
+	// ---  .ttf ファイルからコレクションを動的作成 ---
+	IDWriteFactory* pDWFactory = vnDirect2D::getDWFactory();
+	IDWriteFactory5* pDWFactory5 = nullptr;
+
+	// IDWriteFactory5 が使えるか確認 (Win10 1607以降)
+	if (SUCCEEDED(pDWFactory->QueryInterface(__uuidof(IDWriteFactory5), (void**)&pDWFactory5)))
+	{
+		IDWriteFontFile* fontFile = nullptr;
+		// 使用したいフォントファイルのパス
+		const wchar_t* filePath = L"data/font/Mochiy_Pop_P_One/MochiyPopPOne-Regular.ttf";
+
+		if (SUCCEEDED(pDWFactory5->CreateFontFileReference(filePath, NULL, &fontFile)))
+		{
+			IDWriteFontSetBuilder1* fontSetBuilder = nullptr;
+			if (SUCCEEDED(pDWFactory5->CreateFontSetBuilder(&fontSetBuilder)))
+			{
+				fontSetBuilder->AddFontFile(fontFile);
+				IDWriteFontSet* fontSet = nullptr;
+				if (SUCCEEDED(fontSetBuilder->CreateFontSet(&fontSet)))
+				{
+					// ファイルから専用の FontCollection を生成
+					pDWFactory5->CreateFontCollectionFromFontSet(fontSet, (IDWriteFontCollection1**)&pFontCollection);
+					fontSet->Release();
+				}
+				fontSetBuilder->Release();
+			}
+			fontFile->Release();
+		}
+		pDWFactory5->Release();
+	}
 	//テキストフォーマットの生成
 	hr = vnDirect2D::getDWFactory()->CreateTextFormat(
 		fontname,					//フォント ファミリの名前を含む文字配列。
-		NULL,						//フォント コレクション オブジェクトへのポインター。これが NULL の場合、システム フォント コレクションを示します。
+		pFontCollection,						//フォント コレクション オブジェクトへのポインター。これが NULL の場合、システム フォント コレクションを示します。
 		DWRITE_FONT_WEIGHT_NORMAL,	//このメソッドによって作成されるテキスト オブジェクトのフォントの太さを示す値。
 		DWRITE_FONT_STYLE_NORMAL,	//このメソッドによって作成されるテキスト オブジェクトのフォント スタイルを示す値。
 		DWRITE_FONT_STRETCH_NORMAL,	//このメソッドによって作成されるテキスト オブジェクトのフォント伸縮を示す値。
@@ -197,6 +234,12 @@ IDWriteTextFormat *vnFont::create(const WCHAR *fontname, int size)
 		L"",						//ロケール名を含む文字配列。
 		&ret						//このメソッドが返されるときに、新しく作成されたテキスト形式オブジェクトへのポインターのアドレスが格納されます。失敗した場合は NULL が格納されます。
 	);
+
+	// 作成したコレクションの解放
+	if (pFontCollection) {
+		pFontCollection->Release();
+	}
+
 	return ret;
 }
 
@@ -242,15 +285,26 @@ DWORD vnFont::getColor()
 	return Color;
 }
 
-void vnFont::setFontSize(int index, int size) {
-	// すでにそのサイズのフォントを作ったことがあるか確認
-	if (fontCache.find(index) == fontCache.end()) {
-		// なければ作成（フォント名は固定か、今の38番などを使う）
-		fontCache[size] = vnFont::create(vnFont::getFontName(index), size);
+void vnFont::setFontSize(IDWriteTextFormat* pFormat, int size) 
+{
+	if (!pFormat) return;
+
+	// 1. 渡された pFormat からフォントファミリー名を取得する
+	WCHAR fontName[256] = {};
+	pFormat->GetFontFamilyName(fontName, ARRAYSIZE(fontName));
+
+	// 2. 「フォント名_サイズ」でキャッシュキーを作成（例: L"Mochiy Pop P One_50"）
+	std::wstring cacheKey = std::wstring(fontName) + L"_" + std::to_wstring(size);
+
+	// 3. キャッシュになければ指定サイズで作成して登録
+	if (fontCache.find(cacheKey) == fontCache.end()) {
+		fontCache[cacheKey] = vnFont::create(fontName, size);
 	}
-	// 作成済み（キャッシュ）のものをセット
-	vnFont::setTextFormat(fontCache[size]);
+
+	// 4. 作成済み（キャッシュ）のものを描画用にセット
+	vnFont::setTextFormat(fontCache[cacheKey]);
 }
+
 
 //文字列の描画(ワイド文字)
 void vnFont::print(float x, float y, DWORD color, const WCHAR *string, ...)

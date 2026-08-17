@@ -51,6 +51,9 @@ using namespace Common;
 //    vnCamera::setTarget(&camTarget);
 //}
 
+//======================================================================
+// --- マウスに合わせてカメラの向き変更 ---
+//======================================================================
 void Common::UpdateCameraByMouse(
     float& theta,
     float& phi,
@@ -154,17 +157,17 @@ void Common::UpdateFlexibleCamera(const XMVECTOR* pPlayerPos, float phi, float r
 
 
 #pragma region カメラに回転がない
-    // 1.理想のオフセットを作成
+    // オフセットを作成
     {
         float camX = radius * cosf(phi) * cosf(theta);
         float camY = radius * sinf(phi);
         float camZ = radius * cosf(phi) * sinf(theta);
         XMVECTOR camOffset = XMVectorSet(camX, camY, camZ, 0.0f);
 
-        // 2.注視点を作る
+        // 注視点を作る
         XMVECTOR finalTargetPos = *pPlayerPos;
 
-        // 3.XZの座標の制限
+        // XZの座標の制限
         if (fenceRadius > 0.1)
         {
             //Yをプレイヤーのジャンプで動かないようにする
@@ -207,6 +210,9 @@ void Common::UpdateFlexibleCamera(const XMVECTOR* pPlayerPos, float phi, float r
 
 }
 
+//======================================================================
+// --- プレイヤーの前にカメラを持ってくる ---
+//======================================================================
 void Common::UpdateCameraLevelUp(
     const XMVECTOR* pPlayerPos, //プレイヤーの現在地
     float targetTheta,          //演出開始時に固定した目標角度
@@ -216,17 +222,17 @@ void Common::UpdateCameraLevelUp(
     float& currentTheta         //現在のカメラの回転角
 )
 {
-    // 1.目標値の設定
+    //目標値の設定
     const float targetPhi = 0.5f;       //最終的にこの高さに合わせる
     const float targetRadius = 10.0f;    //最終的にプレイヤーから５ｍの距離まで近づく
     float speed = 5.0f * deltaTime;     //補間速度（１秒間にどれくらい近づくか）
 
-    // 2.数値の補間
+    //数値の補間
     //Lerpを使って、現在の「高さ」と「距離」を目標値へ向かって一歩近づける
     currentPhi = MyLerp(currentPhi, targetPhi, speed);
     currentRadius = MyLerp(currentRadius, targetRadius, speed);
 
-    // 3.角度の計算と修正
+    //角度の計算と修正
     //モデルの回転方向とカメラの計算方向（時計回り/反時計回り）を合わせるため符号を反転
     targetTheta = -targetTheta;
 
@@ -240,28 +246,17 @@ void Common::UpdateCameraLevelUp(
     //計算した差分にスピードを掛けて、現在の角度を目標へ近づける
     currentTheta += deltaTheta * speed;
 
-    // --- 4. 注視点のY座標を固定する ---
-        // プレイヤーの座標をコピー
+    //注視点のY座標を固定する
+    //プレイヤーの座標をコピー
     XMVECTOR fixedTargetPos = *pPlayerPos;
 
-    // Y座標だけ「地面の高さ（またはお好みの高さ）」に固定する
-    // プレイヤーがピョンピョン跳ねても、カメラのターゲットは地面に残る
+    //Y座標だけ地面の高さに固定する
+    //プレイヤーがピョンピョン跳ねても、カメラのターゲットは地面に残る
     float groundLevel = 2.0f; // 地面の高さに合わせて調整してください
     fixedTargetPos = XMVectorSetY(fixedTargetPos, groundLevel);
 
-    ////プレイヤーを画面の端に寄せるためのオフセット計算
-    ////offsetAmountがプラスならプレイヤーは画面の左側、マイナスなら右側に寄せる
-    //float offsetAmount = 3.0f;
 
-    ////カメラの横方向ベクトルを計算(Thetaを利用)
-    ////currentThetaはカメラの回転角なので、その方向に合わせてオフセットを振る
-    //float offsetX = cosf(currentTheta) * offsetAmount;
-    //float offsetZ = -sinf(currentTheta) * offsetAmount;
-
-    ////注視点をプレイヤーの位置から横にずらす
-    //fixedTargetPos = XMVectorAdd(fixedTargetPos, XMVectorSet(offsetX, 0, offsetZ, 0));
-
-    // 5. 最終的な適用 (書き換えた fixedTargetPos を渡す)
+    //最終的な適用 (書き換えた fixedTargetPos を渡す)
     UpdateFlexibleCamera(&fixedTargetPos, currentPhi, currentRadius, currentTheta, 0);
 
 }
@@ -280,6 +275,7 @@ void Common::StartCameraShake(float x, float y, float duration)
 
 
 #pragma region ボタン関係
+
 
 //ボタンの上に来たかどうか（画像の位置にマウスが来たかどうか）
 bool Common::OnButton(float x, float y, float button_w, float button_h)
@@ -332,15 +328,16 @@ bool Common::UpdateButton(
 }
 
 
-
-#pragma endregion
-
+//======================================================================
+// --- ボタンに合わせてテキストも拡大(ボタンの拡大縮小) ---
+//======================================================================
 void Common::ChangeButtonTextSize(
     float x,
     float y,
     float buttonScale,
     bool isOnButton,
-    const WCHAR* text)
+    const WCHAR* text,
+    IDWriteTextFormat* pFormat)
 {
     float off = 4.0f;
     unsigned int shadowCol = GAME_COLOR_WHITE;
@@ -349,11 +346,11 @@ void Common::ChangeButtonTextSize(
 
     float currentFontSize = 30.0f * buttonScale;
 
-    vnFont::setTextFormat(
-        vnFont::create(
-            vnFont::getFontName(38),
-            (int)currentFontSize));
-
+    //vnFont::setTextFormat(
+    //    vnFont::create(
+    //        pFormat,
+    //        (int)currentFontSize));
+    vnFont::setFontSize(pFormat, (int)currentFontSize);
     float textWidth = currentFontSize * 0.65f * len;
     float textHeight = currentFontSize * 0.5f;
 
@@ -372,6 +369,9 @@ void Common::ChangeButtonTextSize(
     }
 }
 
+
+
+#pragma endregion
 
 
 

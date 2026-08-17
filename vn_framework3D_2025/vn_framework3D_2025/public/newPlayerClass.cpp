@@ -38,8 +38,9 @@ NewPlayerClass::NewPlayerClass()
 	motion_idle_bird = loadMotionFile(L"data/model/Brid/brid_animation_new/motion/Brid_Idle1.mot");
 
 }
-
-//ステータス初期化
+//======================================================================
+// --- ステータス初期化 ---
+//======================================================================
 void NewPlayerClass::Init()
 {
 	//スキル関係
@@ -69,14 +70,17 @@ void NewPlayerClass::Init()
 	SetCurrentHP(100);
 }
 
-//スキルのクールタイムのリセット
+//======================================================================
+// --- スキルのクールタイムのリセット ---
+//======================================================================
 void NewPlayerClass::ResetSkillCoolTime()
 {
 	m_areaAtkCoolTimer = 0.0f;
 	m_pullCooldownTimer = 0.0f;
 }
-
-//必殺の落ちてくる殻のモデルセット
+//======================================================================
+// --- 必殺の落ちてくる殻のモデルセット --- 
+//======================================================================
 void NewPlayerClass::SetMeteorModel(vnModel* model)
 {
 	m_pMeteorModel = model;

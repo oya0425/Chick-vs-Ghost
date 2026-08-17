@@ -65,14 +65,16 @@ bool SceneTitle::initialize()
     //---フォント--------
     //使用できるフォントの数を取得
 
-    FontNum = vnFont::getFontNum();
 
-    //作成したフォント用の情報を確保しておく変数を必要な数作成
+
+    FontNum = vnFont::getFontNum();
     textFormat_score = new IDWriteTextFormat * [FontNum];
 
-    for (int i = 0; i < FontNum; i++)
+
+    textFormat_score[0] = vnFont::create(L"Mochiy Pop P One", 100);
+
+    for (int i = 1; i < FontNum; i++)
     {
-        //フォント名とサイズを指定してフォントを作成(フォント名は直接指定することも可能)
         textFormat_score[i] = vnFont::create(vnFont::getFontName(i), 100);
     }
 
@@ -370,7 +372,7 @@ void SceneTitle::render()
     {
     case SceneTitle::TitleState::MAIN:
     {
-        float off = 5.0f; // 影のズレ幅
+        float off = 8.0f; // 影のズレ幅
         unsigned int shadowCol = 0xFF000000;
 
         blinkCounter++;
@@ -378,14 +380,16 @@ void SceneTitle::render()
         float offsetY = sinf(blinkCounter * 0.08f) * 15.0f;
         if (!isStarting)
         {
-            vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 90));
-            vnFont::print(250 + off, 200 + offsetY + off, shadowCol, L"『Chick vs Ghost』");
-            vnFont::print(250, 200 + offsetY, GAME_COLOR_GOLD, L"『Chick vs Ghost』");
+            //vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 90));
+            vnFont::setFontSize(textFormat_score[0], 90);
+            vnFont::print(250 + off, 150 + offsetY + off, shadowCol, L"『Chick vs Ghost』");
+            vnFont::print(250, 150 + offsetY, GAME_COLOR_GOLD, L"『Chick vs Ghost』");
 
 
-            vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 40));
+            //vnFont::setTextFormat(vnFont::create(vnFont::getFontName(38), 40));
+            vnFont::setFontSize(textFormat_score[0], 40);
 
-            Common::ChangeButtonTextSize(ruleButton_x-15, ruleButton_y, ruleButtonScale, isOnRuleButton, L"ルール");
+            Common::ChangeButtonTextSize(ruleButton_x-15, ruleButton_y-10, ruleButtonScale, isOnRuleButton, L"ルール",textFormat_score[0]);
 
         }
 
@@ -396,22 +400,23 @@ void SceneTitle::render()
         if (!isStarting)
         {
             Common::ChangeButtonTextSize(
-                startButton_x-15, startButton_y,
+                startButton_x-10, startButton_y-10,
                 startButtonScale, isOnStartButton,
-                L"スタート");
+                L"スタート", textFormat_score[0]);
 
             Common::ChangeButtonTextSize(
-                tutorialStartButton_x-40, tutorialStartButton_y,
+                tutorialStartButton_x-20, tutorialStartButton_y-10,
                 tutorialStartButtonScale, isOnTutorialStartButton,
-                L"チュートリアル");
+                L"チュートリアル", textFormat_score[0]);
 
             Common::ChangeButtonTextSize(
-                endlessStartButton_x-25, endlessStartButton_y,
+                endlessStartButton_x-15, endlessStartButton_y-10,
                 endlessStartButtonScale, isOnEndlessStartButton,
-                L"エンドレス");
+                L"エンドレス", textFormat_score[0]);
         }
         else
         {
+            //ボタン押したときに文字の拡大
             //switch (startType)
             //{
             //case StartType::Normal:
@@ -449,7 +454,7 @@ void SceneTitle::render()
                 leftButton_y,
                 leftButtonScale,
                 isOnLeftButton,
-                L"タイトル");
+                L"タイトル", textFormat_score[0]);
         }
         else
         {
@@ -458,7 +463,7 @@ void SceneTitle::render()
                 leftButton_y,
                 leftButtonScale,
                 isOnLeftButton,
-                L"戻る");
+                L"戻る", textFormat_score[0]);
         }
 
         // 右ボタン
@@ -470,7 +475,7 @@ void SceneTitle::render()
                 rightButton_y,
                 rightButtonScale,
                 isOnRightButton,
-                L"タイトル");
+                L"タイトル", textFormat_score[0]);
         }
         else
         {
@@ -479,7 +484,7 @@ void SceneTitle::render()
                 rightButton_y,
                 rightButtonScale,
                 isOnRightButton,
-                L"進む");
+                L"進む", textFormat_score[0]);
         }
 
         break;

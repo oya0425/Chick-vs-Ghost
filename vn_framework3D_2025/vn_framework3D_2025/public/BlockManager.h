@@ -24,13 +24,13 @@ public:
 	// WAVE開始時に位置をシャッフル（引数に最終WAVE判定用のフラグを追加）
 	void RespawnBlocks(int waveCount, float fenceRadius, bool isFinalWave = false)
 	{
-		// 1. 今回の配置対象にするメイン配列と、非表示にする退避配列を決定する
+		// 今回の配置対象にするメイン配列と、非表示にする退避配列を決定する
 		// 最終WAVE（ボス戦）はマグマのブロックにする
 
 		std::vector<TerrainBlock*>& targetBlocks = isFinalWave ? m_magmaBlocks : m_blocks;
 		std::vector<TerrainBlock*>& escapeBlocks = isFinalWave ? m_blocks : m_magmaBlocks;
 
-		// 2. 出現させる数を決定
+		// 出現させる数を決定
 		if (isFinalWave)
 		{
 			m_currentActiveBlocks = m_maxActiveMagmaBlocks;
@@ -41,19 +41,19 @@ public:
 			m_currentActiveBlocks = waveCount * m_countUpNum;
 		}
 
-		// 安全対策：プールしている最大数を超えないようにクリップ
+		// プールしている最大数を超えないようにクリップ
 		if (m_currentActiveBlocks > (int)targetBlocks.size())
 		{
 			m_currentActiveBlocks = (int)targetBlocks.size();
 		}
 
-		// --- 3. メイン対象のブロックをドーナツ状に配置 ---
+		// --- メイン対象のブロックをドーナツ状に配置 ---
 		for (int i = 0; i < targetBlocks.size(); i++)
 		{
 			if (i < m_currentActiveBlocks)
 			{
 				float minRadius = 3.0f;
-				float maxRadius = fenceRadius * 1.0f; // フェンスの8割まで
+				float maxRadius = fenceRadius * 1.0f; 
 
 				float r1 = (float)rand() / RAND_MAX;
 				float r2 = (float)rand() / RAND_MAX;
@@ -87,7 +87,7 @@ public:
 			}
 		}
 
-		// --- 4. 今回使わない側のプールをすべて強制的に非表示（y = -1000）にする ---
+		// --- 今回使わない側のプールをすべて強制的に非表示にする ---
 		for (int i = 0; i < escapeBlocks.size(); i++)
 		{
 			escapeBlocks[i]->GetModel()->setPosition(0, -1000, 0);
@@ -99,25 +99,23 @@ public:
 		}
 	}
 
-	//std::vector<TerrainBlock*>& GetAllBlocks() { return m_blocks; }
-	//std::vector<TerrainBlock*>& GetMagmaBlocks() { return m_magmaBlocks; }
 
 	// 今現在、画面上に表示されているブロックの配列を丸ごと返す
 	std::vector<TerrainBlock*>& GetAllActiveBlocks()
 	{
-		// 1. 通常ブロックの先頭が存在し、かつ表示中なら通常ブロックの配列を返す
+		// 通常ブロックの先頭が存在し、かつ表示中なら通常ブロックの配列を返す
 		if (!m_blocks.empty() && m_blocks[0]->GetModel() && m_blocks[0]->GetModel()->getRenderEnable())
 		{
 			return m_blocks;
 		}
 
-		// 2. マグマブロックの先頭が存在し、かつ表示中ならマグマブロックの配列を返す
+		// マグマブロックの先頭が存在し、かつ表示中ならマグマブロックの配列を返す
 		if (!m_magmaBlocks.empty() && m_magmaBlocks[0]->GetModel() && m_magmaBlocks[0]->GetModel()->getRenderEnable())
 		{
 			return m_magmaBlocks;
 		}
 
-		// 3. どちらも表示されていない（WAVE間のインターバルなど）場合は通常ブロック（空 or 非表示）を安全に返す
+		// どちらも表示されていない（WAVE間のインターバルなど）場合は通常ブロック（空 or 非表示）を安全に返す
 		return m_blocks;
 	}
 	std::vector<TerrainBlock*>& GetAllBlocks() { return m_allBlocks; }

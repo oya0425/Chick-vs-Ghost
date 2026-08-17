@@ -73,7 +73,6 @@ public:
 	void Update(float deltaTime);
 
 	// --- スポーン命令 ---
-	void Spawn(const XMVECTOR& position/*,int globalLimit*/);
 	void Spawn(const XMVECTOR& position,int currentWave,int maxWave);
 
 	// --- 非アクティブ敵取得 ---
@@ -95,8 +94,7 @@ public:
 	void UnlockEnemyType(NewEnemyClass::EnemyType type);
 
 	// --- 画面上にいる敵を全て非表示 --- 
-	void HideAllActiveEnemies();
-	void ShowAllEnemies();
+	void ShowHideAllActiveEnemies(bool isShow);		//trueで全表示
 
 	std::vector<std::unique_ptr<NewEnemyClass::GroupData>>& GetLatestGroupData() { return m_groupDatas; }
 	std::unique_ptr<NewEnemyClass::GroupData>& GetBossGroupData() { return m_bossGroupData; }
@@ -108,6 +106,8 @@ public:
 	eDisplayMode GetDisplayMode()const { return m_displayMode; }
 	void DrawGroupDebugInfo();
 	void DrawGroupDebugArrow();
+	void DrawBossDirectionArrow(IDWriteTextFormat* pFormat);
+
 	void ChangeDebugGroupIndex(int direction);	//表示する群れを変更
 	void DebugPause();
 	
@@ -155,6 +155,10 @@ public:
 	void SetMeleeQus(UIQuestionExplain ui) { m_meleeQus = ui; }
 	void SetRangeQus(UIQuestionExplain ui) { m_rangeQus = ui; };
 	void SetPullQus(UIQuestionExplain ui) { m_pullQus = ui; };
+
+	//吹き出し（セリフ）
+	void SetImageBalloonBg(vnSprite* sprite) { m_ImageBalloonBg = sprite; }
+	vnSprite* GetImageBalloonBg()const { return m_ImageBalloonBg; }
 
 	//？マークとの当たり判定用
 	bool IsMouseOver(const UIQuestionExplain& ui, int mx, int my);
@@ -234,6 +238,9 @@ private:
 	UIQuestionExplain m_rangeQus;
 	UIQuestionExplain m_pullQus;
 	float m_balloonScale = 0.0f; // 吹き出しの現在のスケール（最初は0）
+	
+	//吹き出し（セリフ）
+	vnSprite* m_ImageBalloonBg = nullptr;
 
 	//ボスWAVEの表示切り替え
 	bool m_isFinalWave = false;

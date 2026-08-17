@@ -210,7 +210,9 @@
     <ClCompile Include="public\newPlayerClass.cpp" />
     <ClCompile Include="public\RigidbodyComponent.cpp" />
     <ClCompile Include="public\scene\scene_boot.cpp" />
-    <ClCompile Include="public\scene\scene_main.cpp" />
+    <ClCompile Include="public\scene\scene_main.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="public\scene\scene_table.cpp" />
     <ClCompile Include="public\scene\scene_title.cpp" />
     <ClCompile Include="public\scene\vn_scene.cpp" />

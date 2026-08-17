@@ -26,7 +26,7 @@ public:
 	static void ShowSearching(const XMVECTOR& worldPos);
 
 
-	// 学習・強化の表示（一定時間だけ呼ぶ想定）
+	// 学習・強化の表示
 	static void ShowUpgrade(const XMVECTOR& worldPos, const WCHAR* text, DWORD color);
 
 	//時間制限付きで表示する
@@ -34,6 +34,10 @@ public:
 
 	//固定で表示する
 	static void ShowStateArrow(const XMVECTOR& worldPos, const WCHAR* text, DWORD color);
+
+	//ボスの位置を知らせる矢印の表示
+	static void ShowBossDirectionArrow(const XMVECTOR& bossWorldPos, IDWriteTextFormat* pFormat);
+
 
 private:
 

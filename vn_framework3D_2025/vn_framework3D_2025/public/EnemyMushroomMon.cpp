@@ -51,7 +51,7 @@ void EnemyMushroomMon::OnRun(float deltaTime, float distance, const XMVECTOR& to
     CharacterBase* target = GetPlayer();
     if (!target) return;
 
-    // --- 1.タイマー更新と状態切り替え ---
+    // --- タイマー更新と状態切り替え ---
     m_timer += deltaTime;
     if (m_timer > 10.0f)
     {
@@ -72,31 +72,20 @@ void EnemyMushroomMon::OnRun(float deltaTime, float distance, const XMVECTOR& to
         }
     }
 
-    // --- 2.移動処理 ---
+    // --- 移動処理 ---
     if (m_isMoving)
     {
-        // 1. モーション再生
+        // モーション再生
         GetModel()->setMotion(motion_run_Mush);
         GetModel()->execute(motionSpeed, false, false);
 
-        // 2. 逃走方向の計算 (toPlayerは enemyPos - playerPos である前提)
+        // 逃走方向の計算 (toPlayerは enemyPos - playerPos である前提)
         XMVECTOR vInput = XMVectorZero();
         if (distance > 0.1f)
         {
             vInput = XMVector3Normalize(toPlayer); // プレイヤーに向かう方向
         }
         ApplyMovement(deltaTime, vInput);
-
-        // 3. 向き（回転）の更新
-        //if (!XMVector3Equal(vInput, XMVectorZero()))
-        //{
-        //    float rotY = atan2f(XMVectorGetX(vInput), XMVectorGetZ(vInput));
-        //    GetModel()->setRotationY(rotY);
-        //}
-        // 4. 移動速度の適用 (Rigidbodyに速度を渡す)
-        // m_baseMoveSpeed と m_boostSpeedMultiplier を掛け合わせる
-        //GetRigidbody().SetBaseVelocity(vInput * (m_baseMoveSpeed * m_boostSpeedMultiplier*m_waveBoostSpeedMultiplier));
-
 
     }
     else
@@ -106,7 +95,7 @@ void EnemyMushroomMon::OnRun(float deltaTime, float distance, const XMVECTOR& to
         GetModel()->execute(motionSpeed, false, false);
         GetRigidbody().SetBaseVelocity(XMVectorZero());
     }
-    // 5. 状態遷移：プレイヤーが停止距離（escapeStopDist）より離れたら待機へ
+    // 状態遷移：プレイヤーが停止距離（escapeStopDist）より離れたら待機へ
     if (!InPlayerArea(escapeStartDist, escapeStopDist))
     {
         if (GetRigidbody().GetIsGround())

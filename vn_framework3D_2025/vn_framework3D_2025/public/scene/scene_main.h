@@ -73,6 +73,7 @@ private:
 		WaitSkill_Pull,		   //「引き寄せ攻撃を使おう！」
 		WaitLevelUp,		   //「レベルアップしよう!」
 		WaitEnemyRange,		   //「敵を特攻状態にしよう!」
+		WaitDamage,			   //「ダメージを受けよう！」
 		WaitEnemyCount,		   //「敵を合計200体倒そう！」
 		MaxNum,	
 	};
@@ -92,7 +93,7 @@ private:
 		vnSprite* sprite_back;		//背景＋フレーム
 		vnSprite* sprite_check_box;		//クリアしたかどうかのチェックボックスの画像
 		vnSprite* sprite_check;		//チェック（クリアしたときに拡大して出す）
-		bool isClear = true;		//クリアしたか
+		bool isClear = false;		//クリアしたか
 		bool visible = false;		//表示用
 
 		float position_x = 0;		//座標
@@ -358,10 +359,19 @@ private:
 
 
 	// --- UI: スプライト (ゲージ・アイコン) ---
+	//プレイヤーアイコン。HPバー
 	vnSprite* pHpBarBackBlack;
 	vnSprite* pHpBarBack;
 	vnSprite* pHpBarFront;
 	vnSprite* pIconPlayer;
+
+	//ボスアイコン。HPバー
+	vnSprite* pBossHpBarBackBlack;
+	vnSprite* pBossHpBarBack;
+	vnSprite* pBossHpBarFront;
+	vnSprite* pIconBoss;
+	vnSprite* divide[4];			//ボスのHPバーの区切り（５分割するため4本）
+
 	vnSprite* pBackGroundBlack;
 	float     backGroundBlackScale;
 
@@ -581,6 +591,8 @@ private:
 	void SetExpbarRender(bool on);
 
 	void SetSkillUIRender(bool on); 
+
+	void SetBossHPbarRender(bool on);
 
 	//スキルのバーのUpdate
 	void UpdateSkillBar(

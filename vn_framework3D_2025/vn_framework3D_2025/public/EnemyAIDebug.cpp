@@ -1,61 +1,66 @@
-#include "../framework.h"
+ï»¿#include "../framework.h"
 #include "../framework/vn_environment.h"
+
 EnemyAIDebug::EnemyAIDebug()
 {
 
 }
-
-//ƒpƒjƒbƒNó‘Ô‚Ì•\¦
+//======================================================================
+// --- ãƒ‘ãƒ‹ãƒƒã‚¯çŠ¶æ…‹ã®è¡¨ç¤º ---
+//======================================================================
 void EnemyAIDebug::ShowPanic(const XMVECTOR& worldPos,float timer)
 {
 	if (timer <= 0.0f) return;
 	float floatUp = (1.0f - timer) * 2.0f;
 	float sx = 0, sy = 0;
-	//À•W‚ğ“ü‚ê‚é
+	//åº§æ¨™ã‚’å…¥ã‚Œã‚‹
 	XMVECTOR pos = XMVectorSetY(worldPos, XMVectorGetY(worldPos) +floatUp);
 	pos = XMVectorSetX(pos, XMVectorGetX(pos) - 2.0f);
 	if (vnFont::CalculateScreenPosition(pos, &sx, &sy))
 	{
-		vnFont::print(sx, sy, GAME_COLOR_BLUE, L"ƒŠ[ƒ_[I");
+		vnFont::print(sx, sy, GAME_COLOR_BLUE, L"ãƒªãƒ¼ãƒ€ãƒ¼ï¼");
 	}
 
 }
-
-//“ÁUó‘Ô
+//======================================================================
+// --- ç‰¹æ”»çŠ¶æ…‹ --- 
+//======================================================================
 void EnemyAIDebug::ShowCharge(const XMVECTOR& worldPos)
 {
 	float sx = 0, sy = 0;
-	//À•W‚ğ“ü‚ê‚é
+	//åº§æ¨™ã‚’å…¥ã‚Œã‚‹
 	XMVECTOR pos = XMVectorSetY(worldPos, XMVectorGetY(worldPos) + 4.0f);
 	pos = XMVectorSetX(pos, XMVectorGetX(pos) - 2.0f);
 
 	if (vnFont::CalculateScreenPosition(pos, &sx, &sy))
 	{
-		vnFont::print(sx, sy, GAME_COLOR_BLUE, L"“ÁUI");
+		vnFont::print(sx, sy, GAME_COLOR_BLUE, L"ç‰¹æ”»ï¼");
 	}
 
 }
-
-//ƒŠ[ƒ_[’T‚µó‘Ô‚Ì•\¦
+//======================================================================
+// --- ãƒªãƒ¼ãƒ€ãƒ¼æ¢ã—çŠ¶æ…‹ã®è¡¨ç¤º ---
+//======================================================================
 void EnemyAIDebug::ShowSearching(const XMVECTOR& worldPos)
 {
 	float sx = 0, sy = 0;
-	//À•W‚ğ“ü‚ê‚é
+	//åº§æ¨™ã‚’å…¥ã‚Œã‚‹
 	XMVECTOR pos = XMVectorSetY(worldPos, XMVectorGetY(worldPos) + 4.0f);
 	pos = XMVectorSetX(pos, XMVectorGetX(pos) - 2.0f);
 
 	if (vnFont::CalculateScreenPosition(pos, &sx, &sy))
 	{
-		vnFont::print(sx, sy, GAME_COLOR_BLUE, L"ƒŠ[ƒ_[‚Ç‚±‚â‚Ë‚ñH");
+		vnFont::print(sx, sy, GAME_COLOR_BLUE, L"ãƒªãƒ¼ãƒ€ãƒ¼ã©ã“ã‚„ã­ã‚“ï¼Ÿ");
 	}
 
 }
 
-
-// ŠwKE‹­‰»‚Ì•\¦iˆê’èŠÔ‚¾‚¯ŒÄ‚Ô‘z’èj
+//======================================================================
+// --- å­¦ç¿’ãƒ»å¼·åŒ–ã®è¡¨ç¤º ---
+//======================================================================
 void EnemyAIDebug::ShowUpgrade(const XMVECTOR& worldPos, const WCHAR* text,DWORD color) {
 	float sx, sy;
-	XMVECTOR pos = XMVectorSetY(worldPos, XMVectorGetY(worldPos)); // ó‘Ô‚æ‚è­‚µã
+	XMVECTOR pos = XMVectorSetY(worldPos, XMVectorGetY(worldPos)); // çŠ¶æ…‹ã‚ˆã‚Šå°‘ã—ä¸Š
 	pos = XMVectorSetX(pos, XMVectorGetX(pos) - 3.0f);
 
 	if (vnFont::CalculateScreenPosition(pos, &sx, &sy)) {
@@ -65,15 +70,15 @@ void EnemyAIDebug::ShowUpgrade(const XMVECTOR& worldPos, const WCHAR* text,DWORD
 
 void EnemyAIDebug::ShowStateOnce(const XMVECTOR& worldPos, DebugTextState& state, float timer, const WCHAR* text, DWORD color)
 {
-	// ‚·‚Å‚É•\¦‚ªI‚í‚Á‚Ä‚¢‚é‚È‚ç‰½‚à‚µ‚È‚¢
+	// ã™ã§ã«è¡¨ç¤ºãŒçµ‚ã‚ã£ã¦ã„ã‚‹ãªã‚‰ä½•ã‚‚ã—ãªã„
 	//if (state.isDone) return;
 
-	// ƒ^ƒCƒ}[‚ğXV
+	// ã‚¿ã‚¤ãƒãƒ¼ã‚’æ›´æ–°
 	state.timer = timer;
 
 	state.timer -= vnScene::getDeltaTime();
 
-	// •`‰æƒƒWƒbƒNiˆÈ‘Oì‚Á‚½ã¸‰‰oj
+	// æ–‡å­—ãŒä¸Šã«æµã‚Œã¦ã„ãæ„Ÿã˜
 	float floatUp = (1.0f - state.timer) * 2.0f;
 	XMVECTOR displayPos = XMVectorSetY(worldPos, XMVectorGetY(worldPos) + floatUp + 3.0f);
 	displayPos = XMVectorSetX(displayPos, XMVectorGetX(worldPos) - 3.0f);
@@ -83,21 +88,143 @@ void EnemyAIDebug::ShowStateOnce(const XMVECTOR& worldPos, DebugTextState& state
 		vnFont::print(sx, sy, color, text);
 	}
 
-	// I‚í‚Á‚½‚çƒtƒ‰ƒO‚ğ—§‚Ä‚é
+	// çµ‚ã‚ã£ãŸã‚‰ãƒ•ãƒ©ã‚°ã‚’ç«‹ã¦ã‚‹
 	if (state.timer <= 0.0f) {
 		state.isDone = true;
 	}
 
 }
-
+//======================================================================
+// --- ï¼“Dç©ºé–“ã®ã‚‚ã®ã¨åŒã˜å ´æ‰€ã«æ–‡å­—ã‚’è¡¨ç¤º ---
+//======================================================================
 void EnemyAIDebug::ShowStateArrow(const XMVECTOR& worldPos, const WCHAR* text, DWORD color)
 {
-
-	// •`‰æƒƒWƒbƒNiˆÈ‘Oì‚Á‚½ã¸‰‰oj
 	XMVECTOR displayPos = XMVectorSetY(worldPos, XMVectorGetY(worldPos)+2.0f);
 
 	float sx, sy;
 	if (vnFont::CalculateScreenPosition(displayPos, &sx, &sy)) {
 		vnFont::print(sx, sy, color, text);
 	}
+}
+
+//======================================================================
+// --- ãƒœã‚¹ã®ä½ç½®ã‚’çŸ¥ã‚‰ã›ã‚‹çŸ¢å°ã®è¨­å®š ---
+//======================================================================
+void EnemyAIDebug::ShowBossDirectionArrow(
+    const XMVECTOR& bossWorldPos,
+	IDWriteTextFormat* pFormat)
+{
+    float bossX;
+    float bossY;
+
+    // ãƒœã‚¹ã‚’ã‚¹ã‚¯ãƒªãƒ¼ãƒ³åº§æ¨™ã¸å¤‰æ›
+	// ãƒœã‚¹ãŒç”»é¢å¤–ã®æ™‚ã«ã®ã¿è¡¨ç¤ºã™ã‚‹
+    if (!vnFont::CalculateScreenPosition(
+        bossWorldPos, &bossX, &bossY))
+    {
+        return;
+    }
+
+    float screenW = (float)vnMainFrame::screenWidth;
+    float screenH = (float)vnMainFrame::screenHeight;
+
+    // ãƒœã‚¹ãŒç”»é¢å†…ãªã‚‰çŸ¢å°ã‚’è¡¨ç¤ºã—ãªã„
+    if (bossX >= 0.0f && bossX <= screenW &&
+        bossY >= 0.0f && bossY <= screenH)
+    {
+        return;
+    }
+
+    // ç”»é¢ä¸­å¤®ã‹ã‚‰ãƒœã‚¹æ–¹å‘
+    float centerX = screenW * 0.5f;
+    float centerY = screenH * 0.5f;
+
+    float dx = bossX - centerX;
+    float dy = bossY - centerY;
+
+    // çŸ¢å°ã‚’è¡¨ç¤ºã™ã‚‹ä½ç½®
+    float arrowX;
+    float arrowY;
+
+    const float margin = 100.0f;
+
+    // Xæ–¹å‘ã¨Yæ–¹å‘ã€ã©ã¡ã‚‰ãŒç”»é¢ç«¯ã«å…ˆã«åˆ°é”ã™ã‚‹ã‹
+    float absX = fabsf(dx);
+    float absY = fabsf(dy);
+
+    if (absX > absY)
+    {
+        // å·¦å³ã®ç«¯
+        arrowX = (dx > 0.0f)
+            ? screenW - margin
+            : margin;
+
+        arrowY =
+            centerY + dy * (arrowX - centerX) / dx;
+    }
+    else
+    {
+        // ä¸Šä¸‹ã®ç«¯
+        arrowY = (dy > 0.0f)
+            ? screenH - margin
+            : margin;
+
+        arrowX =
+            centerX + dx * (arrowY - centerY) / dy;
+    }
+
+    // å¿µã®ãŸã‚ç”»é¢å†…ã«åã‚ã‚‹
+    arrowX = Common::MyClamp(
+        arrowX,
+        margin,
+        screenW - margin);
+
+    arrowY = Common::MyClamp(
+        arrowY,
+        margin,
+        screenH - margin);
+
+    // æ–¹å‘ã«ã‚ˆã£ã¦çŸ¢å°ã‚’å¤‰ãˆã‚‹
+    const WCHAR* arrow = L"â†’";
+
+	float angle = atan2f(dy, dx);
+
+	if (angle >= -0.3927f && angle < 0.3927f)
+	{
+		arrow = L"â†’";
+	}
+	else if (angle >= 0.3927f && angle < 1.1781f)
+	{
+		arrow = L"â†˜";
+	}
+	else if (angle >= 1.1781f && angle < 1.9635f)
+	{
+		arrow = L"â†“";
+	}
+	else if (angle >= 1.9635f && angle < 2.7489f)
+	{
+		arrow = L"â†™";
+	}
+	else if (angle >= 2.7489f || angle < -2.7489f)
+	{
+		arrow = L"â†";
+	}
+	else if (angle >= -2.7489f && angle < -1.9635f)
+	{
+		arrow = L"â†–";
+	}
+	else if (angle >= -1.9635f && angle < -1.1781f)
+	{
+		arrow = L"â†‘";
+	}
+	else
+	{
+		arrow = L"â†—";
+	}
+	vnFont::setFontSize(pFormat, 100);
+	vnFont::print(
+        arrowX,
+        arrowY,
+        GAME_COLOR_YELLOW,
+        arrow);
 }

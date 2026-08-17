@@ -48,6 +48,8 @@ public:
 
     int GetKillBossCountTarget()const { return m_killBossCountTarget - m_killedCount; } //ボスの残り撃破数
 
+    int GetKillNeedBossCount()const { return m_killBossCountTarget; }           //ボスの最大必要撃破数
+
     int GetNextKillTargetCount()const { return m_nextKillTarget; }
 
     //--WAVE切り替え用
