@@ -64,6 +64,8 @@ private:
 
 		ExplainPlayerDamage,   //プレイヤーがダメージを受けたとき
 
+		ExplainBoss,		   //ボスの説明
+
 		Finish,
 	};
 	enum class TutorialMission
@@ -179,7 +181,7 @@ private:
 		TUTORIAL_SKILLS,			//スキルを獲得したときの説明
 		TUTORIAL_PLAYER_OPERATION,	//プレイヤーの基本操作説明
 		TUTORIAL_PLAYER_DAMAGE,		//プレイヤーがダメージを受けたときの説明
-
+		TUTORIAL_BOSS,				//ボスの説明
 
 		MaxNum				//最大数
 	};
@@ -229,6 +231,7 @@ private:
 		Skills,				//スキルを獲得したときの説明
 		PlayerOperation,	//プレイヤーの基本操作説明
 		PlayerDamage,		//プレイヤーがダメージを受けたときの説明
+		Boss,				//ボスの説明
 		MaxNum,
 		None,
 	};
@@ -428,6 +431,9 @@ private:
 	//時間表示の後ろに置く背景（円形の）
 	vnSprite* pTimeBackGround;
 
+	//総撃破数の後ろの背景
+	vnSprite* pEnemyKillCountBack;
+
 	// --- ポーズ中画面に出すもの ---
 	vnSprite* m_pPauseFrame;		//ポーズ中に出るフレーム
 	vnSprite* m_pPauseFrame2;		//ポーズ中に出るフレーム
@@ -552,14 +558,50 @@ private:
 	void UpdateIdel();
 	void UpdatePlay(float deltaTime);
 	void UpdateLevelUp();
+	//==========================
+	//---ポーズ画面処理 ---
+	//==========================
 	void UpdatePause();
+
+	// ゲームに戻るボタン
+	void UpdatePauseBack();
+
+	// タイトルに戻る処理
+	void UpdateReturnTitle();
+
+	// チュートリアル振り返り
+	void UpdateTutorialReview();
+
 	void UpdateBossPause();
+	//==========================
 
 
 	// --- Play中のサブシステム ---
 	void UpdatePlayer(float deltaTime);			//プレイヤー挙動・衝突判定
 	void SpawnEnemies(float deltaTime);			//敵の出現管理
+
+	//==========================
+	// --- 敵のUpdate処理 ---
+	//==========================
 	void UpdateEnemies(float deltaTime);		//敵の移動・衝突・プレイヤーとの判定
+	// WAVEクリア時の敵処理
+	void RemoveEnemiesOnWaveClear();
+
+	// 敵の移動・地面判定・引き寄せ判定
+	void UpdateEnemyMovement();
+
+	// 敵同士の衝突
+	void UpdateEnemyEnemyCollision();
+
+    // 敵とプレイヤー・弾の衝突
+	void UpdateEnemyAttackCollision();
+	void CheckEnemyPlayerCollision(NewEnemyClass* enemy);
+	void OnEnemyKilledByPlayer(NewEnemyClass* enemy);
+	void PlayEnemyDeathEffect(NewEnemyClass* enemy);
+	void UpdateWaveKillCount(NewEnemyClass* enemy);
+	void OnEnemyKilledByBullet(NewEnemyClass* enemy);
+	//==========================
+
 	void UpdateCombo(float deltaTime);			//コンボ計算・回復
 	void AddCombo(NewEnemyClass* enemy);							//コンボ加算
 	void UpdateGlobalSystems(float deltaTime);	// フェンス・タイマー・カメラ
@@ -653,6 +695,18 @@ private:
 	void SetWAVETree();
 
 	void SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData& data,bool isLeader, bool isBoss);
+
+
+
+
+
+	// --- render関数整理 ---
+
+
+
+
+
+
 
 public:
 	bool initialize();

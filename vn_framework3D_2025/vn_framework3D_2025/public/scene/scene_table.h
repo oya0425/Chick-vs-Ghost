@@ -9,7 +9,6 @@
 //シーンの種類
 enum eSceneTable
 {
-	Boot,
 	TITEL,
 	Main,
 	SceneMax,
@@ -17,7 +16,6 @@ enum eSceneTable
 
 //シーンクラス定義ファイル
 #include "vn_scene.h"
-#include "scene_boot.h"
 #include"scene_title.h"
 
 #include"scene_main.h"

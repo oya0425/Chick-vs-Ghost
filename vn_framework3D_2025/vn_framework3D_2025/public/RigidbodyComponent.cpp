@@ -31,9 +31,11 @@ void RigidbodyComponent::AddExternalVelocity(const XMVECTOR& v)
     m_externalVelocity += v;
 }
 
+//======================================================================
+// --- 物理更新 ---
+//======================================================================
 void RigidbodyComponent::Update(float dt)
 {
-    //１.
     // --- 重力（速度にだけ加算） ---
 
     if (m_IsUseGravity&&!m_isGround)
@@ -44,24 +46,13 @@ void RigidbodyComponent::Update(float dt)
     {
         m_verticalVelocity = 0.0f;  //地面なら下方向の速度をリセット
     }
-    //２.
+
     // --- 全ての速度を合算 ---
     // 合計＝（入力*倍率）+重力ベクトル+外部からの衝撃
     XMVECTOR gravityVec = XMVectorSet(0, m_verticalVelocity, 0, 0);
     m_moveDelta = (m_baseVelocity * m_speedMultiplier * dt)
                 + (gravityVec * dt)
                 + (m_externalVelocity * dt);
-
-    //// --- 水平移動（速度） ---
-    //XMVECTOR vMove = m_baseVelocity * m_speedMultiplier;
-
-    //// --- 外力を加算 ---
-    //vMove += m_externalVelocity;
-
-
-    //// --- 移動量計算（ここでだけ dt） ---
-    //XMVECTOR vY = XMVectorSet(0.0f, m_verticalVelocity, 0.0f, 0.0f);
-    //m_moveDelta = (vMove + vY) * dt;
 
     // --- 外力は1フレームで消す ---
     m_externalVelocity = XMVectorZero();

@@ -3,7 +3,7 @@
 #include "EnemyPool.h"
 namespace
 {
-    constexpr float ENEMY_GRAPH_CENTER_X = 700.0f;
+    constexpr float ENEMY_GRAPH_CENTER_X = 740.0f;
     constexpr float ENEMY_GRAPH_MAX_W = 300.0f; // baseBarWidth
 
 }
@@ -769,14 +769,18 @@ void EnemyPool::ChangeDisplayMode(eDisplayMode nextMode) {
 //======================================================================
 // --- ポーズ画面に出るもの ---
 //======================================================================
-void EnemyPool::DebugPause()
+void EnemyPool::DebugPause(bool isPlay)
 {
-    // ポーズ中の更新処理内
-    if (vnKeyboard::trg(DIK_LEFT)||vnKeyboard::trg(DIK_A)) {
-        ChangeDebugGroupIndex(-1);
-    }
-    if (vnKeyboard::trg(DIK_RIGHT)||vnKeyboard::trg(DIK_D)) {
-        ChangeDebugGroupIndex(1);
+    if (isPlay)
+    {
+        //プレイ中のみ切り替え可能にする
+        // ポーズ中の更新処理内
+        if (vnKeyboard::trg(DIK_LEFT) || vnKeyboard::trg(DIK_A)) {
+            ChangeDebugGroupIndex(-1);
+        }
+        if (vnKeyboard::trg(DIK_RIGHT) || vnKeyboard::trg(DIK_D)) {
+            ChangeDebugGroupIndex(1);
+        }
     }
 
     DrawGroupDebugInfo();
@@ -787,7 +791,7 @@ void EnemyPool::DebugPause()
 
 
 //======================================================================
-// --- 通常WAVE中に出るデバッグ ---
+// --- 通常WAVE中に出る群れ情報デバッグ ---
 //======================================================================
 void EnemyPool::DrawGroupDebugInfo()
 {
@@ -836,11 +840,11 @@ void EnemyPool::DrawGroupDebugInfo()
         //==================================================
         // 描画基準座標・レイアウトの計算
         //==================================================
-        float x = (float)vnMainFrame::screenWidth - 1080 * 0.95f;
-        float y = (float)vnMainFrame::screenHeight - 512 * 1.1f;
+        float x = (float)vnMainFrame::screenWidth - 1080.0f * 0.95f;
+        float y = (float)vnMainFrame::screenHeight - 512.0f * 1.1f;
 
         float lineYPitch = 40.0f;  // 行間（縦）
-        float lineXPitch = 210.0f; // 列間（横）
+        float lineXPitch = 230.0f; // 列間（横）
         float colonX = x + lineXPitch;
         float fontsize = /*フォント分*/ -5.0f;
         // フォントサイズ設定
@@ -854,7 +858,7 @@ void EnemyPool::DrawGroupDebugInfo()
 
         // Tabキー（戻るボタン）
         if (m_ImageTab) {
-            float imageX = x + lineXPitch * 3.5f;
+            float imageX = x + 40 + lineXPitch * 3.5f;
             m_ImageTab->setPos(imageX, y + lineYPitch * 1.2f);
             vnFont::print(imageX + 55.0f, y + lineYPitch * 0.8f+ fontsize, GAME_COLOR_YELLOW, L"：戻る");
         }
@@ -924,13 +928,13 @@ void EnemyPool::DrawGroupDebugInfo()
         float barLeftEdge = ENEMY_GRAPH_CENTER_X - (ENEMY_GRAPH_MAX_W * 0.5f);
 
         UpdateUIBarHelper(m_meleeBar, data->meleeFear, data->maxMeleeFear,
-            barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 4.3f, V_GAME_COLOR_SUNGLOW);
+            barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 4.3f+2, V_GAME_COLOR_SUNGLOW);
 
         UpdateUIBarHelper(m_rangeBar, data->rangeFear, data->maxRangeFear,
-            barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 5.3f, V_GAME_COLOR_NEON_MAGENTA);
+            barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 5.3f+2, V_GAME_COLOR_NEON_MAGENTA);
 
         UpdateUIBarHelper(m_pullBar, data->pullResistance, data->maxPullResistance,
-            barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 6.3f, V_GAME_COLOR_AQUA_GREEN);
+            barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 6.3+2, V_GAME_COLOR_AQUA_GREEN);
 
         //==================================================
         // 特殊UI（？マークと説明吹き出し）の処理
@@ -940,9 +944,10 @@ void EnemyPool::DrawGroupDebugInfo()
         //==================================================
         // --- 吹き出し（セリフ）(見栄え)---
         //==================================================
-        m_ImageBalloonBg->setPos(800, 300);
+        m_ImageBalloonBg->setPos(820, 220);
         //セリフ
-        vnFont::print(610, 200 + fontsize, GAME_COLOR_ICE_BLUE, L"～～");
+        vnFont::print(700, 150 + fontsize, GAME_COLOR_BLACK, 
+            L"範囲攻撃への耐性が\n上がるほど、敵は群れで\n固まって行動するぞ！");
 
     }
     
@@ -1038,7 +1043,7 @@ void EnemyPool::ChangeDebugGroupIndex(int direction)
     if (m_debugGroupIndex < 0)
     {
         //左へ行きすぎたら一番最後へ
-        m_debugGroupIndex = (int)m_groupDatas.size() - 1;
+        m_debugGroupIndex = aliveCount - 1;
 
     }
     //else if(m_debugGroupIndex>=(int)m_groupDatas.size())
@@ -1092,6 +1097,13 @@ void EnemyPool::DrawBossDebugInfo()
     //==================================================
     // お化け画像
     //==================================================
+
+    // Tabキー（戻るボタン）
+    if (m_ImageTab) {
+        float imageX = x + 100 + lineXPitch * 3.5f;
+        m_ImageTab->setPos(imageX, y + lineYPitch * 1.2f);
+        vnFont::print(imageX + 55.0f, y + lineYPitch * 0.8f + fontsize, GAME_COLOR_YELLOW, L"：戻る");
+    }
         // 区切り線
     if (m_ImageSlash) {
         m_ImageSlash->setRenderEnable(false);
@@ -1156,10 +1168,10 @@ void EnemyPool::DrawBossDebugInfo()
     //==================================================
     // --- 吹き出し（セリフ）(見栄え)---
     //==================================================
-    m_ImageBalloonBg->setPos(800, 300);
+    m_ImageBalloonBg->setPos(820, 220);
     //セリフ
-    vnFont::print(610, 200 + fontsize, GAME_COLOR_ICE_BLUE, L"～～");
-
+    vnFont::print(720, 180 + fontsize, GAME_COLOR_BLACK,
+        L"ゲージを５個削ると\n倒し切れるぞ！");
 
 
 }

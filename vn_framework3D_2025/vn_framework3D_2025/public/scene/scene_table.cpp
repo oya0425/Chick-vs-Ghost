@@ -9,7 +9,7 @@
 
 //起動時のシーン
 #if _DEBUG
-eSceneTable initialScene = eSceneTable::Boot;
+eSceneTable initialScene = eSceneTable::TITEL;
 #else
 eSceneTable initialScene = eSceneTable::TITEL;
 #endif
@@ -24,7 +24,6 @@ eSceneTable reserveScene = initialScene;
 //各シーンの名前	//起動時に出てくる名前
 WCHAR SceneName[(int)eSceneTable::SceneMax][32] =
 {
-	L"Boot",
 	L"TITEL",
 	L"Main",
 };
@@ -48,8 +47,6 @@ void switchScene()
 	vnScene *pScene=NULL;
 	switch(reserveScene)
 	{
-	case Boot:			pScene = new SceneBoot();			break;
-
 	case Main:			pScene = new SceneMain();			break;
 	case TITEL:			pScene = new SceneTitle();			break;
 	}

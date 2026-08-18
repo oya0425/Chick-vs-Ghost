@@ -25,6 +25,8 @@ enum SE_ID
 	SE_ENEMY_PANIC,		//パニック時に鳴らすSE
 	SE_JUMP,			//ジャンプ時に鳴らすSE
 	SE_GRILL,			//溶岩に当たってるときの音
+	SE_MISSIONCLEAR,	//ミッションクリア時に鳴らす音
+	SE_TUTORIALCLEAR,	//チュートリアルクリア時に鳴らすSE
 
 
 	//タイトル画面で使用

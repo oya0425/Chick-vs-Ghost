@@ -279,7 +279,7 @@ void SceneTitle::execute()
         pTutorialStartButton->setRenderEnable(false);
         pEndlessStartButton->setRenderEnable(false);
         pRuleButton->setRenderEnable(false);
-
+        //ページの切り替え
         // 戻るボタン
         if (Common::UpdateButton(
             leftButton_x,
@@ -445,7 +445,7 @@ void SceneTitle::render()
        break;
 
     case SceneTitle::TitleState::RULE:
-
+        //一番最初のページではタイトルに戻るか進む、などページにあった文字を表示
         // 左ボタン
         if (m_rulePage == 0)
         {
@@ -498,14 +498,6 @@ void SceneTitle::render()
 //=====================
 // 背景の変更
 //=====================
-//void SceneTitle::ChangeBackGround(TitleUI ui)
-//{
-//    m_pBackGround[m_currentUI]->setRenderEnable(false);
-//    m_pBackGround[ui]->setRenderEnable(true);
-//
-//    m_currentUI = ui;
-//}
-
 void SceneTitle::ChangeBackGround(int index)
 {
     m_pBackGround[m_currentUI]->setRenderEnable(false);

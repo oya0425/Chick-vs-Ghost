@@ -184,43 +184,32 @@ void EnemyAIDebug::ShowBossDirectionArrow(
         margin,
         screenH - margin);
 
-    // 方向によって矢印を変える
-    const WCHAR* arrow = L"→";
+	// 方向によって矢印を変える
+	const WCHAR* arrow = L"→";
 
 	float angle = atan2f(dy, dx);
 
-	if (angle >= -0.3927f && angle < 0.3927f)
+	if (angle >= -0.7854f && angle < 0.7854f)
 	{
+		// 右
 		arrow = L"→";
 	}
-	else if (angle >= 0.3927f && angle < 1.1781f)
+	else if (angle >= 0.7854f && angle < 2.3562f)
 	{
-		arrow = L"↘";
-	}
-	else if (angle >= 1.1781f && angle < 1.9635f)
-	{
+		// 下
 		arrow = L"↓";
 	}
-	else if (angle >= 1.9635f && angle < 2.7489f)
+	else if (angle >= 2.3562f || angle < -2.3562f)
 	{
-		arrow = L"↙";
-	}
-	else if (angle >= 2.7489f || angle < -2.7489f)
-	{
+		// 左
 		arrow = L"←";
-	}
-	else if (angle >= -2.7489f && angle < -1.9635f)
-	{
-		arrow = L"↖";
-	}
-	else if (angle >= -1.9635f && angle < -1.1781f)
-	{
-		arrow = L"↑";
 	}
 	else
 	{
-		arrow = L"↗";
+		// 上
+		arrow = L"↑";
 	}
+
 	vnFont::setFontSize(pFormat, 100);
 	vnFont::print(
         arrowX,

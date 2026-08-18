@@ -105,9 +105,6 @@
     <ClInclude Include="framework\vn_sound.h">
       <Filter>framework</Filter>
     </ClInclude>
-    <ClInclude Include="public\scene\scene_boot.h">
-      <Filter>public\scene</Filter>
-    </ClInclude>
     <ClInclude Include="public\scene\scene_table.h">
       <Filter>public\scene</Filter>
     </ClInclude>
@@ -244,9 +241,6 @@
     </ClCompile>
     <ClCompile Include="framework\vn_sound.cpp">
       <Filter>framework</Filter>
-    </ClCompile>
-    <ClCompile Include="public\scene\scene_boot.cpp">
-      <Filter>public\scene</Filter>
     </ClCompile>
     <ClCompile Include="public\scene\scene_table.cpp">
       <Filter>public\scene</Filter>

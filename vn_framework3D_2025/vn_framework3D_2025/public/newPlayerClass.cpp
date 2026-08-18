@@ -25,10 +25,6 @@ NewPlayerClass::NewPlayerClass()
 	m_isMoving(false),
 	m_boostSpeedMultiplier(1.0f)
 {
-	m_boostTime = 0.0f;
-	m_specialGauge = 0.0f;
-	m_isCanBoost = false;
-	m_isCanMeteor = false;
 
 	SetMaxHp(100);
 	//SetCurrentHP(50);
@@ -78,14 +74,6 @@ void NewPlayerClass::ResetSkillCoolTime()
 	m_areaAtkCoolTimer = 0.0f;
 	m_pullCooldownTimer = 0.0f;
 }
-//======================================================================
-// --- 必殺の落ちてくる殻のモデルセット --- 
-//======================================================================
-void NewPlayerClass::SetMeteorModel(vnModel* model)
-{
-	m_pMeteorModel = model;
-	ResetMeteorModel();
-}
 
 //上の殻のモデルセット
 void NewPlayerClass::SetUpKaraModel(vnModel* model)
@@ -95,10 +83,6 @@ void NewPlayerClass::SetUpKaraModel(vnModel* model)
 }
 
 
-vnModel* NewPlayerClass::GetMeteorModel()const
-{
-	return m_pMeteorModel;
-}
 vnModel* NewPlayerClass::GetUpKaraModel()const
 {
 	return m_pUpKara;
@@ -112,35 +96,38 @@ void NewPlayerClass::SetPlayerMove(bool canMove)
 
 
 
-
+//======================================================================
+// --- 更新 ---
+//======================================================================
 void NewPlayerClass::Update(float deltaTime)
 {
 	vnCharacter* pModel = GetModel();
 	if (!pModel)return;
 
-	//1.入力と移動ベクトル計算（カメラ方向を変換含む）
+	//入力と移動ベクトル計算（カメラ方向を変換含む）
 	XMVECTOR vInput = CalculateInputVector();
 
-	//2.物理・移動処理（ジャンプ、Rigidbody更新、座標反映）
+	//物理・移動処理（ジャンプ、Rigidbody更新、座標反映）
 	HandlePhysicsAndMovement(vInput, deltaTime);
 
 
-	//3.スキル・攻撃処理
+	//スキル・攻撃処理
 	UpdateSkills(deltaTime);
 
 
 
-	//4.キャラクターの向きとアニメーション
+	//キャラクターの向きとアニメーション
 	UpdateVisuals(vInput, deltaTime);
 
-	//5.デバッグ
+	//デバッグ
 	DrawDebugInfo();
 
 }
 
 
-
+//======================================================================
 // --- 移動入力 ---
+//======================================================================
 XMVECTOR NewPlayerClass::CalculateInputVector()
 {
 	if (!m_isMove)return XMVectorZero();
@@ -235,7 +222,12 @@ XMVECTOR NewPlayerClass::CalculateInputVector()
 
 }
 
+
+
+
+//======================================================================
 // --- ジャンプ入力や物理 ---
+//======================================================================
 void NewPlayerClass::HandlePhysicsAndMovement(XMVECTOR vInput, float deltaTime)
 {
 	bool currentJumpInput = vnKeyboard::trg(DIK_SPACE) || vnMouse::trgL();
@@ -278,7 +270,12 @@ void NewPlayerClass::HandlePhysicsAndMovement(XMVECTOR vInput, float deltaTime)
 
 }
 
+
+
+
+//======================================================================
 // --- スキル ---
+//======================================================================
 void NewPlayerClass::UpdateSkills(float deltaTime)
 {
 	if (m_isLevelUp)return;
@@ -294,7 +291,11 @@ void NewPlayerClass::UpdateSkills(float deltaTime)
 
 }
 
+
+
+//======================================================================
 // --- モーション ---
+//======================================================================
 void NewPlayerClass::UpdateVisuals(XMVECTOR vInput, float deltaTime)
 {
 	vnCharacter* pModel = GetModel();
@@ -320,14 +321,19 @@ void NewPlayerClass::UpdateVisuals(XMVECTOR vInput, float deltaTime)
 		auto* pDownKara = pModel->getParts("KaraDown");
 		if (pDownKara)
 		{
-			float rotSpeed =
-				m_isCanBoost ? downKaraBoostRotSpeed_motion : downKaraNormalRotSpeed_motion;
+			float rotSpeed = downKaraNormalRotSpeed_motion;
 			pDownKara->addRotationY(rotSpeed);
 		}
 
 	}
 }
 
+
+
+
+//======================================================================
+// --- ジャンプ ---
+//======================================================================
 void NewPlayerClass::Jump(bool isLevelUping)
 {
 	if (!m_isJump)
@@ -361,12 +367,13 @@ void NewPlayerClass::Jump(bool isLevelUping)
 }
 
 
-
+//======================================================================
 // --- 範囲攻撃スキル ---
+//======================================================================
 void NewPlayerClass::UpdateAreaAttackSkill(float deltaTime)
 {
 
-	// スキルを持っていないなら、これ以降の処理（switch文など）を一切やらない
+	// スキルを持っていないなら、これ以降の処理を一切やらない
 	if (!m_isHaveAreaAtkSkill) return;
 	if (m_pullState == eSkillState::ACTIVE)return;
 	switch (m_areaAttackState)
@@ -375,7 +382,7 @@ void NewPlayerClass::UpdateAreaAttackSkill(float deltaTime)
 	{
 		bool keyE = vnKeyboard::trg(DIK_E);
 
-		// --- 入力検知（例えば左クリックや特定のキー） ---
+		// --- 入力検知 ---
 		if ((keyE && !m_isExpanding) /*|| (vnMouse::trgR() && !m_isExpanding)*/)
 		{
 			//範囲攻撃時に音を鳴らす
@@ -408,7 +415,7 @@ void NewPlayerClass::UpdateAreaAttackSkill(float deltaTime)
 			// 半径を更新
 			m_currentRadius = m_defaultRadius + (m_maxAttackRadius - m_defaultRadius) * t;
 			XMVECTOR ropecenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
-			DWORD debugColor = m_isExpanding ? GAME_COLOR_SILVER : GAME_COLOR_LIME; // 攻撃中は赤くする
+			DWORD debugColor = m_isExpanding ? GAME_COLOR_SILVER : GAME_COLOR_LIME; // 攻撃中は色を変化する
 			vnDebugDraw::Sphere(ropecenter, m_currentRadius, debugColor);
 
 			// 1秒経過（最大サイズに到達）したらリセット
@@ -438,10 +445,12 @@ void NewPlayerClass::UpdateAreaAttackSkill(float deltaTime)
 }
 
 
+//======================================================================
 // --- 引き寄せスキル ---
+//======================================================================
 void NewPlayerClass::UpdatePullSkill(float deltaTime)
 {
-	// スキルを持っていないなら、これ以降の処理（switch文など）を一切やらない
+	// スキルを持っていないなら、これ以降の処理を一切やらない
 	if (!m_isHavePullSkill) return;
 	if (m_areaAttackState == eSkillState::ACTIVE)return;
 
@@ -449,12 +458,12 @@ void NewPlayerClass::UpdatePullSkill(float deltaTime)
 	{
 	case eSkillState::READY:
 	{
-		//入力判定
+		//引き寄せの表示（線を円に描く）
 		XMVECTOR ropecenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
 		vnDebugDraw::DrawSuctionEffect(ropecenter, m_pullRadius, m_pullDuration, GAME_COLOR_LIGHT_BLUE,false,0);
-		//vnDebugDraw::DrawSuctionEffect(ropecenter, m_pullRadius, m_pullDuration, GAME_COLOR_LIGHT_BLUE,false,2);
 		vnDebugDraw::DrawSuctionLines(ropecenter, m_pullRadius, m_pullDuration, GAME_COLOR_LIGHT_BLUE, GAME_COLOR_WHITE,false);
 
+		//入力判定
 		if (vnKeyboard::trg(DIK_Q))
 		{
 			//引き寄せ攻撃時に音を鳴らす
@@ -483,7 +492,6 @@ void NewPlayerClass::UpdatePullSkill(float deltaTime)
 		else
 		{
 			XMVECTOR ropecenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
-			//vnDebugDraw::DrawSuctionLines(ropecenter, m_pullRadius, m_pullDuration, GAME_COLOR_BLACK, GAME_COLOR_WHITE,true);
 			vnDebugDraw::DrawSuctionEffect(ropecenter, m_pullRadius, m_pullTimer, GAME_COLOR_BLUE,true,0);
 			vnDebugDraw::DrawSuctionEffect(ropecenter, m_pullRadius, m_pullTimer, GAME_COLOR_CYAN,true,3);
 		}
@@ -501,18 +509,13 @@ void NewPlayerClass::UpdatePullSkill(float deltaTime)
 
 		break;
 	}
-	// --- デバッグ表示 ---
-	//// スキル発動中(ACTIVE)は青、それ以外(準備完了中など)は薄い色にするなど
-	//XMVECTOR pullCenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
-	//DWORD debugColor = (m_pullState == eSkillState::ACTIVE) ? GAME_COLOR_MAGENTA : 0x4400FFFF; // 発動中は水色、待機中は半透明
-
-	//// 引き寄せ範囲（m_pullRadius）を表示
-	//vnDebugDraw::Sphere(pullCenter, m_pullRadius, debugColor);
 }
 
 
-
+//======================================================================
 // --- 弾撃つ攻撃 ---
+//======================================================================
+//======================================================================
 void NewPlayerClass::UpdateBulletAttack(float deltaTime)
 {
 	switch (m_ShootState)
@@ -541,23 +544,10 @@ void NewPlayerClass::UpdateBulletAttack(float deltaTime)
 }
 
 
-// --- 初期化（殻）---
-void NewPlayerClass::ResetMeteorModel()
-{
-	if (!m_pMeteorModel||!GetModel())return;
-	m_pMeteorModel->setRenderEnable(false);
-	m_pMeteorModel->setPosition(GetModel()->getPosition());
-	m_pMeteorModel->setPositionY(100.0f);
-	m_pMeteorModel->setPositionZ(10.0f);
-	m_pMeteorModel->setScale(1, 1, 1);
-	m_pMeteorModel->setRotationX(4.712734f);
-	m_isCanMeteor = true;
-	m_isUpKara = false;	
-	m_isForwardBig = false;
-	m_isDownKara = false;
-}
 
-
+//======================================================================
+// --- 上の殻をプレイヤーの頭の上にそろえる ---
+//======================================================================
 void NewPlayerClass::ResetUpKara()
 {
 	if (!m_pUpKara || !GetModel())return;
@@ -569,111 +559,11 @@ void NewPlayerClass::ResetUpKara()
 	m_pUpKara->setRotationY(0);
 }
 
-//隕石必殺発動
-void NewPlayerClass::StartSpecialMeteor()
-{
-	m_isUpKara = true;
-	m_isForwardBig = false;
-	m_isDownKara = false;
-}
-//隕石必殺中
-void NewPlayerClass::SpecialMeteor()
-{
-	//if (!pMeteorModel) return;
-	//// ① 殻が真上に上がる
-	//if (isUpKara)
-	//{
-
-	//	isMove = false;
-	//	isCanMeteor = false;
-	//	//pMeteorModel->removeParent();
-
-	//	pUpKara->addPositionZ(1.0f); // 上
-
-	//	if (pUpKara->getPositionZ() >= 20.0f)
-	//	{
-	//		pUpKara->setRenderEnable(false);
-	//		pMeteorModel->setPosition(pModel->getPosition());
-	//		//落ちてくる殻をplayerの動きに合わせておいとく
-	//		pMeteorModel->setPositionY(70.0f);
-
-	//		isUpKara = false;
-	//		isForwardBig = true;
-	//	}
-
-	//	return;
-	//}
-
-	//// ② 正面上空へ移動しながら巨大化
-	//if (isForwardBig)
-	//{
-	//	pMeteorModel->setRenderEnable(true);
-
-	//	//pMeteorModel->addPositionY(-0.3f); // 正面
-	//	//pMeteorModel->setRotationY(XM_PI);
-
-	//	XMVECTOR currentPos = *pMeteorModel->getPosition();
-	//	//pMeteorModel->setPosition(XMVectorGetX(currentPos), XMVectorGetY(currentPos), XMVectorGetZ(currentPos)+1.0f);
-	//	
-	//	//pMeteorModel->setPosition(pModel->getPositionX(), XMVectorGetY(currentPos),pModel->getPositionZ() +50.0f);
-	//	float rotY = pModel->getRotationY(); // プレイヤーの向き（ラジアン）
-
-	//	// 正面方向ベクトル
-	//	float dirX = sinf(rotY);
-	//	float dirZ = cosf(rotY);
-
-	//	// 現在位置
-	//	float baseX = pModel->getPositionX();
-	//	float baseZ = pModel->getPositionZ();
-
-	//	// 正面50.0f先に出す
-	//	float distance = 70.0f;
-
-	//	pMeteorModel->setPosition(
-	//		baseX + dirX * distance,
-	//		XMVectorGetY(currentPos),
-	//		baseZ + dirZ * distance
-	//	);
-	//	float tergetScaleNum = 50.0f;
-	//	XMFLOAT3 targetScale = { tergetScaleNum, tergetScaleNum, tergetScaleNum };
-	//	if (pMeteorModel->getScaleX() < targetScale.x)
-	//	{
-	//		pMeteorModel->addScale(1.5f, 1.5f, 1.5f);
-	//	}
-	//	else
-	//	{
-	//		pMeteorModel->setScale(tergetScaleNum, tergetScaleNum, tergetScaleNum);
-	//		isForwardBig = false;
-	//		m_isDownKara = true;
-	//	}
-		return;
-	//}
-
-	// ③ 落下
-	//if (m_isDownKara)
-	//{
-	//	pMeteorModel->addPositionY(-1.0f); // 下
-	//	if (pMeteorModel->getPositionY() <= -50.0f) {
-	//		ResetMeteorModel();
-	//		ResetUpKara();
-	//	}
-	//}
-}
 
 
-//移動必殺発動(初期化)
-void  NewPlayerClass::StartSpecialBoost()
-{
-	m_boostTime = m_boostTimeMax;
-	m_isCanBoost = false;
-
-}
-
-//--------------------------------------------------------
-//
-//    経験値で変化する用のやつ
-//
-//--------------------------------------------------------
+//======================================================================
+// --- 経験値で変化する用のやつ ---
+//======================================================================
 
 //移動速度
 void NewPlayerClass::SetSpeedMultiplier(float multiplier)
@@ -702,12 +592,9 @@ void NewPlayerClass::SetBulletSpeedMultiplier(float multiplier)
 	m_bullet->SetSpeed(multiplier);
 }
 
-//---------------------------------------------------------
-
-
-
-
+//======================================================================
 // --- レベルアップ画面での行動 ---
+//======================================================================
 void NewPlayerClass::UpdateLevelUp()
 {
 	m_isLevelUp = true;
@@ -735,35 +622,4 @@ NewPlayerClass::~NewPlayerClass()
 
 void NewPlayerClass::DrawDebugInfo()
 {
-
-	//XMVECTOR ropecenter = XMVectorAdd(*GetModel()->getPosition(), GetCollision().GetCenter());
-	//DWORD debugColor = m_isExpanding ? GAME_COLOR_RED : GAME_COLOR_LIME; // 攻撃中は赤くする
-	//vnDebugDraw::Sphere(ropecenter, m_currentRadius, debugColor);
-
-	//const wchar_t* stateStr = L"UNKNOWN";
-	//switch (m_ShootState)
-	//{
-	//case eSkillState::READY:    stateStr = L"READY";    break;
-	//case eSkillState::ACTIVE:   stateStr = L"ACTIVE";   break;
-	//case eSkillState::COOLDOWN: stateStr = L"COOLDOWN"; break;
-	//}
-
-	//// 2. 指定のフォーマットで表示
-	//// 座標(400, posY)などは適宜調整してください
-	//vnFont::print(20, 400, L"[Skill] ShootState : %s (CT: %.1f / %.1f)",
-	//	stateStr,                     // ステート名
-	//	m_shootCooldownTimer,         // 現在の残り時間
-	//	m_shootCooldownMax            // 最大クールタイム
-	//);
-
-	//vnFont::print(10, 650, L"最大反射回数　%d", m_bullet->GetMaxBounce());
-
-	//vnFont::print(10, 700, L"反射可能回数　%d", m_bullet->GetCurrentBounce());
-
-	//vnFont::print(10, 650, L"MoveDir %.f, %.f , %.f",
-	//	XMVectorGetX(GetMoveDir()),
-	//	XMVectorGetY(GetMoveDir()),
-	//	XMVectorGetZ(GetMoveDir())
-	//	);
-	//vnFont::print(10, 700, L"RotY %.f", GetModel()->getRotationY());
 }

@@ -159,7 +159,6 @@
     <ClInclude Include="public\NewEnemyClass.h" />
     <ClInclude Include="public\newPlayerClass.h" />
     <ClInclude Include="public\RigidbodyComponent.h" />
-    <ClInclude Include="public\scene\scene_boot.h" />
     <ClInclude Include="public\scene\scene_main.h" />
     <ClInclude Include="public\scene\scene_table.h" />
     <ClInclude Include="public\scene\scene_title.h" />
@@ -209,7 +208,6 @@
     <ClCompile Include="public\NewEnemyClass.cpp" />
     <ClCompile Include="public\newPlayerClass.cpp" />
     <ClCompile Include="public\RigidbodyComponent.cpp" />
-    <ClCompile Include="public\scene\scene_boot.cpp" />
     <ClCompile Include="public\scene\scene_main.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>

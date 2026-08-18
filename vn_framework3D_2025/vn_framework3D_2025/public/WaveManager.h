@@ -118,7 +118,7 @@ private:
 
     float m_waveTimer = 20;            //WAVE中の時間
     float m_waveTimeLimit=1;         //WAVEクリアまでの時間（残り０秒でクリア、）
-    const float m_waveTimeBase = 20;  //基準の時間
+    const float m_waveTimeBase = 2;  //基準の時間
     const float m_addTime = 10;       //増える時間   
 
     int m_nextKillTarget;    // 次の必要キル数

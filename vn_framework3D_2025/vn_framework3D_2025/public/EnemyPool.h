@@ -109,7 +109,7 @@ public:
 	void DrawBossDirectionArrow(IDWriteTextFormat* pFormat);
 
 	void ChangeDebugGroupIndex(int direction);	//•\¦‚·‚éŒQ‚ê‚ğ•ÏX
-	void DebugPause();
+	void DebugPause(bool isPlay);
 	
 	int GetChargeCount();				//ŒQ‚ª“ÁUó‘Ô‚É‚È‚Á‚½‰ñ”
 

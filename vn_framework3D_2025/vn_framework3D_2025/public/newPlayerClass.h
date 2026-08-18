@@ -28,9 +28,6 @@ public:
 
 
 	// --- モデルセット ---
-	void SetMeteorModel(vnModel* model); //上の殻のモデルをセット
-	vnModel* GetMeteorModel()const;	//上の殻のモデルを返す
-
 	void SetUpKaraModel(vnModel* model); //上の殻のモデルをセット
 	vnModel* GetUpKaraModel()const;	//上の殻のモデルを返す
 
@@ -45,21 +42,8 @@ public:
 
 	float GetBaseMoveSpeed() { return m_baseMoveSpeed; }
 
-	//void SetIsGround(bool onGround) { isGroundHit = onGround; }
-	//bool GetIsGround() { return isGroundHit; }
-
-
 	// --- 殻を初期化 --- 
-	void ResetMeteorModel(); //落ちてくる殻のリセット
 	void ResetUpKara();		 //上の殻をリセット
-
-	// --- 必殺 ---
-	//隕石必殺
-	void SpecialMeteor();
-	void StartSpecialMeteor();	//隕石必殺開始
-
-	//移動必殺
-	void StartSpecialBoost();	//移動必殺開始
 
 
 	// --- ステータス強化 ---
@@ -152,19 +136,19 @@ public:
 
 private:
 	// --- Update内整理用関数 ---
-	//1.入力と移動ベクトル計算（カメラ方向への変換を含む）
+	//入力と移動ベクトル計算（カメラ方向への変換を含む）
 	XMVECTOR CalculateInputVector();
 
-	//2.物理・移動処理（ジャンプ、Rigidbody更新、座標反映）
+	//物理・移動処理（ジャンプ、Rigidbody更新、座標反映）
 	void HandlePhysicsAndMovement(XMVECTOR Input, float deltaTime);
 
-	//3.スキル・攻撃処理
+	//スキル・攻撃処理
 	void UpdateSkills(float deltaTime);
 
-	//4.キャラクターの向きとアニメーション
+	//キャラクターの向きとアニメーション
 	void UpdateVisuals(XMVECTOR Input, float deltaTime);
 
-	//5.デバッグ
+	//デバッグ
 	void DrawDebugInfo();
 
 
@@ -172,7 +156,6 @@ private:
 
 	// --- モデル ---
 	vnModel* m_pUpKara = nullptr;
-	vnModel* m_pMeteorModel = nullptr;
 	
 	// --- 移動 ---
 	const float m_baseMoveSpeed = 18.0f;
@@ -184,25 +167,6 @@ private:
 	bool m_isMoving=false;	//移動中かどうか？
 
 	XMVECTOR respawnPos = XMVectorSet(0, 5, 0, 0);
-
-
-	// --- 必殺 ---
-	float m_specialGauge;
-	const float m_specialGaugeMax = 1.0f;
-	const float m_specialGaugeMin = 0;
-	const float m_needGaugeBoost = 0.4f;
-	const float m_needGaugeMeteor = 0.7f;
-
-	// --- 状態 ---
-	bool  m_isCanBoost;	//移動必殺が打てるかどうか？
-	float m_boostTime;
-	const float m_boostTimeMax = 5.0f;
-
-	bool m_isCanMeteor;	//隕石必殺が打てるかどうか？
-	//隕石必殺演出変数
-	bool m_isUpKara = false; // 殻が真上に上がる
-	bool m_isForwardBig = false; // 正面上空へ＋巨大化
-	bool m_isDownKara = false; // 落下
 
 	// --- 範囲攻撃用 ---
 	eSkillState m_areaAttackState = eSkillState::READY;

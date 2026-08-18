@@ -164,6 +164,6 @@ public:
 	float getPosX() const { return posX; }
 	float getPosY() const { return posY; }
 
-	// 関数を宣言
+	// 四角を斜めに
 	void setSkewX(float skew);
 };
