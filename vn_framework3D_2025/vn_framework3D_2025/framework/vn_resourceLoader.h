@@ -43,11 +43,6 @@ private:
 		};
 
 		//ì«Ç›çûÇ‹ÇÍÇΩÉäÉ\Å[ÉX
-		//union
-		//{
-		//	_tex tex;
-		//	_vnm vnm;
-		//};
 		_tex tex;
 		_vnm vnm;
 #endif
@@ -56,19 +51,6 @@ private:
 		{
 			init();
 		}
-
-//		void init()
-//		{
-//			memset(path, 0, sizeof(path));
-//			refCount = 0;
-//#if vnRESOURCE_LOADER_TEX_ONLY
-//			texbuff = NULL;
-//			format = DXGI_FORMAT_UNKNOWN;
-//#else
-//			memset(&vnm, 0, sizeof(_vnm));
-//#endif
-//
-//		}
 		void init()
 		{
 			memset(path, 0, sizeof(path));

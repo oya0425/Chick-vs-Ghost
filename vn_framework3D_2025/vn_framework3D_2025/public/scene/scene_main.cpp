@@ -3833,24 +3833,20 @@ void SceneMain::UpdateMissionAnimation(float deltaTime)
 
 	for (auto& mission : m_missionUI)
 	{
+		//ミッションをクリアしていないものだけ
 		if (mission.animState == MissionAnimState::Finished)
 			continue;
-
+		//上にあげる
 		mission.position_y +=
 			(targetY - mission.position_y) * 0.2f;
+		//UIに位置を入れる
+		mission.sprite_back->setPos(mission.position_x, mission.position_y);
 
-		mission.sprite_back->setPos(
-			mission.position_x,
-			mission.position_y);
+		mission.sprite_check_box->setPos(mission.position_x - 175.0f, mission.position_y);
 
-		mission.sprite_check_box->setPos(
-			mission.position_x - 175.0f,
-			mission.position_y);
-
-		mission.sprite_check->setPos(
-			mission.position_x - 175.0f,
-			mission.position_y);
-
+		mission.sprite_check->setPos(mission.position_x - 175.0f, mission.position_y);
+		
+		//目標位置をずらしてミッションUIが被らないように
 		targetY += 40.0f;
 	}
 
