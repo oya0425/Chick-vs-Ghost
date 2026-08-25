@@ -227,7 +227,7 @@ void vnCharacter::execute(float time,bool isDead, bool isBoxUnity)//vnCharactor‚
 
 	vnObject* pObj = this;	//Ä¶‘ÎÛƒIƒuƒWƒFƒNƒg
 
-	for (int i = 0; i < pMotion->ChannelNum; i++)
+	for (int i = 0; i < (int)pMotion->ChannelNum; i++)
 	{
 		if (channel[i].Name[0] == '\0')	//–¼‘O‚Ìİ’è‚ª‚È‚¢ƒ`ƒƒƒ“ƒlƒ‹‚ÍƒIƒuƒWƒFƒNƒg©‘Ì‚Ìƒ‚[ƒVƒ‡ƒ“‚Æ‚µ‚Äˆµ‚¤
 		{

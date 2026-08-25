@@ -9,7 +9,7 @@ namespace
     constexpr float ghostSize = 2.5f;
 
     // --- 状態遷移の確率 (0.0f ~ 1.0f) ---
-    constexpr float chargeProbability = 0.05f; // 特攻になる確率
+    constexpr float chargeProbability = 0.01f; // 特攻になる確率
 
     // --- ノックバック演出 (回転分岐) ---
     constexpr float rotationThreshold1 = 0.33f;
@@ -43,7 +43,7 @@ namespace
     constexpr float leaderRepelRadius       = 50.0f;    // リーダー同士が重ならないように反発する距離（排他範囲）
 
     constexpr float followerStopDistBase    = 5.0f;    // リーダーに対して停止する基本距離
-    constexpr float followerSpeedBoost      = leaderSpeedBoost*0.9;    // 一般個体の速度倍率
+    constexpr float followerSpeedBoost      = leaderSpeedBoost*0.9f;    // 一般個体の速度倍率
     constexpr float followerSearchRadius    = 100.0f;  // リーダーを探し出す索敵範囲
     constexpr int   stopDistRandomRange     = 50;      // 停止距離にバラつきを出すための乱数範囲（0～4.9f）
 
@@ -436,6 +436,7 @@ void NewEnemyClass::UpdatePhysics(float deltaTime)
     Jump();
     //物理更新
     GetRigidbody().Update(deltaTime);
+
     //伸び縮みのアニメーション
     UpdateSquashAndStretch(deltaTime);
 
@@ -762,7 +763,7 @@ void NewEnemyClass::ApplyMovement(float deltaTime, const XMVECTOR moveDir)
 
 #pragma region 範囲攻撃耐性が基礎速度アップ
     // 学習データをもとに足す基礎速度を取る
-    float rangeFear = data ? data->rangeFear*1.2 : 0.0f;
+    float rangeFear = data ? data->rangeFear*1.2f : 0.0f;
 
     //群のそれぞれに応じたベース倍率の決定
     float roleMultiplier = GetIsLeader() ? m_leaderSpeedMultiplier : m_otherSpeedMultiplier;
@@ -794,8 +795,7 @@ void NewEnemyClass::Jump()
     {
         m_isJump = true;
         GetRigidbody().SetIsGround(false);
-        GetRigidbody().AddVerticalVelocity(wallJumpPower); // 18.0fは結構高いので調整してください
-
+        GetRigidbody().AddVerticalVelocity(wallJumpPower); 
         // フラグをリセットしておかないと、空中で何度もジャンプしようとする可能性がある
         SetWallHit(false);
     }
@@ -807,6 +807,8 @@ void NewEnemyClass::Jump()
             m_isJump = false;
             GetRigidbody().SetVerticalVelocity(0.0f);
             GetRigidbody().SetIsUseGravity(false);
+
+
         }
     }
     else
@@ -815,35 +817,7 @@ void NewEnemyClass::Jump()
     }
 }
 
-//======================================================================
-// --- プレイヤーの範囲攻撃の範囲外に出る(使用していない) ---
-//======================================================================
-void NewEnemyClass::EscapeAreaAttack()
-{
-    if (!GetIsLeader()) return;
-    GroupData* pData = GetGroupData();
-    if (!pData) return;
-    
-    // プレイヤーが攻撃中かどうかに関わらず、
-    // 「プレイヤーの周囲 R メートル」を常に危険地帯とみなす
-    // 学習が進む（rangeFearが上がる）ほど、その半径が広がる
-    
-    float escapeStartDist = m_pPlayer->GetAreaAttackRadius() + pData->rangeFear; // 基礎半径 + 警戒心
-    float escapeStopDist = escapeStartDist + 2.0f;
-    
-    // 常に判定を回しておく
-    pData->isLeaderEscaping = InPlayerArea(escapeStartDist, escapeStopDist);
 
-    if (pData->isLeaderEscaping)
-    {
-        m_leaderSpeedMultiplier *= 2.0f;
-
-    }
-    else
-    {
-        m_leaderSpeedMultiplier = m_defalutLeaderSpeedMultiplier;
-    }
-}
 
 
 
@@ -877,6 +851,46 @@ void NewEnemyClass::UpdateSquashAndStretch(float deltaTime)
     }
 }
 //======================================================================
+
+
+//======================================================================
+// --- 自身がついていくリーダーをセット ---
+//======================================================================
+void NewEnemyClass::LeaderSet(float searchRadius)
+{
+    //リーダーを範囲で探して見つかったら色をリーダーに合わせて、
+    // リーダーについていくモードに変える
+
+    // リーダー以外：リーダーを探す（既存のFollowロジック）
+    if (!m_pMyLeader)
+    {
+        m_pMyLeader = EnemyPool::GetInstance().FindClosestLeader(this, searchRadius);
+        if (m_pMyLeader)
+        {
+            //リーダーの色を取得
+            XMVECTOR leaderColor = m_pMyLeader->GetColor();
+
+            //少し色を足して薄くする
+            XMVECTOR offset = XMVectorSet(0.2f, 0.2f, 0.2f, 0.0f);
+            XMVECTOR followerColor = XMVectorAdd(leaderColor, offset);
+
+            //1.0を超えないようにクランプ
+            followerColor = XMVectorClamp(followerColor, XMVectorZero(), XMVectorSplatOne());
+
+            //群れの番号を適応
+            SetGroupID(m_pMyLeader->GetGroupID());
+
+            //自分に色を適用
+            GetModel()->SetAllPartsDiffuse(followerColor, 1.0f);
+            SetState(eState::Follow);
+        }
+    }
+    //すでにリーダーを知ってる場合はそのリーダーについていく
+    else
+    {
+        SetState(eState::Follow);
+    }
+}
 
 
 //======================================================================
@@ -1017,6 +1031,10 @@ void NewEnemyClass::SettingBoss(GroupData* groupData)
     GetModel()->SetAllPartsDiffuse(groupData->color, 1.0f);
     SetGroupID(groupData->id);
 
+    //少し重力を上げる
+    GetRigidbody().SetGravityPowerUp(2.0f);
+
+    
 }
 
 //======================================================================
@@ -1068,7 +1086,7 @@ void NewEnemyClass::UpdateEnemyMessage(float deltaTime)
             GroupData* data = m_pMyLeader->GetGroupData();
             if (data)
             {
-                // 1. 前フレームから状態が変わった瞬間を検知（エッジトリガー）
+                // 前フレームから状態が変わった瞬間を検知（エッジトリガー）
                 bool isChanged = (data->isLeaderEscaping != m_wasLeaderEscaping);
 
                 if (isChanged)
@@ -1077,7 +1095,7 @@ void NewEnemyClass::UpdateEnemyMessage(float deltaTime)
                     m_aiDebugText.Reset(m_defaultTextTime);
                 }
 
-                // 2. 現在の状態を保存しておく（次のフレームの比較用）
+                // 現在の状態を保存しておく（次のフレームの比較用）
                 m_wasLeaderEscaping = data->isLeaderEscaping;
 
                 // --- 表示 ---

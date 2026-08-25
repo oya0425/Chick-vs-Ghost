@@ -17,7 +17,9 @@ public:
     {
         InProgress, //ゲーム中（戦闘中）
         ClearWait,  //WAVEクリア画面
-        Finished    //全WAVEクリア画面
+        Finished,   //全WAVEクリア画面
+
+        None,
     };
 
     void Init(bool isTutorial, bool isEndless);
@@ -105,37 +107,37 @@ private:
 
 
 private:
-    int m_currentWave;
+    int m_currentWave = 0;
 
-    int m_killTarget;        // 必要撃破数
-    int m_killedCount;       // 現在撃破数
-    int m_killedLeaderCount=0; //リーダーの撃破数
+    int m_killTarget = 0;        // 必要撃破数
+    int m_killedCount = 0;       // 現在撃破数
+    int m_killedLeaderCount = 0; //リーダーの撃破数
 
-    int m_totalKillCount;    // 全体の撃破数
+    int m_totalKillCount = 0;    // 全体の撃破数
 
 
     int m_killBossCountTarget = 5;
 
     float m_waveTimer = 20;            //WAVE中の時間
-    float m_waveTimeLimit=1;         //WAVEクリアまでの時間（残り０秒でクリア、）
-    const float m_waveTimeBase = 2;  //基準の時間
+    float m_waveTimeLimit = 1;        //WAVEクリアまでの時間（残り０秒でクリア、）
+    const float m_waveTimeBase = 20;  //基準の時間
     const float m_addTime = 10;       //増える時間   
 
-    int m_nextKillTarget;    // 次の必要キル数
+    int m_nextKillTarget = 0;    // 次の必要キル数
 
 
-    int m_spawnLimit;        // 同時出現上限
-    int m_aliveCount;        // 現在生存数
+    int m_spawnLimit = 0;        // 同時出現上限
+    int m_aliveCount = 0;        // 現在生存数
     int m_configMaxSimultaneous = 1000;   //最初の敵の最大数
     int m_configMaxSimultaneous_endless = 1200;   //最初の敵の最大数
     int m_startEnemyNum_endless = 600;   //最初の敵の最大数
 
     int m_spawnLimit_tutorial = 100;
 
-    float m_respawnInterval; // 湧き間隔
-    float m_respawnTimer;    // 湧きタイマー
+    float m_respawnInterval = 0.0f; // 湧き間隔
+    float m_respawnTimer = 0.0f;    // 湧きタイマー
 
-    WaveState m_state;
+    WaveState m_state=WaveState::None;
     int m_maxWave = 5;
 
     float m_endless_time = 0;

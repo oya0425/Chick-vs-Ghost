@@ -313,13 +313,10 @@ void EnemyPool::ShowHideUI(bool isShow)
 
     //ボタンの表示非表示
     m_ImageTab->setRenderEnable(isShow);
-    if (!m_isFinalWave)
-    {
-        m_ImageA->setRenderEnable(isShow);
-        m_ImageD->setRenderEnable(isShow);
-        m_ImageSlash->setRenderEnable(isShow);
+    m_ImageA->setRenderEnable(isShow);
+    m_ImageD->setRenderEnable(isShow);
+    m_ImageSlash->setRenderEnable(isShow);
 
-    }
     //お化けの画像の表示非表示
     m_ImageGhost->setRenderEnable(isShow);
 
@@ -526,7 +523,7 @@ int EnemyPool::GetActiveCount() const
 //======================================================================
 // --- プレイヤーの位置をセット ---
 //======================================================================
-void EnemyPool::SetPlayerPosAll(CharacterBase& player)
+void EnemyPool::SetPlayerPosAll(NewPlayerClass& player)
 {
     for (auto enemy : _enemies)
     {
@@ -930,11 +927,11 @@ void EnemyPool::DrawGroupDebugInfo()
         UpdateUIBarHelper(m_meleeBar, data->meleeFear, data->maxMeleeFear,
             barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 4.3f+2, V_GAME_COLOR_SUNGLOW);
 
-        UpdateUIBarHelper(m_rangeBar, data->rangeFear, data->maxRangeFear,
+        UpdateUIBarHelper(m_rangeBar, data->rangeFear, data->maxRangeFear/2,
             barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 5.3f+2, V_GAME_COLOR_NEON_MAGENTA);
 
         UpdateUIBarHelper(m_pullBar, data->pullResistance, data->maxPullResistance,
-            barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 6.3+2, V_GAME_COLOR_AQUA_GREEN);
+            barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 6.3f+2, V_GAME_COLOR_AQUA_GREEN);
 
         //==================================================
         // 特殊UI（？マークと説明吹き出し）の処理
@@ -944,9 +941,9 @@ void EnemyPool::DrawGroupDebugInfo()
         //==================================================
         // --- 吹き出し（セリフ）(見栄え)---
         //==================================================
-        m_ImageBalloonBg->setPos(820, 220);
+        m_ImageBalloonBg->setPos(820.0f, 220.0f);
         //セリフ
-        vnFont::print(700, 150 + fontsize, GAME_COLOR_BLACK, 
+        vnFont::print(700.0f, 150.0f + fontsize, GAME_COLOR_BLACK, 
             L"範囲攻撃への耐性が\n上がるほど、敵は群れで\n固まって行動するぞ！");
 
     }
@@ -993,6 +990,7 @@ void EnemyPool::DrawGroupDebugArrow() {
 }
 
 
+
 //======================================================================
 // --- ボスの位置を知らせる矢印の表示 ---
 //======================================================================
@@ -1012,6 +1010,8 @@ void EnemyPool::DrawBossDirectionArrow(IDWriteTextFormat* pFormat)
         }
     }
 }
+
+
 
 //======================================================================
 // --- 群れ情報の切り替え（入力は別）---
@@ -1043,11 +1043,11 @@ void EnemyPool::ChangeDebugGroupIndex(int direction)
     if (m_debugGroupIndex < 0)
     {
         //左へ行きすぎたら一番最後へ
-        m_debugGroupIndex = aliveCount - 1;
+        m_debugGroupIndex = (int)aliveCount - 1;
 
     }
     //else if(m_debugGroupIndex>=(int)m_groupDatas.size())
-    else if(m_debugGroupIndex>=aliveCount)
+    else if(m_debugGroupIndex>=(int)aliveCount)
     {
         m_debugGroupIndex = 0;
     }
@@ -1060,7 +1060,12 @@ void EnemyPool::DebugBossPause()
     // ポーズ中の更新処理内
     DrawBossDebugInfo();
     m_isFinalWave = true;
+    m_ImageA->setRenderEnable(false);
+    m_ImageD->setRenderEnable(false);
+    m_ImageSlash->setRenderEnable(false);
+
 }
+
 
 //======================================================================
 // --- ボス戦のボスの情報 ---
@@ -1083,7 +1088,7 @@ void EnemyPool::DrawBossDebugInfo()
     float y = (float)vnMainFrame::screenHeight - 512.0f * 1.1f;
 
     float lineYPitch = 40.0f; // ザコ敵と同じ 40.0f に統一
-    float lineXPitch = 210.0f;
+    float lineXPitch = 230.0f;
     float colonX = x + lineXPitch;
     float fontsize = /*フォント分*/ -5.0f;
 
@@ -1100,7 +1105,7 @@ void EnemyPool::DrawBossDebugInfo()
 
     // Tabキー（戻るボタン）
     if (m_ImageTab) {
-        float imageX = x + 100 + lineXPitch * 3.5f;
+        float imageX = x + 40 + lineXPitch * 3.5f;
         m_ImageTab->setPos(imageX, y + lineYPitch * 1.2f);
         vnFont::print(imageX + 55.0f, y + lineYPitch * 0.8f + fontsize, GAME_COLOR_YELLOW, L"：戻る");
     }
@@ -1119,9 +1124,9 @@ void EnemyPool::DrawBossDebugInfo()
     }
     if (m_ImageGhost) {
         m_ImageGhost->setRenderEnable(true);
-        m_ImageGhost->setScale(2);
+        m_ImageGhost->setScale(2.0f);
         m_ImageGhost->setColor(data->color);
-        m_ImageGhost->setPos(x + lineXPitch * 1.5,y+lineYPitch*3);
+        m_ImageGhost->setPos(x + lineXPitch * 1.3f,y+lineYPitch*3.0f);
     }
 
 
@@ -1150,7 +1155,6 @@ void EnemyPool::DrawBossDebugInfo()
     //==================================================
     float barLeftEdge = ENEMY_GRAPH_CENTER_X - (ENEMY_GRAPH_MAX_W * 0.5f);
 
-    // 行番号（* 4.3f / 5.3f / 6.3f）もザコ敵側と完全に一致させます
     UpdateUIBarHelper(m_meleeBar, data->meleeFear, data->maxBossMeleeFear,
         barLeftEdge, ENEMY_GRAPH_MAX_W, y + lineYPitch * 4.3f, V_GAME_COLOR_SUNGLOW);
 

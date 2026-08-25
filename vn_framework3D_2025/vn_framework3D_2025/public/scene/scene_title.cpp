@@ -46,11 +46,11 @@ namespace
 
     //左のボタン（戻るなど）位置
     constexpr float leftButton_x = 200;
-    constexpr float leftButton_y = 600;
+    constexpr float leftButton_y = 650;
 
     //右のボタン（進むなど）位置
     constexpr float rightButton_x = 1100;
-    constexpr float rightButton_y = 600;
+    constexpr float rightButton_y = 650;
 
 
     //全ボタンサイズ
@@ -67,16 +67,10 @@ bool SceneTitle::initialize()
 
 
 
-    FontNum = vnFont::getFontNum();
+    FontNum = 1;
     textFormat_score = new IDWriteTextFormat * [FontNum];
-
-
     textFormat_score[0] = vnFont::create(L"Mochiy Pop P One", 100);
 
-    for (int i = 1; i < FontNum; i++)
-    {
-        textFormat_score[i] = vnFont::create(vnFont::getFontName(i), 100);
-    }
 
     // --- BGM ---
     m_soundManager = std::make_unique<SoundManager>();
@@ -119,14 +113,13 @@ bool SceneTitle::initialize()
     registerObject(pEndlessStartButton);
 
     //ルールボタン
-    pRuleButton = new vnSprite(ruleButton_x, ruleButton_y, button_w, button_h, L"data/image/選択ボタン形.png");
     pRuleButton = new vnSprite(ruleButton_x, ruleButton_y, button_w, button_h, L"data/image/無題.png");
     registerObject(pRuleButton);
     //左ボタン（戻るボタン）
-    pLeftButton = new vnSprite(leftButton_x, leftButton_y, button_w, button_h, L"data/image/選択ボタン形.png");
+    pLeftButton = new vnSprite(leftButton_x, leftButton_y, button_w, button_h, L"data/image/無題.png");
     registerObject(pLeftButton);
     //右ボタン（進むボタン）
-    pRightButton = new vnSprite(rightButton_x, rightButton_y, button_w, button_h, L"data/image/選択ボタン形.png");
+    pRightButton = new vnSprite(rightButton_x, rightButton_y, button_w, button_h, L"data/image/無題.png");
     registerObject(pRightButton);
 
     pStartButton->setRenderEnable(false);
@@ -179,11 +172,13 @@ void SceneTitle::execute()
                 startButtonScale,
                 m_soundManager.get()))
             {
+                isOnStartButton = false;
                 isStarting = true;
                 g_isTutorial = false;
                 g_isEndless = false;
                 m_soundManager->PlaySE(SE_TITLE_START);
                 startType = StartType::Normal;
+
             }
             if (Common::UpdateButton(
                 tutorialStartButton_x,
@@ -195,6 +190,7 @@ void SceneTitle::execute()
                 tutorialStartButtonScale,
                 m_soundManager.get()))
             {
+                isOnTutorialStartButton = false;
                 isStarting = true;
                 g_isTutorial = true;
                 g_isEndless = false;
@@ -212,6 +208,7 @@ void SceneTitle::execute()
                 endlessStartButtonScale,
                 m_soundManager.get()))
             {
+                isOnEndlessStartButton = false;
                 isStarting = true;
                 g_isTutorial = false;
                 g_isEndless = true;
@@ -228,18 +225,21 @@ void SceneTitle::execute()
             // --- 演出開始：回転しながら巨大化 ---
             if (startType == StartType::Normal)
             {
+                pStartButton->setColor(V_GAME_COLOR_BLACK);
                 OnStartButton(StartType::Normal,
                     startButtonScale,
                     pStartButton);
             }
             else if (startType == StartType::Tutorial)
             {
+                pTutorialStartButton->setColor(V_GAME_COLOR_BLACK);
                 OnStartButton(StartType::Tutorial,
                     tutorialStartButtonScale,
                     pTutorialStartButton);
             }
             else if (startType == StartType::Endless)
             {
+                pEndlessStartButton->setColor(V_GAME_COLOR_BLACK);
                 OnStartButton(StartType::Endless,
                     endlessStartButtonScale,
                     pEndlessStartButton);
@@ -260,7 +260,7 @@ void SceneTitle::execute()
                 ruleButtonScale,
                 m_soundManager.get()))
             {
-
+                isOnRuleButton = false;
                 m_soundManager->PlaySE(SE_TITLE_CHANGEPAGE);
                 m_titleState = TitleState::RULE;
                 m_rulePage = 0; //0はタイトル画面　１はルール説明画面最初
@@ -279,6 +279,10 @@ void SceneTitle::execute()
         pTutorialStartButton->setRenderEnable(false);
         pEndlessStartButton->setRenderEnable(false);
         pRuleButton->setRenderEnable(false);
+
+        pRightButton->setRenderEnable(true);
+        pLeftButton->setRenderEnable(true);
+
         //ページの切り替え
         // 戻るボタン
         if (Common::UpdateButton(
@@ -451,7 +455,7 @@ void SceneTitle::render()
         {
             Common::ChangeButtonTextSize(
                 leftButton_x - 10,
-                leftButton_y,
+                leftButton_y-10,
                 leftButtonScale,
                 isOnLeftButton,
                 L"タイトル", textFormat_score[0]);
@@ -460,7 +464,7 @@ void SceneTitle::render()
         {
             Common::ChangeButtonTextSize(
                 leftButton_x - 10,
-                leftButton_y,
+                leftButton_y-10,
                 leftButtonScale,
                 isOnLeftButton,
                 L"戻る", textFormat_score[0]);
@@ -471,8 +475,8 @@ void SceneTitle::render()
         {
             // 最後の説明ページ
             Common::ChangeButtonTextSize(
-                rightButton_x - 30,
-                rightButton_y,
+                rightButton_x - 10,
+                rightButton_y-10,
                 rightButtonScale,
                 isOnRightButton,
                 L"タイトル", textFormat_score[0]);
@@ -481,7 +485,7 @@ void SceneTitle::render()
         {
             Common::ChangeButtonTextSize(
                 rightButton_x - 10,
-                rightButton_y,
+                rightButton_y-10,
                 rightButtonScale,
                 isOnRightButton,
                 L"進む", textFormat_score[0]);

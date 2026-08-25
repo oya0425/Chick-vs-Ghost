@@ -46,18 +46,18 @@ public:
 		vnSprite* pBalloonBg = nullptr;     // 吹き出しの背景画像
 
 		// 表示するテキスト情報
-		const WCHAR* explainText; // 表示したい説明文（L"：特攻確率に加算" など）
-		DWORD textColor;       // 文字の色
+		const WCHAR* explainText = nullptr; // 表示したい説明文（L"：特攻確率に加算" など）
+		DWORD textColor = 0;                // 文字の色
 
 		// 座標とサイズ（当たり判定や描画に使用）
-		float qX, qY;             // ？マークの中心座標
-		float qW, qH;             // ？マークの幅と高さ（当たり判定のサイズ）
+		float qX = 0.0f, qY = 0.0f;         // ？マークの中心座標
+		float qW = 0.0f, qH = 0.0f;         // ？マークの幅と高さ（当たり判定のサイズ）
 
-		float textX, textY;       // テキストを表示する座標
+		float textX = 0.0f, textY = 0.0f;   // テキストを表示する座標
 
 		// 状態管理フラグ
-		bool isHovered;           // 今マウスが？マークの上にあるか
-		bool isShowExplain;       // 今説明（吹き出しと文字）を表示中か
+		bool isHovered = false;             // 今マウスが？マークの上にあるか
+		bool isShowExplain = false;         // 今説明（吹き出しと文字）を表示中か
 	};
 
 
@@ -88,7 +88,7 @@ public:
 	std::vector<NewEnemyClass*>& GetEnemies() { return _enemies; }
 
 	// --- プレイヤーの位置をセット ---
-	void SetPlayerPosAll(CharacterBase& pos);
+	void SetPlayerPosAll(NewPlayerClass& pos);
 
 	// --- 出現する敵のロックを解除 ---
 	void UnlockEnemyType(NewEnemyClass::EnemyType type);
@@ -205,7 +205,7 @@ private:
 
 
 	//音
-	SoundManager* m_soundManager;
+	SoundManager* m_soundManager = nullptr;
 
 	//棒グラフ
 	UIBar m_meleeBar;

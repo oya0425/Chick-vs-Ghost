@@ -9,8 +9,8 @@ namespace
     const float motionSpeed = 2.0f;
 
      
-    constexpr  float avoidStartRatio = 0.7f; // 半径の80%から回避開始
-    constexpr  float avoidRangeRatio = 0.3f; // 残り20%の幅で重みを変化させる
+    constexpr  float avoidStartRatio = 0.7f; // 半径のn%から回避開始
+    constexpr  float avoidRangeRatio = 0.3f; // 残りn%の幅で重みを変化させる
     constexpr  float repulsionStrength = 3.0f; //逃げる力（反発力に近い）
 
 }
@@ -127,7 +127,7 @@ void EnemyGhost::OnRun(float deltaTime, float distance, const XMVECTOR& toPlayer
             // 距離が検知範囲内で、かつ完全に重なっていない
             if (dSq < maxDistSq && dSq > 0.000001f)
             {
-                // ここから先は正規化や線形補間で実距離が必要になるため、
+                // 正規化や線形補間では実距離でとる
                 // ルートを計算する
                 float d = sqrtf(dSq);
 
@@ -155,6 +155,7 @@ void EnemyGhost::OnRun(float deltaTime, float distance, const XMVECTOR& toPlayer
                 float dot = XMVectorGetX(XMVector3Dot(fleeDir, separationDir));
 
                 //逃げ道に仲間がいて、挟まれて動けなくなる可能性がある場合
+                // -1.0（真逆）になるより少し手前で、一定以上逆向きなら挟まりを回避
                 if (dot < -0.7)
                 {
                     //仲間から離れる方向に対して垂直（真横）のベクトルを算出する
@@ -261,6 +262,8 @@ void EnemyGhost::OnDead()
 //====================================================================
 void EnemyGhost::OnFollow(float deltaTime)
 {
+    if (m_pMyLeader == nullptr)return;
+
     // リーダーが決めたモードを群れで共有
     auto mode = m_pMyLeader->GetGroupData()->mode;
     if (mode == eGroupMode::Panic)
@@ -278,7 +281,6 @@ void EnemyGhost::OnFollow(float deltaTime)
         //特攻状態では色はそのまま残しておく
         SetState(eState::Charge);
         GetModel()->SetAllPartsDiffuse(V_GAME_COLOR_WHITE, 0.1f);
-        m_chargeMessage.SetState(NewEnemyClass::eShowUISelect::Text1);
         m_isCharge = true;
         m_pMyLeader = nullptr;
         return;
@@ -496,6 +498,7 @@ void EnemyGhost::MoveAlongPath(float deltaTime, float distance)
                         vInput += sideDir * weight * 1.0f;
                     }
 
+                    //相手を避けながら目的地に近づく方向
                     vInput += separationDir * weight * 0.8f;
                     vInput = XMVector3Normalize(vInput);
                 }
@@ -551,6 +554,7 @@ void EnemyGhost::CheckSurroundings(float distance)
 
 }
 
+//逃げる状態に変化
 void EnemyGhost::StartEscapeTransition(bool can)
 {
     GetGroupData()->isLeaderEscaping = can;
@@ -604,42 +608,3 @@ XMVECTOR EnemyGhost::GetInFence(XMVECTOR vInput, XMVECTOR myPos)
 }
 
 
-//======================================================================
-// --- リーダーを設定 ---
-//======================================================================
-void EnemyGhost::LeaderSet(float searchRadius)
-{
-    //リーダーを範囲で探して見つかったら色をリーダーに合わせて、
-    // リーダーについていくモードに変える
-    
-    // リーダー以外：リーダーを探す（既存のFollowロジック）
-    if (!m_pMyLeader)
-    {
-        m_pMyLeader = EnemyPool::GetInstance().FindClosestLeader(this, searchRadius);
-        if (m_pMyLeader)
-        {
-            //リーダーの色を取得
-            XMVECTOR leaderColor = m_pMyLeader->GetColor();
-
-            //少し色を足して薄くする
-            XMVECTOR offset = XMVectorSet(0.2f, 0.2f, 0.2f, 0.0f);
-            XMVECTOR followerColor = XMVectorAdd(leaderColor, offset);
-
-            //1.0を超えないようにクランプ
-            followerColor = XMVectorClamp(followerColor, XMVectorZero(), XMVectorSplatOne());
-
-            //群れの番号を適応
-            SetGroupID(m_pMyLeader->GetGroupID());
-
-            //自分に色を適用
-            GetModel()->SetAllPartsDiffuse(followerColor, 1.0f);
-            SetState(eState::Follow);
-            m_panicMessage.SetState(eShowUISelect::Text3);
-        }
-    }
-    //すでにリーダーを知ってる場合はそのリーダーについていく
-    else
-    {
-        SetState(eState::Follow);
-    }
-}

@@ -297,7 +297,9 @@ bool Common::UpdateButton(
     float& buttonScale,
     SoundManager* soundManager)
 {
-    if (OnButton(x, y,button_w,button_h))
+    bool isPressed = false;
+
+    if (OnButton(x, y, button_w, button_h))
     {
         if (!isOnButton)
         {
@@ -307,11 +309,12 @@ bool Common::UpdateButton(
         isOnButton = true;
 
         buttonScale += (1.2f - buttonScale) * 0.2f;
-        pButton->setColor(V_GAME_COLOR_BLACK);
+        pButton->setColor(V_GAME_COLOR_WHITE);
 
         if (vnMouse::trgL())
         {
-            return true;
+            buttonScale = 1.0f;
+            isPressed = true;
         }
     }
     else
@@ -319,14 +322,13 @@ bool Common::UpdateButton(
         isOnButton = false;
 
         buttonScale += (1.0f - buttonScale) * 0.2f;
-        pButton->setColor(V_GAME_COLOR_YELLOW);
+        pButton->setColor(V_GAME_COLOR_BLACK);
     }
 
     pButton->setScale(buttonScale);
 
-    return false;
+    return isPressed;
 }
-
 
 //======================================================================
 // --- ボタンに合わせてテキストも拡大(ボタンの拡大縮小) ---
@@ -339,37 +341,71 @@ void Common::ChangeButtonTextSize(
     const WCHAR* text,
     IDWriteTextFormat* pFormat)
 {
-    float off = 4.0f;
-    unsigned int shadowCol = GAME_COLOR_WHITE;
-
-    int len = wcslen(text);
+    size_t len = wcslen(text);
 
     float currentFontSize = 30.0f * buttonScale;
 
-    //vnFont::setTextFormat(
-    //    vnFont::create(
-    //        pFormat,
-    //        (int)currentFontSize));
     vnFont::setFontSize(pFormat, (int)currentFontSize);
+
     float textWidth = currentFontSize * 0.65f * len;
     float textHeight = currentFontSize * 0.5f;
 
     float tx = x - textWidth * 0.5f;
     float ty = y - textHeight;
 
-    vnFont::print(tx + off, ty + off * 0.3f, shadowCol, text);
+    unsigned int textCol;
+    unsigned int outlineCol;
 
     if (isOnButton)
     {
-        vnFont::print(tx, ty, GAME_COLOR_RED, text);
+        // 文字：黒
+        // 輪郭：白
+        textCol = GAME_COLOR_BLACK;
+        outlineCol = GAME_COLOR_LIGHT_GRAY;
     }
     else
     {
-        vnFont::print(tx, ty, GAME_COLOR_BLACK, text);
+        // 文字：白
+        // 輪郭：黒
+        textCol = GAME_COLOR_WHITE;
+        outlineCol = GAME_COLOR_DARK_GRAY;
     }
+
+    //================================================
+    // 文字の輪郭
+    //================================================
+    //文字のサイズの拡大ではずれた
+    const float outline = 3.0f;
+
+    // 上
+    vnFont::print(tx, ty - outline, outlineCol, text);
+
+    // 下
+    vnFont::print(tx, ty + outline, outlineCol, text);
+
+    // 左
+    vnFont::print(tx - outline, ty, outlineCol, text);
+
+    // 右
+    vnFont::print(tx + outline, ty, outlineCol, text);
+
+    // 左上
+    vnFont::print(tx - outline, ty - outline, outlineCol, text);
+
+    // 右上
+    vnFont::print(tx + outline, ty - outline, outlineCol, text);
+
+    // 左下
+    vnFont::print(tx - outline, ty + outline, outlineCol, text);
+
+    // 右下
+    vnFont::print(tx + outline, ty + outline, outlineCol, text);
+
+    //================================================
+    // 本来の文字
+    //================================================
+    vnFont::print(tx, ty, textCol, text);
 }
-
-
 
 #pragma endregion
 

@@ -64,9 +64,9 @@ public:
 	void SetBulletClass(Bullet* bullet) { m_bullet = bullet; }
 
 
-	// --- スキルの解放 ---
-	void UnlockAreaAttackSkill(bool unlock) { m_isHaveAreaAtkSkill = unlock; }
-	void UnlockPullAttackSkill(bool unlock) { m_isHavePullSkill = unlock; }
+	// --- スキルの解放(獲得時にクールタイムをリセット) ---
+	void UnlockAreaAttackSkill(bool unlock) { m_isHaveAreaAtkSkill = unlock; m_areaAtkCoolTimer  = 0.0f; }
+	void UnlockPullAttackSkill(bool unlock) { m_isHavePullSkill    = unlock; m_pullCooldownTimer = 0.0f; }
 	
 	// --- スキル持ってるかのGet ---
 	bool GetIsHaveAreaAtkSkill()const { return m_isHaveAreaAtkSkill; }
@@ -103,18 +103,24 @@ public:
 
 	//--スキルの発動中か
 	// --- 範囲攻撃 ---
-	bool CanAreaAttack()const override{return (m_isHaveAreaAtkSkill && (m_areaAttackState == eSkillState::READY));}
-	bool IsAreaAttack()const override { return m_areaAttackState == eSkillState::ACTIVE; }//範囲攻撃を撃てるか(スキルを持っているか)
-	float GetAreaAttackRadius()const override { return m_maxAttackRadius; }				//範囲攻撃の大きさ
+	bool CanAreaAttack()const {return (m_isHaveAreaAtkSkill && (m_areaAttackState == eSkillState::READY));}
+	bool CoolDownAreaAttack()const {return (m_isHaveAreaAtkSkill && (m_areaAttackState == eSkillState::COOLDOWN));}	//範囲攻撃がクールダウン中
+	bool IsAreaAttack()const  { return m_areaAttackState == eSkillState::ACTIVE; }//範囲攻撃を撃てるか(スキルを持っているか)
+	float GetAreaAttackRadius()const  { return m_maxAttackRadius; }				//範囲攻撃の大きさ
 
 	// --- 引き寄せ攻撃 ---
 	bool IsPulling()const { return m_pullState == eSkillState::ACTIVE; }	//引き寄せ攻撃中か
+	bool CoolDownPull()const { return (m_isHavePullSkill && (m_pullState == eSkillState::COOLDOWN)); }	//引き寄せ攻撃がクールダウン中
 	float GetPullRadius()const { return m_pullRadius; }//敵が範囲に入っているか判定するため
+
 
 
 	// --- スキルのクールタイムリセット ---
 	void ResetSkillCoolTime();
 
+	// --- 無敵のセットゲット ---
+	void SetIsMuteki(bool muteki) { m_isMuteki = muteki; }
+	bool GetIsMuteki() { return m_isMuteki; }
 
 	// ---　入力関係(移動) ---
 	enum eInputDir
@@ -166,18 +172,18 @@ private:
 
 	bool m_isMoving=false;	//移動中かどうか？
 
-	XMVECTOR respawnPos = XMVectorSet(0, 5, 0, 0);
+	XMVECTOR respawnPos = XMVectorSet(0, 0.5f, 0, 0);
 
 	// --- 範囲攻撃用 ---
 	eSkillState m_areaAttackState = eSkillState::READY;
 	bool  m_isHaveAreaAtkSkill		  = false;			//スキル獲得済みか？
-	bool  m_isExpanding				  = false;		// 半径拡大中か？
-	float m_currentRadius			  = 1.0f;			// 現在の半径
-	float m_expandTimer				  = 0.0f;			// 拡大用タイマー
-	//float m_maxAttackRadius		      = 2.0f;		// 最大半径
-	float m_maxAttackRadius		      = 20.0f;		    // 最大半径(随時更新)(20)
-	const float m_defaultAttackRadius = 10.0f;			// 加算される攻撃範囲のデフォルトのサイズ
-	const float m_defaultRadius		  = 1.0f;			// 通常時の半径（size.x/2の値に合わせて調整）普通の当たり判定
+	bool  m_isExpanding				  = false;		    //半径拡大中か？
+	float m_currentRadius			  = 1.0f;			//現在の半径
+	float m_expandTimer				  = 0.0f;			//拡大用タイマー
+	//float m_maxAttackRadius		      = 2.0f;		//最大半径
+	float m_maxAttackRadius		      = 20.0f;		    //最大半径(随時更新)(20)
+	const float m_defaultAttackRadius = 10.0f;			//加算される攻撃範囲のデフォルトのサイズ
+	const float m_defaultRadius		  = 1.0f;			//通常時の半径（size.x/2の値に合わせて調整）普通の当たり判定
 	float m_areaAtkCoolTimer		  = 0.0f;			//現在のクールタイム
 	const float m_areaAtkCoolTimeMax  = 5.0;			//最大のクールタイム
 	const float m_attackTime		  = 0.5f;			//範囲攻撃の最大まで行く時間
@@ -188,9 +194,9 @@ private:
 	eSkillState m_pullState			= eSkillState::READY;	//現在の状態
 	bool  m_isHavePullSkill			= false;				//スキル獲得済みか？
 	const float m_defaultPullRadius = 10.0f;				//デフォルトの引き寄せ範囲
-	float m_pullRadius				= 20.0f;			    //引き寄せ範囲
+	float m_pullRadius				= 10.0f;			    //引き寄せ範囲
 	float m_pullTimer				= 0.0f;				    //吸引時間の計測用
-	float m_pullCooldownTimer		= 0.0f;				    //クールタイムの計測用
+	float m_pullCooldownTimer		= 0.0f;				    //現在のクールタイム
 
 	const float m_pullDuration	  = 0.5f;  //吸引し続ける時間
 	const float m_pullCooldownMax = 10.0f; //クールタイム
@@ -221,6 +227,8 @@ private:
 	int m_pullUseCount = 0;	//引き寄せ攻撃の発動回数
 	int m_areaUseCount = 0;	//範囲攻撃の発動回数
 
+
+	bool m_isMuteki = false;	//不死身かどうか
 
 	//音
 	SoundManager* m_sound;

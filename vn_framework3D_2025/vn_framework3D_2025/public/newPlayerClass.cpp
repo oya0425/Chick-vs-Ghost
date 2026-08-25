@@ -41,7 +41,7 @@ void NewPlayerClass::Init()
 {
 	//スキル関係
 	//範囲攻撃
-	m_areaAtkCoolTimer = 0.0f;
+	m_areaAtkCoolTimer = m_areaAtkCoolTimeMax;
 	m_areaUseCount = 0;
 	m_areaAttackState = eSkillState::READY;
 	m_isHaveAreaAtkSkill = false;
@@ -51,19 +51,19 @@ void NewPlayerClass::Init()
 	m_maxAttackRadius = 20.0f;		
 
 	// --- 引き寄せ攻撃 ---
-	m_pullState = eSkillState::READY;	//現在の状態
-	m_isHavePullSkill = false;				//スキル獲得済みか？
-	m_pullRadius = 20.0f;			    //引き寄せ範囲
-	m_pullTimer = 0.0f;				    //吸引時間の計測用
-	m_pullCooldownTimer = 0.0f;				    //クールタイムの計測用
+	m_pullState = eSkillState::READY;			//現在の状態
+	m_isHavePullSkill = false;					//スキル獲得済みか？
+	m_pullRadius = m_defaultPullRadius;			//引き寄せ範囲
+	m_pullTimer = 0.0f;							//吸引時間の計測用
+	m_pullCooldownTimer = m_pullCooldownMax;	//クールタイムの計測用
 	
 	m_isLevelUp = false;	//レベルアップ中はスキルの時間を止める
 	GetModel()->setMotion(NULL);
 
 	GetModel()->setPosition(&respawnPos);
-	GetModel()->setRotationY(0);
+	GetModel()->setRotationY(0.0f);
 
-	SetCurrentHP(100);
+	SetCurrentHP(100.0f);
 }
 
 //======================================================================
@@ -480,12 +480,11 @@ void NewPlayerClass::UpdatePullSkill(float deltaTime)
 	case eSkillState::ACTIVE:
 		m_pullTimer -= deltaTime;
 
-		if (m_pullTimer <= 0)
+		if (m_pullTimer <= 0.0f)
 		{
 
 			m_pullState = eSkillState::COOLDOWN;
 			m_pullCooldownTimer = m_pullCooldownMax;
-			//m_pullCooldownTimer = 0;
 			Common::StartCameraShake(3.5f, 3.5f, 1.0f);
 
 		}
@@ -499,7 +498,7 @@ void NewPlayerClass::UpdatePullSkill(float deltaTime)
 		break;
 	case eSkillState::COOLDOWN:
 		m_pullCooldownTimer -= deltaTime;
-		if (m_pullCooldownTimer <= 0)
+		if (m_pullCooldownTimer <= 0.0f)
 		{
 			//スキル回復時に音を出す
 			m_sound->PlaySE(SE_SKILL_HEAL);
@@ -535,7 +534,7 @@ void NewPlayerClass::UpdateBulletAttack(float deltaTime)
 
 	case eSkillState::COOLDOWN:
 		m_shootCooldownTimer -= deltaTime;
-		if (m_shootCooldownTimer <= 0)
+		if (m_shootCooldownTimer <= 0.0f)
 		{
 			m_ShootState = eSkillState::READY;
 		}
@@ -555,8 +554,8 @@ void NewPlayerClass::ResetUpKara()
 	m_pUpKara->setParent(GetModel()->getParts("Body"));
 	m_pUpKara->setPositionY(0.1f);
 	m_pUpKara->setPositionZ(-0.5f);
-	m_pUpKara->setScale(1, 1, 1);
-	m_pUpKara->setRotationY(0);
+	m_pUpKara->setScale(1.0f, 1.0f, 1.0f);
+	m_pUpKara->setRotationY(0.0f);
 }
 
 

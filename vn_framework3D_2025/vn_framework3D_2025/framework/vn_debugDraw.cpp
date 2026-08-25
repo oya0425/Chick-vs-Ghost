@@ -578,7 +578,7 @@ void vnDebugDraw::DrawSuctionEffect(const XMVECTOR& center, float radius, float 
 
 	for (int r = 0; r < ringCount; r++)
 	{
-		float currentRadius = (rings[ringSelect][r].baseRadius*1.2) * shrinkFactor / 2;
+		float currentRadius = (rings[ringSelect][r].baseRadius*1.2f) * shrinkFactor / 2;
 		XMVECTOR ringCenter = center + XMVectorSet(0.0f, rings[ringSelect][r].yOffset+ offsetY, 0.0f, 0.0f);
 
 		// 偶数・奇数リングで逆回転

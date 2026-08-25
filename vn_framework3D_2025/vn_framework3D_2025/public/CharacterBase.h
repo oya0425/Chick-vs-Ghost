@@ -31,16 +31,16 @@ public:
         return XMVectorGetX(m_collision.GetSize()) * 0.5f;
     }
 
-    virtual float GetAreaAttackRadius()const { return 0.0f; }
-    virtual bool IsAreaAttack()const { return false; }  //”ÍˆÍUŒ‚’†‚©
-    virtual bool CanAreaAttack()const { return false; }  //”ÍˆÍUŒ‚‚ğŒ‚‚Ä‚é‚©
+    //virtual float GetAreaAttackRadius()const { return 0.0f; }
+    //virtual bool IsAreaAttack()const { return false; }  //”ÍˆÍUŒ‚’†‚©
+    //virtual bool CanAreaAttack()const { return false; }  //”ÍˆÍUŒ‚‚ğŒ‚‚Ä‚é‚©
     // --- HP ---
     void SetMaxHp(float maxHp);
     void SetCurrentHP(float currentHP);
     float GetCurrentHp() const;
     float GetMaxHp() const;
-    void AddHP(float addhp,bool isTutorial);
-    void Damage(float value, bool isTutorial);
+    void AddHP(float addhp,bool isMuteki);
+    void Damage(float value, bool isMuteki);
     // --- ¶€ ---
     bool IsDead()const;
 

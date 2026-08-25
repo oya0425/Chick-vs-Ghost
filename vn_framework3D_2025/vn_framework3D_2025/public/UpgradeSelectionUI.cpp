@@ -260,11 +260,11 @@ void UpgradeSelectionUI::UpdateHeader(IDWriteTextFormat* pFormat)
 	{
 		float off = 3.0f;
 		vnFont::setFontSize(pFormat, 30);
-		vnFont::print(420 + off, (int)m_headerY + off,
+		vnFont::print(420.0f + off, m_headerY + off,
 			GAME_COLOR_BLACK,
 			L"強化する項目を選択してください");
 
-		vnFont::print(420, (int)m_headerY,
+		vnFont::print(420.0f, m_headerY,
 			GAME_COLOR_WHITE,
 			L"強化する項目を選択してください");
 	}

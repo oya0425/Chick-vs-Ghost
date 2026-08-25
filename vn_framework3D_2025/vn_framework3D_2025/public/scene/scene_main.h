@@ -303,11 +303,8 @@ private:
 	// --- ゲーム全体の状態 ---
 	GameState m_gameState;
 	GameState currentState = m_gameState;
-	float     totalClearTime;
-	bool      isTimerActive;
-	bool      isWaveClear;
+	bool      isWaveClear;			
 	bool      isGameFinish;
-	bool	  m_isBossStage = false;
 
 
 	// --- プレイヤー関連 ---
@@ -319,7 +316,6 @@ private:
 	vnSprite* m_pGameOverPlayer;
 
 	Bullet* m_pBullet;
-	bool isHittingAnyBlock = false;
 
 	// --- 敵・ウェーブ関連 ---
 	EnemyPool* enemyPool;
@@ -497,15 +493,13 @@ private:
 	//表示するウィンドウ（説明）
 	vnSprite* m_messageBackground;					//説明の画像の後ろの背景
 	float m_windowScale = 0.0f;
-	bool m_isOpen = false;
-	bool m_isClosing = false;
 	bool UpdateMessageWindow(float targetScale, const WCHAR* text, WindowMode mode, ExplanationUIData* explanation);
 
 
 	//説明の画像の管理
 	ExplanationUIData m_explanationUI[(int)(ExplanationType::MaxNum)];
 	ExplanationType m_currentExplanationType = ExplanationType::None;
-	int m_explanationPage = 0;	//説明のページ（切り替えよう）
+	int m_explanationPage = 0;	//説明のページ（切り替え用）
 	void UpdateExplanationButtons(ExplanationType type);	//説明の画像の切り替え用のボタンの制御
 	void UpdateExplanation(ExplanationType type);			//チュートリアルの説明の制御
 
@@ -545,7 +539,15 @@ private:
 	void InitializeEnemies();        // EnemyPool・敵生成
 	void InitializeField();          // 地形・木・フェンス
 	void InitializeEffects();        // エフェクト
-	void InitializeUI();             // HP・Exp・スキルUI
+	//==============================================================
+	void InitializeUI();             
+	void InitializeBarUI();			 // HP・EXP・ボスHP
+	void InitializeGameUI();         // アイコン・コンボ
+	void InitializeKeyBoardUI();     // 背景・キーボード
+	void InitializeSkillUI();        // スキル
+	void InitializeInfoUI();         // 時間・撃破数
+
+	//==============================================================
 	void InitializeMissionUI();		 // ミッションのUI
 	void InitializePauseUI();        // ポーズ画面
 	void InitializeUpgradeUI();      // レベルアップUI
@@ -633,6 +635,7 @@ private:
 	void SetExpbarRender(bool on);
 
 	void SetSkillUIRender(bool on); 
+	void PlayerSkillSetColorAlpha();
 
 	void SetBossHPbarRender(bool on);
 
@@ -640,6 +643,7 @@ private:
 	void UpdateSkillBar(
 		float currentCoolTime,	//現在のクールタイム
 		float maxCoolTime,		//最大クールタイム
+		bool isHave,		    //スキルを持っているかどうか
 		vnSprite* pSkillIcon,	//スキルアイコン
 		vnSprite* pSkillBar,	//ゲージ前面
 		bool& isSkillMaxPrev,	//前のフレームで満タンだったか
@@ -695,15 +699,6 @@ private:
 	void SetWAVETree();
 
 	void SetupEnemy(NewEnemyClass* enemy, const NewEnemyClass::EnemyData& data,bool isLeader, bool isBoss);
-
-
-
-
-
-	// --- render関数整理 ---
-
-
-
 
 
 

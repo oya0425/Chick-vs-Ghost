@@ -69,7 +69,7 @@ float CharacterBase::GetCurrentHp() const
 //======================================================================
 // --- HPÇÃëùå∏ ---
 //======================================================================
-void CharacterBase::AddHP(float value,bool isTutorial)
+void CharacterBase::AddHP(float value,bool isMuteki)
 {
     m_currentHP += value;
 
@@ -77,7 +77,7 @@ void CharacterBase::AddHP(float value,bool isTutorial)
         m_currentHP = m_maxHP;
     if (m_currentHP < 0)
         m_currentHP = 0;
-    if (isTutorial && m_currentHP <= 0.0f)
+    if (isMuteki && m_currentHP <= 0.0f)
     {
         m_currentHP = 1.0f;
     }
@@ -85,10 +85,10 @@ void CharacterBase::AddHP(float value,bool isTutorial)
 //======================================================================
 // --- É_ÉÅÅ[ÉW ---
 //======================================================================
-void CharacterBase::Damage(float value,bool isTutoral)
+void CharacterBase::Damage(float value,bool isMuteki)
 {
     //if (value > 0)
-        AddHP(-value, isTutoral);
+        AddHP(-value, isMuteki);
 }
 
 bool CharacterBase::IsDead() const

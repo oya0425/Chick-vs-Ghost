@@ -226,7 +226,7 @@ IDWriteTextFormat *vnFont::create(const WCHAR *fontname, int size)
 	//テキストフォーマットの生成
 	hr = vnDirect2D::getDWFactory()->CreateTextFormat(
 		fontname,					//フォント ファミリの名前を含む文字配列。
-		pFontCollection,						//フォント コレクション オブジェクトへのポインター。これが NULL の場合、システム フォント コレクションを示します。
+		pFontCollection,			//フォント コレクション オブジェクトへのポインター。これが NULL の場合、システム フォント コレクションを示します。
 		DWRITE_FONT_WEIGHT_NORMAL,	//このメソッドによって作成されるテキスト オブジェクトのフォントの太さを示す値。
 		DWRITE_FONT_STYLE_NORMAL,	//このメソッドによって作成されるテキスト オブジェクトのフォント スタイルを示す値。
 		DWRITE_FONT_STRETCH_NORMAL,	//このメソッドによって作成されるテキスト オブジェクトのフォント伸縮を示す値。
@@ -289,19 +289,19 @@ void vnFont::setFontSize(IDWriteTextFormat* pFormat, int size)
 {
 	if (!pFormat) return;
 
-	// 1. 渡された pFormat からフォントファミリー名を取得する
+	// 渡された pFormat からフォントファミリー名を取得する
 	WCHAR fontName[256] = {};
 	pFormat->GetFontFamilyName(fontName, ARRAYSIZE(fontName));
 
-	// 2. 「フォント名_サイズ」でキャッシュキーを作成（例: L"Mochiy Pop P One_50"）
+	// 「フォント名_サイズ」でキャッシュキーを作成（例: L"Mochiy Pop P One_50"）
 	std::wstring cacheKey = std::wstring(fontName) + L"_" + std::to_wstring(size);
 
-	// 3. キャッシュになければ指定サイズで作成して登録
+	// キャッシュになければ指定サイズで作成して登録
 	if (fontCache.find(cacheKey) == fontCache.end()) {
 		fontCache[cacheKey] = vnFont::create(fontName, size);
 	}
 
-	// 4. 作成済み（キャッシュ）のものを描画用にセット
+	// 作成済み（キャッシュ）のものを描画用にセット
 	vnFont::setTextFormat(fontCache[cacheKey]);
 }
 
@@ -335,12 +335,12 @@ void vnFont::print(float x, float y, float size, DWORD color, const WCHAR* strin
 	IDWriteTextFormat* tf = create(L"Arial", (int)size);
 
 	// 描画情報登録
-	int len = wcslen(buffer);
+	size_t len = wcslen(buffer);
 	strInfo[registerNum].x = x;
 	strInfo[registerNum].y = y;
 	strInfo[registerNum].color = color;
 	strInfo[registerNum].ptr = _wcsdup(buffer);  // バッファコピー
-	strInfo[registerNum].count = len;
+	strInfo[registerNum].count = (UINT32)len;
 	strInfo[registerNum].textFormat = tf;  // ここで個別に渡す
 	registerNum++;
 

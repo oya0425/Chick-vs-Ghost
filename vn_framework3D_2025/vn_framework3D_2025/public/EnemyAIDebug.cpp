@@ -200,7 +200,7 @@ void EnemyAIDebug::ShowBossDirectionArrow(
 		arrow = L"↓";
 	}
 	else if (angle >= 2.3562f || angle < -2.3562f)
-	{
+	{ 
 		// 左
 		arrow = L"←";
 	}

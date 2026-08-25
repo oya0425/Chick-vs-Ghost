@@ -95,10 +95,10 @@ public:
 	//群の学習データ
 	struct GroupData
 	{
-		int id;	//群の番号
-		XMVECTOR color;	//群の色
+		int id = -1;	//群の番号
+		XMVECTOR color = XMVectorZero();	//群の色
 
-		const wchar_t* colorName;
+		const wchar_t* colorName = L"";
 
 		//学習
 		float meleeFear = 0.0f;		//近接警戒(特攻確率をあげる)
@@ -126,8 +126,8 @@ public:
 
 		bool isLeaderEscaping = false;	//プレイヤーから全力で逃げる（号令を出す）
 	
-		eGroupMode oldMode;
-		eGroupMode mode;
+		eGroupMode oldMode = eGroupMode::Normal;
+		eGroupMode mode = eGroupMode::Normal;
 
 	};
 
@@ -212,8 +212,8 @@ public:
 	//======================================================================
 
 	// --- プレイヤーの位置を獲得 ---
-	void SetPlayerPos(CharacterBase* player) { m_pPlayer = player; }
-	CharacterBase* GetPlayer() const { return m_pPlayer; }
+	void SetPlayerPos(NewPlayerClass* player) { m_pPlayer = player; }
+	NewPlayerClass* GetPlayer() const { return m_pPlayer; }
 
 	// --- 現在のWAVEを獲得 ---
 	void SetWaveNum(int nowWave) { m_currentWave = nowWave; }
@@ -266,7 +266,6 @@ public:
 	void SettingOther();
 
 	XMVECTOR GetColor() const { return GetModel()->GetAllPartsDiffuse(); }
-	bool IsLeaderPanic() const { return m_leaderInTrouble; }
 
 	// --- ボスのセッティング（初期化）（学習データを最初は入れておく、最後まで行ったときにデータを全部足す）---
 	void SettingBoss(GroupData* groupData);
@@ -292,6 +291,11 @@ public:
 
 	// --- 群の色・番号取得 ---
 	GroupColorData GetRandomGroupDataColor();
+
+
+	// --- 自身がついていくリーダーをセット ---
+	void LeaderSet(float searchRadius);
+
 
 	//======================================================================
 	// ステージ・移動補助
@@ -334,6 +338,8 @@ public:
 	void SetChargeMark(vnSprite* sprite) { m_pChargeMark = sprite; }
 
 
+
+
 protected:
 	//======================================================================
 	// 状態ごとの処理（子クラス実装）
@@ -358,7 +364,7 @@ protected:
 	// 基本ステータス
 	//======================================================================
 	EnemyType m_type = EnemyType::NONE;	//タグ（敵の種類）
-	bool m_isUnlocked;					//出現可能フラグ（false(出現不可)）
+	bool m_isUnlocked = false;			//出現可能フラグ（false(出現不可)）
 
 	//======================================================================
 	// 移動速度設定（子の初期化で設定する）
@@ -409,7 +415,7 @@ protected:
 	//======================================================================
 	// リーダー行動
 	//======================================================================
-	float m_leaderSeparateRadius = 1.0f;		//リーダー同氏の反発距離
+	float m_leaderSeparateRadius = 1.0f;		//リーダー同士の反発距離
 	float m_leaderEscapeRadius = 1.0f;			//プレイヤーから逃げる距離
 	float m_leaderRetreatStopRadius = 1.0f;		//プレイヤーから十分に離れて逃げやめる距離
 
@@ -449,7 +455,7 @@ protected:
 	bool m_isPullChecked = false;			//引き寄せ攻撃の無効化の抽選用（全員が引き寄せられるのを防ぐ）
 	float m_individualPullResist = 0.0f;	//個別に持つランダムな抵抗値、群れの中でもランダムにする
 
-	bool m_wasLeaderEscaping;				//範囲攻撃の逃げるときにタイマーをリセットするため
+	bool m_wasLeaderEscaping = false;		//範囲攻撃の逃げるときにタイマーをリセットするため
 	bool m_onceStartUI = false;				//登場したときの最初のみ出すUI
 
 	//======================================================================
@@ -466,15 +472,15 @@ protected:
 	//======================================================================
 	// 頭上マークUI
 	//======================================================================
-	vnSprite* m_pChargeMark;	//特攻状態の怒りマーク
-	vnSprite* m_pPanicMark;		//焦りマーク
+	vnSprite* m_pChargeMark = nullptr;		//特攻状態の怒りマーク
+	vnSprite* m_pPanicMark = nullptr;		//焦りマーク
 
 
 private:
 	//======================================================================
 	// 基本情報
 	//======================================================================
-	CharacterBase* m_pPlayer = nullptr;	// プレイヤーへのポインタ
+	NewPlayerClass* m_pPlayer = nullptr;	// プレイヤーへのポインタ
 
 	float m_myFenceRadius = 0.0f;		// 自身のフェンス半径
 	int   m_currentWave = 0;			// 現在のWAVE
@@ -573,8 +579,6 @@ private:
 	void UpdateSquashAndStretch(float deltaTime);	//伸び縮みするアニメーション
 
 	void CheckEvolutionOnSpawn();	//スポーン時に何が強化されたか出す
-
-	void EscapeAreaAttack();		//範囲攻撃から逃げる関数
 
 	//======================================================================
 	// 頭上マーク

@@ -19,16 +19,16 @@ class vnSprite
 {
 public:
 	//座標
-	float posX;
-	float posY;
+	float posX = 0.0f;
+	float posY = 0.0f;
 	//サイズ
-	float sizeX;
-	float sizeY;
+	float sizeX = 0.0f;
+	float sizeY = 0.0f;
 	//スケール
-	float scaleX;
-	float scaleY;
+	float scaleX = 0.0f;
+	float scaleY = 0.0f;
 	//回転
-	float rot;
+	float rot = 0.0f;
 
 	//頂点数
 	static const int VertexNum = 4;
@@ -79,7 +79,7 @@ public:
 	static void terminateCommon();
 
 	//コンストラクタ
-	vnSprite() {}
+	//vnSprite() {}
 	vnSprite(float x, float y, float width, float height, const WCHAR* texture_file, float left_u = 0.0f, float right_u = 1.0f, float top_v = 0.0f, float bottom_v = 1.0f);
 
 	//デストラクタ

@@ -4,7 +4,7 @@
 namespace
 {
 	constexpr int canSelectCount = 3;	//選択肢の数
-	constexpr int expOffset = 1.2;		//レベルアップで増える量を増やす（N倍）
+	constexpr float expOffset = 1.0f;		//レベルアップで増える量を増やす（N倍）
 
 }
 //======================================================================
@@ -50,7 +50,7 @@ ExperienceManager::ExperienceManager()
 	
 	// その他初期化
 	m_currentLevel = 1;
-	m_currentExp = 0;
+	m_currentExp = 0.0f;
 	m_neededExp = 60.0f;
 	m_maxLevel = 999;
 	for (int i = 0; i < canSelectCount; i++)
@@ -66,7 +66,7 @@ ExperienceManager::ExperienceManager()
 void ExperienceManager::AllLevelReset()
 {
 	m_currentLevel = 1;
-	m_currentExp = 0;
+	m_currentExp = 0.0f;
 	m_neededExp = 60.0f;
 	m_maxLevel = 999;
 
@@ -107,7 +107,7 @@ void ExperienceManager::GainExp(float exp)
 		//最大レベルに達していたらループを抜ける
 		if (m_currentLevel >= m_maxLevel)
 		{
-			m_currentExp = 0;
+			m_currentExp = 0.0f;
 			break;
 		}
 	}

@@ -22,7 +22,7 @@ public:
 	// --- èdóÕ ---
 	void SetIsUseGravity(bool enable) { m_IsUseGravity = enable; }
 	bool GetIsUseGravity()const { return m_IsUseGravity; }
-	void SetGravity(float g) { m_gravity = g; }
+	void SetGravityPowerUp(float g) { m_gravity *= g; }
 	float GetGracity() const{ return m_gravity; }
 	void AddVerticalVelocity(float v);
 	void SetVerticalVelocity(float v);
