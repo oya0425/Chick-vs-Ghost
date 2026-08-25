@@ -5815,8 +5815,6 @@ void SceneMain::UpdateBlocksCollision()
 			m_pBullet->SetIsHitWall(true);
 		}
 	}
-
-	DebugDraw();
 }
 
 void SceneMain::DebugDraw() 

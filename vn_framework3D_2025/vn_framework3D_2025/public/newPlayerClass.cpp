@@ -40,7 +40,7 @@ NewPlayerClass::NewPlayerClass()
 void NewPlayerClass::Init()
 {
 	//スキル関係
-	//範囲攻撃
+	// --- 範囲攻撃 ---
 	m_areaAtkCoolTimer = m_areaAtkCoolTimeMax;
 	m_areaUseCount = 0;
 	m_areaAttackState = eSkillState::READY;
@@ -49,6 +49,7 @@ void NewPlayerClass::Init()
 	m_currentRadius = 1.0f;
 	m_expandTimer = 0.0f;			// 拡大用タイマー
 	m_maxAttackRadius = 20.0f;		
+	m_canCoolTimeReset_areaAtk = false;
 
 	// --- 引き寄せ攻撃 ---
 	m_pullState = eSkillState::READY;			//現在の状態
@@ -56,6 +57,7 @@ void NewPlayerClass::Init()
 	m_pullRadius = m_defaultPullRadius;			//引き寄せ範囲
 	m_pullTimer = 0.0f;							//吸引時間の計測用
 	m_pullCooldownTimer = m_pullCooldownMax;	//クールタイムの計測用
+	m_canCoolTimeReset_pull = false;
 	
 	m_isLevelUp = false;	//レベルアップ中はスキルの時間を止める
 	GetModel()->setMotion(NULL);

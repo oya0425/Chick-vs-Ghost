@@ -65,8 +65,24 @@ public:
 
 
 	// --- スキルの解放(獲得時にクールタイムをリセット) ---
-	void UnlockAreaAttackSkill(bool unlock) { m_isHaveAreaAtkSkill = unlock; m_areaAtkCoolTimer  = 0.0f; }
-	void UnlockPullAttackSkill(bool unlock) { m_isHavePullSkill    = unlock; m_pullCooldownTimer = 0.0f; }
+	void UnlockAreaAttackSkill(bool unlock) 
+	{ 
+		m_isHaveAreaAtkSkill = unlock;
+		if (!m_canCoolTimeReset_areaAtk)
+		{
+			m_areaAtkCoolTimer = 0.0f;
+			m_canCoolTimeReset_areaAtk = true;
+		}
+	}
+	void UnlockPullAttackSkill(bool unlock) 
+	{
+		m_isHavePullSkill = unlock;
+		if (!m_canCoolTimeReset_pull)
+		{
+			m_pullCooldownTimer = 0.0f;
+			m_canCoolTimeReset_pull = true;
+		}
+	}
 	
 	// --- スキル持ってるかのGet ---
 	bool GetIsHaveAreaAtkSkill()const { return m_isHaveAreaAtkSkill; }
@@ -187,6 +203,7 @@ private:
 	float m_areaAtkCoolTimer		  = 0.0f;			//現在のクールタイム
 	const float m_areaAtkCoolTimeMax  = 5.0;			//最大のクールタイム
 	const float m_attackTime		  = 0.5f;			//範囲攻撃の最大まで行く時間
+	bool m_canCoolTimeReset_areaAtk = false;			//最初の一回だけクールタイムをリセットする
 
 	void UpdateAreaAttackSkill(float deltaTime);
 
@@ -200,6 +217,7 @@ private:
 
 	const float m_pullDuration	  = 0.5f;  //吸引し続ける時間
 	const float m_pullCooldownMax = 10.0f; //クールタイム
+	bool m_canCoolTimeReset_pull = false;					//最初の一回だけクールタイムをリセットする
 
 	void UpdatePullSkill(float deltaTime);	//引き寄せスキルの更新ロジック
 

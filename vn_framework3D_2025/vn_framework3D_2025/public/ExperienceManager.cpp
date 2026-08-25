@@ -30,7 +30,7 @@ static const ExperienceManager::UpgradeUIData MASTER_DATA[] =
 	{10.0f* expOffset, 15.0f * expOffset, 20.0f * expOffset, 25.0f * expOffset, 20.0f * expOffset}, 1, 0, 50},
 
 	{ L"引き寄せ範囲", L"%アップ", L"引き寄せる範囲が大きくなるぞ！",
-	{10.0f* expOffset, 15.0f * expOffset, 20.0f * expOffset, 10.0f * expOffset, 15.0f * expOffset}, 2, 0, 50},
+	{10.0f* expOffset, 10.0f * expOffset, 10.0f * expOffset, 10.0f * expOffset, 15.0f * expOffset}, 2, 0, 50},
 
 	//{ L"反射回数",     L"回増加",     {  1.0f,  2.0f,  3.0f,  1.0f,  2.0f },   3,  1,  50 },
 	//{ L"弾の速度",     L"%アップ",    { 10.0f, 15.0f, 10.0f, 15.0f, 10.0f },   4,  1,  50 },

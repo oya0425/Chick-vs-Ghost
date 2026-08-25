@@ -14,7 +14,7 @@ WCHAR seFile_Title[][FILE_PATH_MAX] =
 //タイトル画面の背景（ルールとか）
 std::vector<std::wstring> ui_Title =
 {
-    L"data/image/タイトル画面 - コピー.png", // 0
+    L"data/image/タイトル画面.png",        // 0
     L"data/image/Rule1.png",               // 1
     L"data/image/Rule2.png",               // 2
     L"data/image/Rule3.png",               // 3
