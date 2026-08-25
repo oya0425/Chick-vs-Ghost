@@ -1230,7 +1230,7 @@ void SceneMain::InitializeExplanationUI()
 			playgame_back_button_x, playgame_back_button_y, L"ゲームへ");
 		//ミッション終了時のゲームに戻るボタン
 		InitButton(UIButton::MESSAGE_GAMEPLAY,
-			gamePlay_button_x, gamePlay_button_y, L"本番へ");
+			gamePlay_button_x, gamePlay_button_y, L"本番へ", threeLetters);
 	}
 	//チュートリアル振り返りボタン
 	{
