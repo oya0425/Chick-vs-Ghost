@@ -1,0 +1,151 @@
+//--------------------------------------------------------------//
+//	"WaveManager.h"												//
+//		WAVEクラス												//
+//													2025/02/14	//
+//														Oya  	//
+//--------------------------------------------------------------//
+#pragma once
+#include"../MainScript/Character/RigidbodyComponent.h"
+class WaveManager
+{
+public:
+    WaveManager();
+    ~WaveManager();
+
+
+    enum class WaveState
+    {
+        InProgress, //ゲーム中（戦闘中）
+        ClearWait,  //WAVEクリア画面
+        Finished,   //全WAVEクリア画面
+
+        None,
+    };
+
+    void Init(bool isTutorial, bool isEndless);
+    void Update(float deltaTime);
+
+
+    void OnEnemyKilled();      // 撃破通知
+    void OnEnemySpawned();     // 出現通知
+
+    void OnEnemyLeaderKilled();//リーダーの撃破通知
+
+    bool IsWaveClear() const;
+
+    bool CanSpawn() const;  //スポーンできるか?
+
+    void GoNextWave();  //WAVEを次へ進める
+
+    WaveState GetState() { return m_state; }
+
+    // --- 表示する必要がある変数を返す ---
+    int GetKillCount()const { return m_killedCount; };    //現在の撃破数
+    int GetCurrentWave() const;                         //現在のWAVE数
+    int GetKillTargetCount()const { return m_killTarget; }//必要撃破数
+
+    int GetKillLeaderCount()const { return m_killedLeaderCount; } //撃破したリーダーの数
+
+    int GetTotalKillCount()const { return m_totalKillCount; }   //倒した敵の合計
+
+    int GetKillBossCountTarget()const { return m_killBossCountTarget - m_killedCount; } //ボスの残り撃破数
+
+    int GetKillNeedBossCount()const { return m_killBossCountTarget; }           //ボスの最大必要撃破数
+
+    int GetNextKillTargetCount()const { return m_nextKillTarget; }
+
+    //--WAVE切り替え用
+    bool IsWaitingForNext() const
+    {
+        return m_state == WaveState::ClearWait;
+    }
+
+    bool IsFinished() const
+    {
+        return m_state == WaveState::Finished;
+    }
+
+    int GetMaxWave() { return m_maxWave; }
+    bool GetFinalWave() { return m_currentWave == m_maxWave; }
+
+    //ボスWAVEゲームオーバー
+    bool GetIsBossWAVEGAMEOver() { return (m_currentWave == m_maxWave && m_waveTimer >= m_waveTimeLimit); }
+    
+
+    const wchar_t* GetStateString() const
+    {
+        switch (m_state)
+        {
+        case WaveState::InProgress:
+            return L"InProgress";
+
+        case WaveState::ClearWait:
+            return L"ClearWait";
+
+        case WaveState::Finished:
+            return L"Finished";
+
+        default:
+            return L"Unknown";
+        }
+    }
+
+
+    // --- 出現する敵を解除(使用可能にする) ---
+    void UnlockEnemyType(NewEnemyClass::EnemyType type);
+
+
+    // --- 出現する最大数 ---
+    int GetMaxSpawnLimit()const { return m_spawnLimit; }
+
+    // --- 時間を返す ---
+    float GetWaveTimer() const { return m_waveTimer; }
+    float GetWaveTimeLimit() const { return m_waveTimeLimit; }
+
+private:
+    void SetupWave();          // 次WAVE準備
+
+
+private:
+    int m_currentWave = 0;
+
+    int m_killTarget = 0;        // 必要撃破数
+    int m_killedCount = 0;       // 現在撃破数
+    int m_killedLeaderCount = 0; //リーダーの撃破数
+
+    int m_totalKillCount = 0;    // 全体の撃破数
+
+
+    int m_killBossCountTarget = 5;
+
+    float m_waveTimer = 20;            //WAVE中の時間
+    float m_waveTimeLimit = 1;        //WAVEクリアまでの時間（残り０秒でクリア、）
+    const float m_waveTimeBase = 20;  //基準の時間
+    const float m_addTime = 10;       //増える時間   
+
+    int m_nextKillTarget = 0;    // 次の必要キル数
+
+
+    int m_spawnLimit = 0;        // 同時出現上限
+    int m_aliveCount = 0;        // 現在生存数
+    int m_configMaxSimultaneous = 1000;   //最初の敵の最大数
+    int m_configMaxSimultaneous_endless = 1200;   //最初の敵の最大数
+    int m_startEnemyNum_endless = 600;   //最初の敵の最大数
+
+    int m_spawnLimit_tutorial = 100;
+
+    float m_respawnInterval = 0.0f; // 湧き間隔
+    float m_respawnTimer = 0.0f;    // 湧きタイマー
+
+    WaveState m_state=WaveState::None;
+    int m_maxWave = 5;
+
+    float m_endless_time = 0;
+
+
+    //チュートリアル時のクリア条件に変更する
+    bool m_isTutorial = false;
+    bool m_isTutorial_Clear = false;    //チュートリアルをクリアしたかどうか
+    bool m_isEndless = false;           //エンドレスモードかどうか、0WAVE固定状態にする
+
+};

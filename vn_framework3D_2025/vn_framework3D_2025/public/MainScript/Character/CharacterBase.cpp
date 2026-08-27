@@ -1,0 +1,109 @@
+#include"../../../framework.h"	
+#include"../../../framework/vn_environment.h"
+#include "../Character/CharacterBase.h"
+
+CharacterBase::CharacterBase()
+    :m_collision(XMVectorSet(1.0f, 1.0f, 1.0f, 0), XMVectorSet(0, 0, 0, 0))
+{
+
+}
+//======================================================================
+// --- モデル ---
+//======================================================================
+void CharacterBase::SetModel(vnCharacter* model)
+{
+    m_pModel = model;
+    
+}
+
+vnCharacter* CharacterBase::GetModel() const
+{
+    return m_pModel;
+}
+//======================================================================
+// --- 物理 ---
+//======================================================================
+RigidbodyComponent& CharacterBase::GetRigidbody()
+{
+    return m_rigidBody;
+}
+
+const RigidbodyComponent& CharacterBase::GetRigidbody() const
+{
+    return m_rigidBody;
+}
+//======================================================================
+// --- 当たり判定 ---
+//======================================================================
+CollisionComponent& CharacterBase::GetCollision()
+{
+    return m_collision;
+}
+
+const CollisionComponent& CharacterBase::GetCollision() const
+{
+    return m_collision;
+}
+//======================================================================
+// --- HP ---
+//======================================================================
+void CharacterBase::SetMaxHp(float maxHP)
+{
+    m_maxHP = maxHP;
+    m_currentHP = m_maxHP;
+}
+void CharacterBase::SetCurrentHP(float currentHP)
+{
+    m_currentHP = currentHP;
+}
+
+float CharacterBase::GetMaxHp() const
+{
+    return m_maxHP;
+}
+
+float CharacterBase::GetCurrentHp() const
+{
+    return m_currentHP;
+}
+//======================================================================
+// --- HPの増減 ---
+//======================================================================
+void CharacterBase::AddHP(float value,bool isMuteki)
+{
+    m_currentHP += value;
+
+    if (m_currentHP > m_maxHP)
+        m_currentHP = m_maxHP;
+    if (m_currentHP < 0)
+        m_currentHP = 0;
+    if (isMuteki && m_currentHP <= 0.0f)
+    {
+        m_currentHP = 1.0f;
+    }
+}
+//======================================================================
+// --- ダメージ ---
+//======================================================================
+void CharacterBase::Damage(float value,bool isMuteki)
+{
+    //if (value > 0)
+        AddHP(-value, isMuteki);
+}
+
+bool CharacterBase::IsDead() const
+{
+    return m_currentHP <= 0;
+}
+
+//======================================================================
+// --- 向き ---
+//======================================================================
+void CharacterBase::SetMoveDirection(const XMVECTOR& dir)
+{
+    m_moveDir = dir;
+}
+XMVECTOR CharacterBase::GetMoveDir()const
+{
+    return m_moveDir;
+}

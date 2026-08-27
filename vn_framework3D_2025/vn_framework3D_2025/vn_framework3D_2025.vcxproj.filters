@@ -29,28 +29,34 @@
       <UniqueIdentifier>{f2363705-c82a-4d9a-b643-425e4afadf76}</UniqueIdentifier>
     </Filter>
     <Filter Include="public\MainScript">
-      <UniqueIdentifier>{60768818-bbb9-4c21-aa2c-f3538931a687}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="public\MainScript\Enemy">
-      <UniqueIdentifier>{bfae0c3f-9a12-4f45-b31d-925ac3ef2b6f}</UniqueIdentifier>
+      <UniqueIdentifier>{b6e2c827-f3d9-4630-a111-51bad7e0bb5e}</UniqueIdentifier>
     </Filter>
     <Filter Include="public\MainScript\Block">
-      <UniqueIdentifier>{b2b0697d-d5b5-44d7-8115-30a7bbcace6b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="public\MainScript\Experience">
-      <UniqueIdentifier>{c9230176-b1a2-4f76-a177-e55bf7e41de9}</UniqueIdentifier>
+      <UniqueIdentifier>{60162182-441d-4397-9b8a-2f7916c4fae7}</UniqueIdentifier>
     </Filter>
     <Filter Include="public\MainScript\Bullet">
-      <UniqueIdentifier>{8af2b732-1d18-4f3c-97c1-6db82926fd0e}</UniqueIdentifier>
+      <UniqueIdentifier>{ec1a898b-375c-4e31-b234-6670d6b0bb6a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="public\MainScript\UI">
-      <UniqueIdentifier>{5bdc31e7-8f72-44ed-9cb3-8fb52cbf730c}</UniqueIdentifier>
+    <Filter Include="public\MainScript\Character">
+      <UniqueIdentifier>{ff035046-0ae6-4fd9-b24f-3314991d9890}</UniqueIdentifier>
     </Filter>
-    <Filter Include="public\MainScript\Sound">
-      <UniqueIdentifier>{d25f34dd-2cb9-4f54-afd9-d12bc18e5bcb}</UniqueIdentifier>
+    <Filter Include="public\MainScript\Experience">
+      <UniqueIdentifier>{3667dfc1-3f6f-419a-9bfa-17d6ec68ab56}</UniqueIdentifier>
     </Filter>
     <Filter Include="public\MainScript\Scene">
-      <UniqueIdentifier>{2fb03403-5425-4a90-aae2-74a04e7c1e54}</UniqueIdentifier>
+      <UniqueIdentifier>{ab98420f-98f1-484a-9873-1793e689eb94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="public\MainScript\Sound">
+      <UniqueIdentifier>{2634a957-aa8a-4170-b134-c8e923531392}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="public\MainScript\UI">
+      <UniqueIdentifier>{bb047069-50dc-4d48-bb76-60ffa6d9c8af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="public\MainScript\Character\Enemy">
+      <UniqueIdentifier>{0ac79f43-d9e0-4548-a9dd-97e02d09acda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="public\MainScript\Character\Player">
+      <UniqueIdentifier>{206c5523-c54c-40a8-aaf4-149e96e63070}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -141,65 +147,65 @@
     <ClInclude Include="public\vn_character.h">
       <Filter>public</Filter>
     </ClInclude>
-    <ClInclude Include="public\RigidbodyComponent.h">
-      <Filter>public\MainScript</Filter>
-    </ClInclude>
-    <ClInclude Include="public\WaveManager.h">
-      <Filter>public\MainScript</Filter>
-    </ClInclude>
-    <ClInclude Include="public\CharacterBase.h">
-      <Filter>public\MainScript</Filter>
-    </ClInclude>
-    <ClInclude Include="public\newPlayerClass.h">
-      <Filter>public\MainScript</Filter>
-    </ClInclude>
-    <ClInclude Include="public\CollisionComponent.h">
-      <Filter>public\MainScript</Filter>
-    </ClInclude>
-    <ClInclude Include="public\EnemyGhost.h">
-      <Filter>public\MainScript\Enemy</Filter>
-    </ClInclude>
-    <ClInclude Include="public\EnemyMushroomMon.h">
-      <Filter>public\MainScript\Enemy</Filter>
-    </ClInclude>
-    <ClInclude Include="public\BlockManager.h">
-      <Filter>public\MainScript\Block</Filter>
-    </ClInclude>
-    <ClInclude Include="public\TerrainBlock.h">
-      <Filter>public\MainScript\Block</Filter>
-    </ClInclude>
-    <ClInclude Include="public\ExperienceManager.h">
-      <Filter>public\MainScript\Experience</Filter>
-    </ClInclude>
-    <ClInclude Include="public\Bullet.h">
-      <Filter>public\MainScript\Bullet</Filter>
-    </ClInclude>
-    <ClInclude Include="public\UpgradeSelectionUI.h">
-      <Filter>public\MainScript\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="public\EnemyAIDebug.h">
-      <Filter>public\MainScript\Enemy</Filter>
-    </ClInclude>
-    <ClInclude Include="public\SoundManager.h">
-      <Filter>public\MainScript\Sound</Filter>
-    </ClInclude>
     <ClInclude Include="framework\vn_resourceLoader.h">
       <Filter>framework</Filter>
     </ClInclude>
-    <ClInclude Include="public\NewEnemyClass.h">
-      <Filter>public\MainScript\Enemy</Filter>
+    <ClInclude Include="public\MainScript\Block\BlockManager.h">
+      <Filter>public\MainScript\Block</Filter>
     </ClInclude>
-    <ClInclude Include="public\EnemyPool.h">
-      <Filter>public\MainScript\Enemy</Filter>
+    <ClInclude Include="public\MainScript\Block\TerrainBlock.h">
+      <Filter>public\MainScript\Block</Filter>
     </ClInclude>
-    <ClInclude Include="public\scene\scene_title.h">
-      <Filter>public\MainScript\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="public\scene\scene_main.h">
-      <Filter>public\MainScript\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="public\common.h">
+    <ClInclude Include="public\MainScript\common.h">
       <Filter>public\MainScript</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\WaveManager.h">
+      <Filter>public\MainScript</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\Bullet\Bullet.h">
+      <Filter>public\MainScript\Bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\Character\Enemy\EnemyAIDebug.h">
+      <Filter>public\MainScript\Character\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\Character\Enemy\EnemyGhost.h">
+      <Filter>public\MainScript\Character\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\Character\Enemy\EnemyMushroomMon.h">
+      <Filter>public\MainScript\Character\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\Character\Enemy\EnemyPool.h">
+      <Filter>public\MainScript\Character\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\Character\Enemy\NewEnemyClass.h">
+      <Filter>public\MainScript\Character\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\Character\Player\newPlayerClass.h">
+      <Filter>public\MainScript\Character\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\Character\CharacterBase.h">
+      <Filter>public\MainScript\Character</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\Character\CollisionComponent.h">
+      <Filter>public\MainScript\Character</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\Character\RigidbodyComponent.h">
+      <Filter>public\MainScript\Character</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\Experience\ExperienceManager.h">
+      <Filter>public\MainScript\Experience</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\UI\UpgradeSelectionUI.h">
+      <Filter>public\MainScript\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\Scene\scene_main.h">
+      <Filter>public\MainScript\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\Scene\scene_title.h">
+      <Filter>public\MainScript\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\Sound\SoundManager.h">
+      <Filter>public\MainScript\Sound</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -278,65 +284,65 @@
     <ClCompile Include="public\vn_character.cpp">
       <Filter>public</Filter>
     </ClCompile>
-    <ClCompile Include="public\RigidbodyComponent.cpp">
-      <Filter>public\MainScript</Filter>
-    </ClCompile>
-    <ClCompile Include="public\WaveManager.cpp">
-      <Filter>public\MainScript</Filter>
-    </ClCompile>
-    <ClCompile Include="public\CharacterBase.cpp">
-      <Filter>public\MainScript</Filter>
-    </ClCompile>
-    <ClCompile Include="public\newPlayerClass.cpp">
-      <Filter>public\MainScript</Filter>
-    </ClCompile>
-    <ClCompile Include="public\CollisionComponent.cpp">
-      <Filter>public\MainScript</Filter>
-    </ClCompile>
-    <ClCompile Include="public\EnemyGhost.cpp">
-      <Filter>public\MainScript\Enemy</Filter>
-    </ClCompile>
-    <ClCompile Include="public\EnemyMushroomMon.cpp">
-      <Filter>public\MainScript\Enemy</Filter>
-    </ClCompile>
-    <ClCompile Include="public\BlockManager.cpp">
-      <Filter>public\MainScript\Block</Filter>
-    </ClCompile>
-    <ClCompile Include="public\TerrainBlock.cpp">
-      <Filter>public\MainScript\Block</Filter>
-    </ClCompile>
-    <ClCompile Include="public\ExperienceManager.cpp">
-      <Filter>public\MainScript\Experience</Filter>
-    </ClCompile>
-    <ClCompile Include="public\Bullet.cpp">
-      <Filter>public\MainScript\Bullet</Filter>
-    </ClCompile>
-    <ClCompile Include="public\UpgradeSelectionUI.cpp">
-      <Filter>public\MainScript\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="public\EnemyAIDebug.cpp">
-      <Filter>public\MainScript\Enemy</Filter>
-    </ClCompile>
-    <ClCompile Include="public\SoundManager.cpp">
-      <Filter>public\MainScript\Sound</Filter>
-    </ClCompile>
     <ClCompile Include="framework\vn_resourceLoader.cpp">
       <Filter>framework</Filter>
     </ClCompile>
-    <ClCompile Include="public\NewEnemyClass.cpp">
-      <Filter>public\MainScript\Enemy</Filter>
+    <ClCompile Include="public\MainScript\Block\BlockManager.cpp">
+      <Filter>public\MainScript\Block</Filter>
     </ClCompile>
-    <ClCompile Include="public\EnemyPool.cpp">
-      <Filter>public\MainScript\Enemy</Filter>
+    <ClCompile Include="public\MainScript\Block\TerrainBlock.cpp">
+      <Filter>public\MainScript\Block</Filter>
     </ClCompile>
-    <ClCompile Include="public\scene\scene_main.cpp">
-      <Filter>public\MainScript\Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="public\scene\scene_title.cpp">
-      <Filter>public\MainScript\Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="public\common.cpp">
+    <ClCompile Include="public\MainScript\common.cpp">
       <Filter>public\MainScript</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\WaveManager.cpp">
+      <Filter>public\MainScript</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Bullet\Bullet.cpp">
+      <Filter>public\MainScript\Bullet</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Character\Enemy\EnemyAIDebug.cpp">
+      <Filter>public\MainScript\Character\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Character\Enemy\EnemyGhost.cpp">
+      <Filter>public\MainScript\Character\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Character\Enemy\EnemyMushroomMon.cpp">
+      <Filter>public\MainScript\Character\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Character\Enemy\EnemyPool.cpp">
+      <Filter>public\MainScript\Character\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Character\Enemy\NewEnemyClass.cpp">
+      <Filter>public\MainScript\Character\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Character\Player\newPlayerClass.cpp">
+      <Filter>public\MainScript\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Character\CharacterBase.cpp">
+      <Filter>public\MainScript\Character</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Character\CollisionComponent.cpp">
+      <Filter>public\MainScript\Character</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Character\RigidbodyComponent.cpp">
+      <Filter>public\MainScript\Character</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Experience\ExperienceManager.cpp">
+      <Filter>public\MainScript\Experience</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\UI\UpgradeSelectionUI.cpp">
+      <Filter>public\MainScript\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Scene\scene_main.cpp">
+      <Filter>public\MainScript\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Scene\scene_title.cpp">
+      <Filter>public\MainScript\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Sound\SoundManager.cpp">
+      <Filter>public\MainScript\Sound</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

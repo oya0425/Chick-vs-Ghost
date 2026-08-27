@@ -1,0 +1,254 @@
+//--------------------------------------------------------------//
+//	"playerClass.h"												//
+//		プレイヤークラス										//
+//													2025/02/01	//
+//														Oya  	//
+//--------------------------------------------------------------//
+#pragma once
+#include"../../../../public/vn_model.h"
+#include "../CharacterBase.h"
+#include"../../Bullet/Bullet.h"
+
+
+//--------------------------------------
+// プレイヤーのクラス
+//--------------------------------------
+class NewPlayerClass:public CharacterBase
+{
+public:
+	NewPlayerClass();
+	~NewPlayerClass();
+
+	void Init();	//初期化
+
+	void Update(float deltaTime)override;
+
+	//soundManagerをセット
+	void SetSoundManager(SoundManager* soundmanager) { m_sound = soundmanager; }
+
+
+	// --- モデルセット ---
+	void SetUpKaraModel(vnModel* model); //上の殻のモデルをセット
+	vnModel* GetUpKaraModel()const;	//上の殻のモデルを返す
+
+
+	// --- フラグ ---
+	bool requestDestroy = false;
+
+	void SetPlayerMove(bool canMove);
+	bool GetPlayerMove() { return m_isMove; }			//操作可能か
+	bool GetIsPlayerMoving()const { return m_isMoving; }//動いてる最中か
+
+
+	float GetBaseMoveSpeed() { return m_baseMoveSpeed; }
+
+	// --- 殻を初期化 --- 
+	void ResetUpKara();		 //上の殻をリセット
+
+
+	// --- ステータス強化 ---
+	void SetSpeedMultiplier(float multiplier);
+	void SetRangeMultiplier(float multiplier);
+	void SetPullMultiplier(float multiplier);
+	void SetBounceMultiplier(int multiplier);
+	void SetBulletSpeedMultiplier(float multiplier);
+
+
+	float GetEffectiveRadius() override {
+		return m_currentRadius; // Updateで計算している変動する半径を返す
+	}
+
+
+
+	// --- 弾撃ち ---
+	void SetBulletClass(Bullet* bullet) { m_bullet = bullet; }
+
+
+	// --- スキルの解放(獲得時にクールタイムをリセット) ---
+	void UnlockAreaAttackSkill(bool unlock) 
+	{ 
+		m_isHaveAreaAtkSkill = unlock;
+		if (!m_canCoolTimeReset_areaAtk)
+		{
+			m_areaAtkCoolTimer = 0.0f;
+			m_canCoolTimeReset_areaAtk = true;
+		}
+	}
+	void UnlockPullAttackSkill(bool unlock) 
+	{
+		m_isHavePullSkill = unlock;
+		if (!m_canCoolTimeReset_pull)
+		{
+			m_pullCooldownTimer = 0.0f;
+			m_canCoolTimeReset_pull = true;
+		}
+	}
+	
+	// --- スキル持ってるかのGet ---
+	bool GetIsHaveAreaAtkSkill()const { return m_isHaveAreaAtkSkill; }
+	bool GetIsHavePullSkill()const { return m_isHavePullSkill; }
+
+	//---スキルのクールタイムのGet
+	float GetAreaAttackCoolTime()const { return m_areaAtkCoolTimer; }
+	float GetAreaAttackMaxCoolTime()const { return m_areaAtkCoolTimeMax; }
+
+	float GetPullAttackCoolTime()const { return m_pullCooldownTimer; }
+	float GetPullAttackMaxCoolTime()const { return m_pullCooldownMax; }
+
+	//レベルアップ時にジャンプ
+	bool GetIsJump()const { return m_isJump; }
+	void Jump(bool isLevelUping);
+
+	//レベルアップ中かどうか（スキルの時間の経過を止めるため）
+	void SetIsLevelUp(bool isLevelUp) { isLevelUp = m_isLevelUp; }
+
+	// --- レベルアップ演出用 ---
+	void UpdateLevelUp();
+	void FinishLevelUp();	//レベルアップが終わった
+	void ResetSkillCounts()	//WAVE終了時にカウントをリセットする
+	{
+		m_pullUseCount = 0;
+		m_areaUseCount = 0;
+	}
+
+	// --- 敵の学習用 ---
+	//スキルの発動回数
+	int GetPullUseCount()const { return m_pullUseCount; }
+	int GetAreaAttackCount()const { return m_areaUseCount; }
+
+
+	//--スキルの発動中か
+	// --- 範囲攻撃 ---
+	bool CanAreaAttack()const {return (m_isHaveAreaAtkSkill && (m_areaAttackState == eSkillState::READY));}
+	bool CoolDownAreaAttack()const {return (m_isHaveAreaAtkSkill && (m_areaAttackState == eSkillState::COOLDOWN));}	//範囲攻撃がクールダウン中
+	bool IsAreaAttack()const  { return m_areaAttackState == eSkillState::ACTIVE; }//範囲攻撃を撃てるか(スキルを持っているか)
+	float GetAreaAttackRadius()const  { return m_maxAttackRadius; }				//範囲攻撃の大きさ
+
+	// --- 引き寄せ攻撃 ---
+	bool IsPulling()const { return m_pullState == eSkillState::ACTIVE; }	//引き寄せ攻撃中か
+	bool CoolDownPull()const { return (m_isHavePullSkill && (m_pullState == eSkillState::COOLDOWN)); }	//引き寄せ攻撃がクールダウン中
+	float GetPullRadius()const { return m_pullRadius; }//敵が範囲に入っているか判定するため
+
+
+
+	// --- スキルのクールタイムリセット ---
+	void ResetSkillCoolTime();
+
+	// --- 無敵のセットゲット ---
+	void SetIsMuteki(bool muteki) { m_isMuteki = muteki; }
+	bool GetIsMuteki() { return m_isMuteki; }
+
+	// ---　入力関係(移動) ---
+	enum eInputDir
+	{
+		NONE,
+		FORWARD,
+		BACK,
+		LEFT,
+		RIGHT,
+	};
+
+	// --- スキルの構成 ---
+	enum class eSkillState
+	{
+		READY,		//使用可能
+		ACTIVE,		//スキル発動中
+		COOLDOWN,	//クールダウン
+	};
+
+private:
+	// --- Update内整理用関数 ---
+	//入力と移動ベクトル計算（カメラ方向への変換を含む）
+	XMVECTOR CalculateInputVector();
+
+	//物理・移動処理（ジャンプ、Rigidbody更新、座標反映）
+	void HandlePhysicsAndMovement(XMVECTOR Input, float deltaTime);
+
+	//スキル・攻撃処理
+	void UpdateSkills(float deltaTime);
+
+	//キャラクターの向きとアニメーション
+	void UpdateVisuals(XMVECTOR Input, float deltaTime);
+
+	//デバッグ
+	void DrawDebugInfo();
+
+
+
+
+	// --- モデル ---
+	vnModel* m_pUpKara = nullptr;
+	
+	// --- 移動 ---
+	const float m_baseMoveSpeed = 18.0f;
+	float m_boostSpeedMultiplier = 1.0f;			///強化される速度
+
+	bool  m_isMove;//動けるかどうか（操作可能か？）
+	bool  m_isJump;//ジャンプできるかどうか
+
+	bool m_isMoving=false;	//移動中かどうか？
+
+	XMVECTOR respawnPos = XMVectorSet(0, 0.5f, 0, 0);
+
+	// --- 範囲攻撃用 ---
+	eSkillState m_areaAttackState = eSkillState::READY;
+	bool  m_isHaveAreaAtkSkill		  = false;			//スキル獲得済みか？
+	bool  m_isExpanding				  = false;		    //半径拡大中か？
+	float m_currentRadius			  = 1.0f;			//現在の半径
+	float m_expandTimer				  = 0.0f;			//拡大用タイマー
+	//float m_maxAttackRadius		      = 2.0f;		//最大半径
+	float m_maxAttackRadius		      = 20.0f;		    //最大半径(随時更新)(20)
+	const float m_defaultAttackRadius = 10.0f;			//加算される攻撃範囲のデフォルトのサイズ
+	const float m_defaultRadius		  = 1.0f;			//通常時の半径（size.x/2の値に合わせて調整）普通の当たり判定
+	float m_areaAtkCoolTimer		  = 0.0f;			//現在のクールタイム
+	const float m_areaAtkCoolTimeMax  = 5.0;			//最大のクールタイム
+	const float m_attackTime		  = 0.5f;			//範囲攻撃の最大まで行く時間
+	bool m_canCoolTimeReset_areaAtk = false;			//最初の一回だけクールタイムをリセットする
+
+	void UpdateAreaAttackSkill(float deltaTime);
+
+	// --- 引き寄せ攻撃 ---
+	eSkillState m_pullState			= eSkillState::READY;	//現在の状態
+	bool  m_isHavePullSkill			= false;				//スキル獲得済みか？
+	const float m_defaultPullRadius = 10.0f;				//デフォルトの引き寄せ範囲
+	float m_pullRadius				= 10.0f;			    //引き寄せ範囲
+	float m_pullTimer				= 0.0f;				    //吸引時間の計測用
+	float m_pullCooldownTimer		= 0.0f;				    //現在のクールタイム
+
+	const float m_pullDuration	  = 0.5f;  //吸引し続ける時間
+	const float m_pullCooldownMax = 10.0f; //クールタイム
+	bool m_canCoolTimeReset_pull = false;					//最初の一回だけクールタイムをリセットする
+
+	void UpdatePullSkill(float deltaTime);	//引き寄せスキルの更新ロジック
+
+	// --- 球撃ち攻撃 ---
+	eSkillState m_ShootState = eSkillState::READY;
+	//弾のデータ配列
+	Bullet *m_bullet=nullptr;
+
+	//弾のモデル
+	float m_shootCooldownTimer = 0.0f;	//次に打てるまでの残り時間
+	const float m_shootCooldownMax = 10.0f;//インターバル
+
+	void UpdateBulletAttack(float deltaTime);
+
+
+	// --- 移動入力用 ---
+	eInputDir m_lastInput = NONE;
+
+
+	bool m_isLevelUp = false;	//レベルアップ中はスキルの時間を止める
+
+	// --- 敵の学習用 ---
+	//--スキルの発動回数
+	// 　//移動での攻撃は移動中かを取る・移動中のスキル発動はスキルの発動を優先
+	int m_pullUseCount = 0;	//引き寄せ攻撃の発動回数
+	int m_areaUseCount = 0;	//範囲攻撃の発動回数
+
+
+	bool m_isMuteki = false;	//不死身かどうか
+
+	//音
+	SoundManager* m_sound;
+
+};

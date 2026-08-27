@@ -88,7 +88,7 @@ using namespace DirectX;
 #include"vn_light.h"
 #include"vn_debugDraw.h"
 #include"vn_resourceLoader.h"
-#include"../public/SoundManager.h"
+//#include"../public/SoundManager.h"
 
 #include"../public/vn_object.h"
 
@@ -98,29 +98,24 @@ using namespace DirectX;
 #include"../public/vn_character.h"
 #include "../public/vn_sprite.h"
 #include "../public/vn_collide.h"
-#include"../public/common.h"
-#include"../public/RigidbodyComponent.h"
-#include"../public/CollisionComponent.h"
-#include"../public/CharacterBase.h"
-#include"../public/EnemyAIDebug.h"
-
-#include"../public/newPlayerClass.h"
-#include"../public/Bullet.h"
-#include"../public/NewEnemyClass.h"
-
-#include"../public/EnemyMushroomMon.h"
-
-#include"../public/ExperienceManager.h"
-#include"../public/UpgradeSelectionUI.h"
-
-#include"../public/WaveManager.h"
-
-#include"../public/TerrainBlock.h"
-#include"../public/BlockManager.h"
+#include"../public/MainScript/Sound/SoundManager.h"
+#include"../public/MainScript/common.h"
+#include"../public/MainScript/Character/RigidbodyComponent.h"
+#include"../public/MainScript/Character/CollisionComponent.h"
+#include"../public/MainScript/Character/CharacterBase.h"
+#include"../public/MainScript/Character/Enemy/EnemyAIDebug.h"
+#include"../public/MainScript/Character/Player/newPlayerClass.h"
+#include"../public/MainScript/Bullet/Bullet.h"
+#include"../public/MainScript/Character/Enemy/NewEnemyClass.h"
+#include"../public/MainScript/Character/Enemy/EnemyMushroomMon.h"
+#include"../public/MainScript/Experience/ExperienceManager.h"
+#include"../public/MainScript/UI/UpgradeSelectionUI.h"
+#include"../public/MainScript/WaveManager.h"
+#include"../public/MainScript/Block/TerrainBlock.h"
+#include"../public/MainScript/Block/BlockManager.h"
 #include "../public/scene/vn_scene.h"
-#include"../public/EnemyPool.h"
-#include"../public/EnemyGhost.h"
-
+#include"../public/MainScript/Character/Enemy/EnemyPool.h"
+#include"../public/MainScript/Character/Enemy/EnemyGhost.h"
 #include "../public/scene/scene_table.h"
 #include "vn_mainframe.h"
 

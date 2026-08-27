@@ -16,9 +16,9 @@ enum eSceneTable
 
 //シーンクラス定義ファイル
 #include "vn_scene.h"
-#include"scene_title.h"
+#include"../MainScript/Scene/scene_title.h"
 
-#include"scene_main.h"
+#include"../MainScript/Scene/scene_main.h"
 
 //シーン切り替え関数(予約)
 void switchScene(eSceneTable scene);
