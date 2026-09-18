@@ -56,7 +56,14 @@
 #include <Xinput.h>
 #include <xaudio2.h>
 
+#if _DEBUG
+#pragma optimize("t",on);	//Å“K‰»ƒtƒ‰ƒOON
+#endif
 #include <DirectXMath.h>
+#if _DEBUG
+#pragma optimize("t",off);
+#endif
+
 
 #include "../DirectXTex/DirectXTex.h"
 

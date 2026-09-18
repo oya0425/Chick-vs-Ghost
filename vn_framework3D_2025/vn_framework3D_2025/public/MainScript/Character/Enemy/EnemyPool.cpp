@@ -550,6 +550,22 @@ void EnemyPool::UnlockEnemyType(NewEnemyClass::EnemyType type)
 }
 
 
+//======================================================================
+// --- 移動範囲の拡大 ---
+//======================================================================
+void EnemyPool::SetFenceRadius(float fenceRadius)
+{
+    for (auto e : _enemies)
+    {
+        if (e != nullptr)
+        {
+            if (e->GetIsLeader())
+            {
+                e->SetFenceRadius(fenceRadius);
+            }
+        }
+    }
+}
 
 //======================================================================
 // --- リーダーを探して一体セット ---

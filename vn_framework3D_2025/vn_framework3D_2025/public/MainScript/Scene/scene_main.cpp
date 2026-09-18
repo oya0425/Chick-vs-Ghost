@@ -5291,6 +5291,17 @@ void SceneMain::AddCombo(NewEnemyClass* enemy)
 		}
 
 	}
+	else if(m_pExpManager->AllIsMaxLv()&&!m_isTutorial)
+	{
+		if (FenceRadius < defalutFenceRadius * 1.5f)
+		{
+			FenceRadius = defalutFenceRadius * 1.5f;
+			SetWAVETree();
+			UpdateFencePositions();
+			enemyPool->SetFenceRadius(FenceRadius);
+
+		}
+	}
 
 }
 
@@ -5300,32 +5311,32 @@ void SceneMain::AddCombo(NewEnemyClass* enemy)
 //==================================================
 void SceneMain::UpdateGlobalSystems(float deltaTime)
 {
-	// --- フェンスの半径WAVEごとに５ずつ大きくする ---
-	int currentWave = waveManager->GetCurrentWave(); // WaveManagerにWave取得関数があると仮定
+	// --- フェンスの半径WAVEごとに大きくする ---
+	int currentWave = waveManager->GetCurrentWave(); 
 
 	if (currentWave > oldWaveCount) {
 		// Waveが増えた瞬間だけここを通る
 		FenceRadius += 3.0f;
 
-		for (auto& obj : enemyPool->GetEnemies()) // 管理しているリストの形式に合わせてください
-		{
-			// NewEnemyClassにキャスト（変換）でき、かつリーダーなら
-			auto enemy = dynamic_cast<NewEnemyClass*>(obj);
-			if (enemy && enemy->GetIsLeader())
-			{
-				enemy->SetFenceRadius(FenceRadius); // 最新の半径に更新！
-			}
-		}
-
-		// 実際にフェンスモデルの座標やスケールを更新する処理をここに書く
+		//for (auto& obj : enemyPool->GetEnemies()) // 管理しているリスト
+		//{
+		//	// NewEnemyClassにキャスト（変換）でき、かつリーダーなら
+		//	auto enemy = dynamic_cast<NewEnemyClass*>(obj);
+		//	if (enemy && enemy->GetIsLeader())
+		//	{
+		//		enemy->SetFenceRadius(FenceRadius); // 最新の半径に更新
+		//	}
+		//}
+		enemyPool->SetFenceRadius(FenceRadius);
+		// 実際にフェンスモデルの座標やスケールを更新する処理
 		UpdateFencePositions();
-		oldWaveCount = currentWave; // 記録を更新
+		oldWaveCount = currentWave; 
 	}
 
 
 
 	// --- カメラ操作 ---
-	Common::UpdateFlexibleCamera(m_pNewPlayer->GetModel()->getPosition(), phi, radius * 1.5f, theta, FenceRadius);
+	Common::UpdateFlexibleCamera(m_pNewPlayer->GetModel()->getPosition(), phi, radius * 1.5f, theta, FenceRadius*1.1f);
 	m_isLevelUpStarted = false;
 
 	if (m_windowMode == WindowMode::None)

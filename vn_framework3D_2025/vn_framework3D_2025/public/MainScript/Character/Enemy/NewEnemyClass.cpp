@@ -731,36 +731,6 @@ void NewEnemyClass::ApplyMovement(float deltaTime, const XMVECTOR moveDir)
     // リーダーなら自分、部下なら m_pMyLeader からデータを取る
     GroupData* data = GetIsLeader() ? GetGroupData() : (m_pMyLeader ? m_pMyLeader->GetGroupData() : nullptr);
 
-#pragma region 範囲攻撃耐性が逃げ始める範囲
-    //// 学習データがない（単独個体など）場合の安全策
-    //float meleeFear = data ? data->meleeFear : 0.0f;
-    //float rangeFear = data ? data->rangeFear : 0.0f;
-
-    //// 役割（リーダー/部下）に応じたベース倍率の決定
-    //float roleMultiplier = GetIsLeader() ? m_leaderSpeedMultiplier : m_otherSpeedMultiplier;
-
-    //// 学習データ(近接への恐怖)をベース倍率に加算
-    //roleMultiplier += meleeFear;
-
-    //// 状況に応じた追加ブースト（パニック等）の計算
-    //float situationBoost = 1.0f;
-    //if (data /*&& rangeFear > 0.0f && GetPlayer()->IsAreaAttack()*/)
-    //{
-    //    if (data->isLeaderEscaping)
-    //    {
-    //        // リーダー逃走中かつ範囲攻撃中なら大幅加速
-    //        situationBoost = GetIsLeader() ? 3.0f : 3.0f;
-    //    }
-    //    else if (GetIsLeader())
-    //    {
-    //        // リーダーが逃げていないが範囲攻撃中のリーダー専用処理
-    //        roleMultiplier = m_defalutLeaderSpeedMultiplier + meleeFear;
-    //    }
-    //}
-
-#pragma endregion
-
-#pragma region 範囲攻撃耐性が基礎速度アップ
     // 学習データをもとに足す基礎速度を取る
     float rangeFear = data ? data->rangeFear*1.2f : 0.0f;
 
@@ -773,7 +743,6 @@ void NewEnemyClass::ApplyMovement(float deltaTime, const XMVECTOR moveDir)
     float chargeMultiplier = GetState() == eState::Charge ? chargeMultiplierOffset : 0;
 
     roleMultiplier += chargeMultiplier;
-#pragma endregion
 
 
     // 最終速度の適用

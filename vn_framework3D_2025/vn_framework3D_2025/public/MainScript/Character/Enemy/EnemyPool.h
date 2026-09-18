@@ -116,6 +116,10 @@ public:
 
 	void ReStartEnemyGroupData();
 
+	//フェンスを更新
+	void SetFenceRadius(float fenceRadius);
+
+
 	// --- ボスの学習データを入れる ---
 	void SetBossData();
 	void DrawBossDebugInfo();

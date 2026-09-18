@@ -261,24 +261,27 @@ void EnemyGhost::OnFollow(float deltaTime)
 
     // リーダーが決めたモードを群れで共有
     auto mode = m_pMyLeader->GetGroupData()->mode;
-    if (mode == eGroupMode::Panic)
+    if (GetState() != eState::Attracted)
     {
-        m_panicDirTimer = 0.0f;
-        m_panicRecoveryTime = 5.0f; //パニック状態から復帰する時間の設定
-        GetModel()->SetAllPartsDiffuse(m_defaultOtherColor, 1.0f);   //パニック状態になると色が戻る
-        SetGroupID(-1);
-        m_pMyLeader = nullptr;
-        SetState(eState::Panic);    //リーダーがいなくなるとパニック開始
-        return;
-    }
-    else if (mode == eGroupMode::Charge)
-    {
-        //特攻状態では色はそのまま残しておく
-        SetState(eState::Charge);
-        GetModel()->SetAllPartsDiffuse(V_GAME_COLOR_WHITE, 0.1f);
-        m_isCharge = true;
-        m_pMyLeader = nullptr;
-        return;
+        if (mode == eGroupMode::Panic)
+        {
+            m_panicDirTimer = 0.0f;
+            m_panicRecoveryTime = 5.0f; //パニック状態から復帰する時間の設定
+            GetModel()->SetAllPartsDiffuse(m_defaultOtherColor, 1.0f);   //パニック状態になると色が戻る
+            SetGroupID(-1);
+            m_pMyLeader = nullptr;
+            SetState(eState::Panic);    //リーダーがいなくなるとパニック開始
+            return;
+        }
+        else if (mode == eGroupMode::Charge)
+        {
+            //特攻状態では色はそのまま残しておく
+            SetState(eState::Charge);
+            GetModel()->SetAllPartsDiffuse(V_GAME_COLOR_WHITE, 0.1f);
+            m_isCharge = true;
+            m_pMyLeader = nullptr;
+            return;
+        }
     }
 
     // リーダーへの方向と距離を計算
