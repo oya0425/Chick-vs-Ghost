@@ -1511,10 +1511,10 @@ void SceneMain::terminate()
 		//リストを空にしてゴミを掃除
 		enemies.clear();
 
+		//プール本体を削除してNULLにする
+		enemyPool = nullptr;
 	}
-	//プール本体を削除してNULLにする
-	delete enemyPool;
-	enemyPool = nullptr;
+
 
 
 	// --- 背景・ギミック ---
