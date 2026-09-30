@@ -106,7 +106,6 @@ using namespace DirectX;
 #include "../public/vn_sprite.h"
 #include "../public/vn_collide.h"
 #include"../public/MainScript/Sound/SoundManager.h"
-#include"../public/MainScript/common.h"
 #include"../public/MainScript/Character/RigidbodyComponent.h"
 #include"../public/MainScript/Character/CollisionComponent.h"
 #include"../public/MainScript/Character/CharacterBase.h"
@@ -123,6 +122,7 @@ using namespace DirectX;
 #include "../public/scene/vn_scene.h"
 #include"../public/MainScript/Character/Enemy/EnemyPool.h"
 #include"../public/MainScript/Character/Enemy/EnemyGhost.h"
+#include"../public/MainScript/common.h"
 #include "../public/scene/scene_table.h"
 #include "vn_mainframe.h"
 

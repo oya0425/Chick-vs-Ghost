@@ -6,8 +6,11 @@
 //--------------------------------------------------------------//
 #include"../../framework.h"
 #include"../../framework/vn_environment.h"
+#include"../MainScript//Character/CharacterBase.h"
 
 using namespace Common;
+
+
 
 #pragma region カメラ関係
 //======================================================================
@@ -245,6 +248,8 @@ bool Common::OnButton(float x, float y, float button_w, float button_h)
     return (mx >= x - button_w / 2 && mx <= x + button_w / 2 &&
         my >= y - button_h / 2 && my <= y + button_h / 2);
 }
+
+
 //ボタン処理（ボタン押したときにtrue）
 bool Common::UpdateButton(
     float x,
@@ -368,6 +373,230 @@ void Common::ChangeButtonTextSize(
 
 #pragma endregion
 
+#pragma region 当たり判定
+//==================================================
+// --- 当たり判定（キャラクターとキャラクター）
+//==================================================
+Common::eDirection Common::colliderCtoC(CharacterBase* p1, CharacterBase* p2)
+{
+    eDirection ret = eDirection::None;
+
+    if (!p1 || !p2) return ret;
+
+    XMVECTOR range = XMVectorAdd(p1->GetCollision().GetSize() * 0.5f, p2->GetCollision().GetSize() * 0.5f);
+    float rx = XMVectorGetX(range);
+    float ry = XMVectorGetY(range);
+    float rz = XMVectorGetZ(range);
+
+    XMVECTOR center1 = XMVectorAdd(*p1->GetModel()->getPosition(), p1->GetCollision().GetCenter());
+    XMVECTOR center2 = XMVectorAdd(*p2->GetModel()->getPosition(), p2->GetCollision().GetCenter());
+
+    XMVECTOR dif = XMVectorAbs(center1 - center2);
+
+    float dx = XMVectorGetX(dif);
+    float dy = XMVectorGetY(dif);
+    float dz = XMVectorGetZ(dif);
+
+    if (dx < rx && dy < ry && dz < rz)
+    {
+        float sx = rx - dx;
+        float sy = ry - dy;
+        float sz = rz - dz;
+
+        if (sx < sy && sx < sz)
+        {
+            if (XMVectorGetX(center1) < XMVectorGetX(center2))
+            {
+                p1->GetModel()->addPositionX(-sx);
+                ret = X_Neg;
+            }
+            else
+            {
+                p1->GetModel()->addPositionX(sx);
+                ret = X_Pos;
+            }
+        }
+        else if (sy < sz)
+        {
+            if (XMVectorGetY(center1) < XMVectorGetY(center2))
+            {
+                p1->GetModel()->addPositionY(-sy);
+                ret = Y_Neg;
+            }
+            else
+            {
+                p1->GetModel()->addPositionY(sy);
+                p1->GetRigidbody().SetIsGround(true);
+                ret = Y_Pos;
+            }
+        }
+        else
+        {
+            if (XMVectorGetZ(center1) < XMVectorGetZ(center2))
+            {
+                p1->GetModel()->addPositionZ(-sz);
+                ret = Z_Neg;
+            }
+            else
+            {
+                p1->GetModel()->addPositionZ(sz);
+                ret = Z_Pos;
+            }
+        }
+    }
+
+    return ret;
+}
+
+
+//==================================================
+// 球体同士の判定と押し戻し
+//==================================================
+Common::eDirection Common::colliderStoS(CharacterBase* p1, CharacterBase* p2)
+{
+    eDirection ret = eDirection::None;
+    if (!p1 || !p2) return ret;
+
+    auto& col1 = p1->GetCollision();
+    auto& col2 = p2->GetCollision();
+
+    // 半径の取得（size.xを直径として扱う、またはradiusを追加）
+    float r1 = p1->GetEffectiveRadius();
+    float r2 = p2->GetEffectiveRadius();
+    float sumRadii = r1 + r2;
+
+    // 世界座標での中心位置
+    XMVECTOR center1 = XMVectorAdd(*p1->GetModel()->getPosition(), col1.GetCenter());
+    XMVECTOR center2 = XMVectorAdd(*p2->GetModel()->getPosition(), col2.GetCenter());
+
+    // 距離の計算
+    XMVECTOR diff = center2 - center1;
+    XMVECTOR distSqVec = XMVector3LengthSq(diff);
+    float distSq = XMVectorGetX(distSqVec);
+
+    // 衝突判定
+    if (distSq < sumRadii * sumRadii)
+    {
+        float dist = sqrtf(distSq);
+        if (dist < 0.0001f) return ret; // 重なりすぎ防止
+
+        float overlap = (sumRadii - dist) * 1.1f;
+        XMVECTOR pushDir = XMVector3Normalize(diff * -1.0f); // p1を押し戻す方向
+
+        // --- 範囲攻撃かどうかの分岐をここに入れる ---
+        //if (p1->IsAttacking()) {
+        //	// 攻撃中なら敵(p2)を吹っ飛ばす！
+        //	XMVECTOR knockbackDir = XMVector3Normalize(diff);
+        //	p2->GetRigidbody().AddImpulse(knockbackDir * 25.0f);
+        //	p2->ApplyDamage(10);
+        //}
+        //else 
+        {
+            // 通常時は位置を補正
+            XMVECTOR pushVector = pushDir * overlap;
+            p1->GetModel()->addPosition(&pushVector);
+        }
+
+        ret = X_Pos; // 戻り値は必要に応じて調整
+    }
+    return ret;
+}
+
+
+//==================================================
+// --- 当たり判定（地面とキャラクター）
+//==================================================
+void Common::OnCollider(vnCharacter* pCharacter, vnModel* pGround, float footOffset, RigidbodyComponent& rigidBody)
+{
+    XMVECTOR LinePos = *pCharacter->getPosition();
+    //LineDir = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
+
+    // --- モデルデータから内部情報を取得 ---
+    int vnum = pGround->getVertexNum();	//頂点数を獲得
+    int inum = pGround->getIndexNum();	//インデックス数
+
+    //メッシュ単位で走査するため、メッシュデータを取得
+    int meshNum = pGround->getMeshNum();
+    vnModel_MeshData* pMesh = pGround->getMesh();
+
+    vnVertex3D* vtx = pGround->getVertex();	//頂点配列
+    unsigned short* idx = pGround->getIndex();	//インデックス配列
+    //ワールドマトリクス
+    XMMATRIX world = *pGround->getWorld();
+
+    float highestY = -10000.0f; // 初期値は極端に低く
+    int hitMeshID = -1;
+
+    //地面
+    vnCollide::stSegment seg;
+    float safetyMargin = 0.2f;
+
+    seg.Pos = *pCharacter->getPosition() + XMVectorSet(0, footOffset, 0, 0);
+    seg.Dir = XMVectorSet(0, -1, 0, 0);
+    seg.Length = footOffset + safetyMargin;
+
+    for (int m = 0; m < meshNum; m++)
+    {
+        int m_inum = pMesh[m].IndexNum;
+        int m_sidx = pMesh[m].StartIndex;
+
+        //for(int i=sidx;i<sidx+inum;i+=3)
+        for (int i = 0; i < m_inum; i += 3)
+        {
+            XMVECTOR v1 = XMVector3TransformCoord(
+                XMVectorSet(vtx[idx[m_sidx + i + 0]].x,
+                    vtx[idx[m_sidx + i + 0]].y,
+                    vtx[idx[m_sidx + i + 0]].z, 0.0f),
+                world);
+
+            XMVECTOR v2 = XMVector3TransformCoord(
+                XMVectorSet(vtx[idx[m_sidx + i + 1]].x,
+                    vtx[idx[m_sidx + i + 1]].y,
+                    vtx[idx[m_sidx + i + 1]].z, 0.0f),
+                world);
+
+            XMVECTOR v3 = XMVector3TransformCoord(
+                XMVectorSet(vtx[idx[m_sidx + i + 2]].x,
+                    vtx[idx[m_sidx + i + 2]].y,
+                    vtx[idx[m_sidx + i + 2]].z, 0.0f),
+                world);
+
+            // ここで vnCollide 用の三角形を作る
+            vnCollide::stTriangle tri;
+            tri.fromPoints(&v1, &v2, &v3);
+
+            // ここで Segment と当てる
+            XMVECTOR hit;
+            if (vnCollide::isCollide(&hit, &seg, &tri))
+            {
+                float y = XMVectorGetY(hit);
+                if (y > highestY)
+                {
+                    highestY = y;
+                }
+            }
+        }
+    }
+
+    if (highestY > -10000.0f)
+    {
+        rigidBody.SetVerticalVelocity(0.0f);
+        rigidBody.SetIsGround(true);
+        rigidBody.SetIsUseGravity(false);
+
+        pCharacter->setPositionY(highestY + GROUND_OFFSET);
+    }
+    else {
+        rigidBody.SetIsUseGravity(true);
+        rigidBody.SetIsGround(false);
+
+    }
+
+
+}
+
+
+#pragma endregion
 
 
 

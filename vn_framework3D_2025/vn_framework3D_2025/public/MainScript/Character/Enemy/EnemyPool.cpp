@@ -44,7 +44,7 @@ void EnemyPool::AllDataReset()
 
 
 //======================================================================
-// --- ？マークと吹き出しの解放 ---
+// --- ポーズ中の？マークと吹き出しの解放 ---
 //======================================================================
 void EnemyPool::ReleaseQuestionUI(vnScene* scene)
 {
@@ -264,6 +264,8 @@ void EnemyPool::SetPullBar(const UIBar& bar)
     m_pullBar.pBack = bar.pBack;
     m_pullBar.pFront = bar.pFront;
 }
+
+
 //======================================================================
 // --- バーの更新 ---
 //======================================================================
@@ -447,6 +449,18 @@ void EnemyPool::Spawn(const XMVECTOR& position, int currentWave, int maxWave)
 
             m_spawnTimer = SPAWN_INTERVAL;
         }
+    }
+}
+
+//======================================================================
+// --- 全敵のデスポーン ---
+//======================================================================
+void EnemyPool::AllEnemyDeSpawn()
+{
+    for (auto enemy : _enemies)
+    {
+        if(enemy!=nullptr)
+        enemy->DeSpawn();
     }
 }
 

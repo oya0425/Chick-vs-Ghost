@@ -4,7 +4,6 @@
 //
 #define FENCE_NUM_MAIN (40)			//フェンスモデルの数
 #define TREE_NUM (10)
-constexpr float GROUND_OFFSET = 0.1f;
 
 struct UpgradeUIResource
 {
@@ -531,6 +530,8 @@ private:
 
 private:
 	void RegisterCharacter(vnCharacter* character);
+	void SetModelRenderEnable(vnCharacter* character);
+	void DeleteObject_Main(CharacterBase* character);
 
 	//初期化関数
 	void InitializeVariables();      // 変数初期化
@@ -685,14 +686,8 @@ private:
 		float& buttonScale,
 		bool isMax);
 		
-	bool OnButton(float x, float y);
-
 
 	// --- 衝突判定・計算系 ---
-	eDirection colliderCtoC(CharacterBase* p1, CharacterBase* p2);
-	eDirection colliderStoS(CharacterBase* p1, CharacterBase* p2);
-
-	void OnCollider(vnCharacter* pCharacter, vnModel* pGround, float footOffset, RigidbodyComponent& rigidBody);
 	void InFence(vnCharacter* pObject);
 	bool CheckFenceReflection(vnCharacter* pObject);//弾の反射用
 	void SetWAVETree();

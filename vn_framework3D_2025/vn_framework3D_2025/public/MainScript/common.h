@@ -5,10 +5,30 @@
 //														Oya  	//
 //--------------------------------------------------------------//
 #pragma once
+
+#include"../MainScript//Character/CharacterBase.h"
+
+constexpr float GROUND_OFFSET = 0.1f;
+
+
 //--------------------------------------
 // マウスによるカメラ操作（引数なし）
 //--------------------------------------
 namespace Common {
+    // --- 列挙型定義 ---
+    enum eDirection
+    {
+        None,
+        X_Pos,
+        X_Neg,
+        Y_Pos,
+        Y_Neg,
+        Z_Pos,
+        Z_Neg
+    };
+
+
+
 	void UpdateCameraByMouse(float& theta, float& phi, float& radius, const XMVECTOR* pPlayerPos);
     void UpdateFlexibleCamera(
         const XMVECTOR* pPlayerPos,
@@ -71,5 +91,13 @@ namespace Common {
         bool isOnButton,
         const WCHAR* text,
         IDWriteTextFormat* pFormat);
+
+
+
+    // --- 衝突判定・計算系 ---
+    eDirection colliderCtoC(CharacterBase* p1, CharacterBase* p2);
+    eDirection colliderStoS(CharacterBase* p1, CharacterBase* p2);
+    //キャラと地面の判定
+    void OnCollider(vnCharacter* pCharacter, vnModel* pGround, float footOffset, RigidbodyComponent& rigidBody);
 
 }

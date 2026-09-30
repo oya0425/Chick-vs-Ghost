@@ -120,9 +120,12 @@ namespace {
 
 	//半径設定（Fenceと木）
 	constexpr float defalutFenceRadius = 35.0f;
+	constexpr float plusFenceRadius = 3.0f;		//フェンスの拡大値
+
 	constexpr float treeRadius = 6.0f;
 
 
+	//================================================================================================
 	// --- UI ---
 	constexpr float uiHidePosX = -5000.0f;
 	constexpr float uiHidePosY = -5000.0f;
@@ -482,6 +485,14 @@ void SceneMain::RegisterCharacter(vnCharacter* character)
 		registerObject(character->getParts(i));
 	}
 }
+void SceneMain::SetModelRenderEnable(vnCharacter* character)
+{
+	for (int i = 0; i < character->getPartsNum(); i++)
+	{
+		character->getParts(i)->setRenderEnable(false);
+	}
+}
+
 
 //変数の初期化
 void SceneMain::InitializeVariables()
@@ -683,20 +694,17 @@ void SceneMain::InitializeField()
 	{
 		TerrainBlock* pBlock = new TerrainBlock();
 		pBlock->SetModel(new vnCharacter(L"data/model/magma/", L"magma.bone"));
-
 		pBlock->SetIsMagma(true);
 		registerObject(pBlock->GetModel());
 		for (int j = 0; j < pBlock->GetModel()->getPartsNum(); j++)
 		{
 			registerObject(pBlock->GetModel()->getParts(j));
 		}
-
 		pBlock->GetModel()->setRenderEnable(false);
 		for (int j = 0; j < pBlock->GetModel()->getPartsNum(); j++)
 		{
 			pBlock->GetModel()->getParts(j)->setRenderEnable(false);
 		}
-
 		m_pBlockManager->AddMagmaBlock(pBlock);
 	}
 
@@ -1039,7 +1047,6 @@ void SceneMain::InitializePauseUI()
 	float centerX = barLeftEdgeAreaSkill + (maxWAreaSkill * 0.5f);
 	float screenWidth= (float)vnMainFrame::screenWidth;
 	float screenHeight = (float)vnMainFrame::screenHeight;
-
 	// ポーズ背景幕
 	m_pUIBackGroundBlackPause = new vnSprite(screenWidth / 2, screenHeight / 2, screenWidth, screenHeight, L"BackGroundBlack.png");
 	m_pUIBackGroundBlackPause->setColor(V_GAME_COLOR_BLACK);
@@ -1089,7 +1096,6 @@ void SceneMain::InitializePauseUI()
 	enemyPool->SetRangeQus(CreateQuestionUI(L"：基本速度に加算", GAME_COLOR_NEON_MAGENTA, 0.6f));
 	enemyPool->SetPullQus(CreateQuestionUI(L"：無効確率に加算", GAME_COLOR_SKY_NEON, 0.6f));
 
-
 	//吹き出し（セリフ）
 	enemyPool->SetImageBalloonBg(new vnSprite(600.0f, 200.0f, 256.0f * 1.5f, 256.0f *1.3f, L"data/image/吹き出しセリフ.png"));
 	registerObject(enemyPool->GetImageBalloonBg());
@@ -1137,8 +1143,6 @@ void SceneMain::InitializeExplanationUI()
 {
 	float screenWidth = (float)vnMainFrame::screenWidth;
 	float screenHeight = (float)vnMainFrame::screenHeight;
-
-
 	//===============================================================
 	// --- チュートリアル説明に関するUI ---
 	//===============================================================
@@ -1182,7 +1186,6 @@ void SceneMain::InitializeExplanationUI()
 	AddExplanationImage(ExplanationType::Boss, L"data/image/tutorial_ExplainBoss2.png");
 	AddExplanationImage(ExplanationType::Boss, L"data/image/tutorial_ExplainBoss3.png");
 
-
 	//設定した説明画像をまとめて登録
 	for (int i = 0; i < (int)ExplanationType::MaxNum; i++)
 	{
@@ -1195,8 +1198,6 @@ void SceneMain::InitializeExplanationUI()
 		m_explanationUI[i].visible = false;
 	}
 
-
-
 	//===============================================================
 	// --- ボタン設定（タイトルに戻るボタンなど）
 	//===============================================================
@@ -1204,8 +1205,6 @@ void SceneMain::InitializeExplanationUI()
 	//３文字のもののフォント位置の調整
 	float threeLetters = -15.0f;
 	{
-		
-
 		//タイトルに戻るボタン
 		InitButton(UIButton::TITLEBACK,
 			titleBack_button_x, titleBack_button_y, L"タイトル");
@@ -1282,11 +1281,6 @@ void SceneMain::InitializeExplanationUI()
 	m_tutorialClearUI.state = TutorialClearState::None;
 	m_tutorialClearUI.visible = false;
 	m_tutorialClearUI.isOne = false;
-
-
-
-
-
 }
 
 
@@ -1437,41 +1431,37 @@ void SceneMain::InitializeTutorial()
 
 //初期化==============================================================================
 
+void SceneMain::DeleteObject_Main(CharacterBase* character)
+{
+	if (!character)
+	{
+		return;
+	}
 
+	if (character->GetModel())
+	{
+		for (int i = 0; i < character->GetModel()->getPartsNum(); i++)
+		{
+			deleteObject(character->GetModel()->getParts(i));
+		}
+
+		deleteObject(character->GetModel());
+	}
+
+	delete character;
+}
 
 //終了関数
 void SceneMain::terminate()
 {
 	// GPUの完了待ち
 	vnDirect3D::waitForGpu();
-	if (m_pBullet) {
-		// パーツなどの中身を先に消す
-		if (m_pBullet->GetModel()) {
-			for (int i = 0; i < m_pBullet->GetModel()->getPartsNum(); i++) {
-				deleteObject(m_pBullet->GetModel()->getParts(i));
-			}
-			deleteObject(m_pBullet->GetModel());
-		}
 
-		// 本体を消す
-		delete m_pBullet;
-		m_pBullet = nullptr;
-	}
+	DeleteObject_Main(m_pBullet);
+	m_pBullet = nullptr;
+	DeleteObject_Main(m_pNewPlayer);
+	m_pNewPlayer = nullptr; 
 
-	if (m_pNewPlayer) {
-		// パーツなどの中身を先に消す
-		if (m_pNewPlayer->GetModel()) {
-			for (int i = 0; i < m_pNewPlayer->GetModel()->getPartsNum(); i++) {
-				deleteObject(m_pNewPlayer->GetModel()->getParts(i));
-			}
-			deleteObject(m_pNewPlayer->GetModel());
-		}
-		deleteObject(m_pNewPlayer->GetUpKaraModel());
-
-		// 本体を消す
-		delete m_pNewPlayer;
-		m_pNewPlayer = nullptr; 
-	}
 	deleteObject(m_pGameOverPlayer);
 	m_pGameOverPlayer = nullptr;
 
@@ -1482,12 +1472,12 @@ void SceneMain::terminate()
 	deleteObject(meleebar.pBack);
 	deleteObject(meleebar.pBackBlack);
 
-	auto& rangebar = enemyPool->GetMeleeBar();
+	auto& rangebar = enemyPool->GetRangeBar();
 	deleteObject(rangebar.pFront);
 	deleteObject(rangebar.pBack);
 	deleteObject(rangebar.pBackBlack);
 
-	auto& pullbar = enemyPool->GetMeleeBar();
+	auto& pullbar = enemyPool->GetPullBar();
 	deleteObject(pullbar.pFront);
 	deleteObject(pullbar.pBack);
 	deleteObject(pullbar.pBackBlack);
@@ -1501,18 +1491,13 @@ void SceneMain::terminate()
 	enemyPool->ReleaseQuestionUI(this);
 
 	// --- 敵 ---
-	if (enemyPool) {
+	if (enemyPool)
+	{
 		auto& enemies = enemyPool->GetEnemies();
-		for (auto enemy : enemies) {
-			if (!enemy) continue; 
-
+		for (auto enemy : enemies)
+		{
+			if (!enemy)continue;
 			// 敵のモデルとパーツを先に削除
-			if (enemy->GetModel()) {
-				for (int i = 0; i < enemy->GetModel()->getPartsNum(); i++) {
-					deleteObject(enemy->GetModel()->getParts(i));
-				}
-				deleteObject(enemy->GetModel());
-			}
 			if (enemy->GetChargeMark())
 			{
 				deleteObject(enemy->GetChargeMark());
@@ -1521,17 +1506,16 @@ void SceneMain::terminate()
 			{
 				deleteObject(enemy->GetPanicMark());
 			}
-
-			//敵本体を削除
-			delete enemy;
+			DeleteObject_Main(enemy);
 		}
 		//リストを空にしてゴミを掃除
 		enemies.clear();
 
-		//プール本体を削除してNULLにする
-		//delete enemyPool;
-		enemyPool = nullptr;
 	}
+	//プール本体を削除してNULLにする
+	delete enemyPool;
+	enemyPool = nullptr;
+
 
 	// --- 背景・ギミック ---
 	for (int i = 0; i < FENCE_NUM_MAIN; i++) {
@@ -1548,30 +1532,21 @@ void SceneMain::terminate()
 	deleteObject(pSky);    pSky = nullptr;
 
 	// --- ブロック ---
-	if (m_pBlockManager) {
+	if (m_pBlockManager)
+	{
 		auto& blocks = m_pBlockManager->GetAllBlocks();
-		for (auto block : blocks) {
-			if (!block) continue; // 念のため空チェック
-
+		for (auto block : blocks)
+		{
+			if (!block)continue;
 			// ブロックのモデルとパーツを先に削除
-			if (block->GetModel()) {
-				for (int i = 0; i < block->GetModel()->getPartsNum(); i++) {
-					deleteObject(block->GetModel()->getParts(i));
-				}
-				deleteObject(block->GetModel());
-			}
-
-			// ブロック本体を削除
-			delete block;
+			DeleteObject_Main(block);
 		}
 		// リストを空にしてゴミを掃除
 		blocks.clear();
-
 		// プール本体を削除してNULLにする
 		delete m_pBlockManager;
 		m_pBlockManager = nullptr;
 	}
-
 
 	// --- その他 ---
 	delete waveManager;
@@ -1585,10 +1560,10 @@ void SceneMain::terminate()
 
 	//プレイヤーHPバー
 	deleteObject(pHpBarBackBlack);
-	pHpBarBackBlack = nullptr;
 	deleteObject(pHpBarBack);
-	pHpBarBack = nullptr;
 	deleteObject(pHpBarFront);
+	pHpBarBackBlack = nullptr;
+	pHpBarBack = nullptr;
 	pHpBarFront = nullptr;
 
 	deleteObject(pIconPlayer);
@@ -1596,10 +1571,10 @@ void SceneMain::terminate()
 
 	//ボスHPバー
 	deleteObject(pBossHpBarBackBlack);
-	pBossHpBarBackBlack = nullptr;
 	deleteObject(pBossHpBarBack);
-	pBossHpBarBack = nullptr;
 	deleteObject(pBossHpBarFront);
+	pBossHpBarBackBlack = nullptr;
+	pBossHpBarBack = nullptr;
 	pBossHpBarFront = nullptr;
 
 	deleteObject(pIconBoss);
@@ -1610,13 +1585,12 @@ void SceneMain::terminate()
 		deleteObject(divide[i - 1]);
 	}
 
-
 	//経験値バー
 	deleteObject(pExpBarBackBlack);
-	pExpBarBackBlack = nullptr;
 	deleteObject(pExpBarBack);
-	pExpBarBack = nullptr;
 	deleteObject(pExpBarFront);
+	pExpBarBackBlack = nullptr;
+	pExpBarBack = nullptr;
 	pExpBarFront = nullptr;
 
 	//範囲攻撃バー
@@ -1631,7 +1605,6 @@ void SceneMain::terminate()
 	deleteObject(pPullBtnFront);
 	deleteObject(pPullSkillIcon);
 
-
 	//コンボの画像
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 10; j++) {
@@ -1642,7 +1615,6 @@ void SceneMain::terminate()
 		}
 	}
 	deleteObject(pComboWord);
-
 
 	// --- WASDのキーボードの画像 ---
 	deleteObject(pImageW);
@@ -1666,8 +1638,6 @@ void SceneMain::terminate()
 		deleteObject(m_pUIBackGroundBlack[i]);
 		m_pUIBackGroundBlack[i] = nullptr;
 	}
-
-
 	//ミッションの画像
 	for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
 	{
@@ -1690,33 +1660,28 @@ void SceneMain::terminate()
 
 	// --- ポーズ中に出る奴 ---
 	deleteObject(m_pUIBackGroundBlackPause);
-	m_pUIBackGroundBlackPause = nullptr;
 	deleteObject(m_pPauseFrame);
-	m_pPauseFrame = nullptr;
 	deleteObject(m_pPauseFrame2);
-	m_pPauseFrame2 = nullptr;
-
 	deleteObject(pBackGroundBlack);
-	pBackGroundBlack = nullptr;
-
-
 	deleteObject(m_messageBackground);
+	m_pUIBackGroundBlackPause = nullptr;
+	m_pPauseFrame = nullptr;
+	m_pPauseFrame2 = nullptr;
+	pBackGroundBlack = nullptr;
 	m_messageBackground = nullptr;
 
 	//Play中
 	deleteObject(pTimeBackGround);
-	pTimeBackGround = nullptr;
-
 	deleteObject(pEnemyKillCountBack);
+	pTimeBackGround = nullptr;
 	pEnemyKillCountBack = nullptr;
-
-
+	
 	//ボタン
 	for (int i = 0; i < (int)UIButton::MaxNum; i++)
 	{
 		deleteObject(m_buttonData[i].sprite);
 	}
-
+	//説明の画像
 	for (int i = 0; i < (int)ExplanationType::MaxNum; i++)
 	{
 		for (size_t j = 0; j < m_explanationUI[i].images.size(); j++)
@@ -1724,7 +1689,6 @@ void SceneMain::terminate()
 			deleteObject(m_explanationUI[i].images[j]);
 		}
 	}
-
 	//レベルアップ時に出るUI
 	for (int i = 0; i < 3; i++)
 	{
@@ -1751,9 +1715,7 @@ void SceneMain::terminate()
 //処理関数
 void SceneMain::execute()
 {
-
 	float deltaTime = vnScene::getDeltaTime();
-
 
 	//ゲーム開始前、クリア、ゲームオーバー、終了時以外鳴らし続ける
 	if (m_gameState != GameState::GameClear &&
@@ -1763,7 +1725,6 @@ void SceneMain::execute()
 	{
 		soundManager->PlayBGM(BGM_GAME);
 	}
-
 
 	switch (m_gameState)
 	{
@@ -1812,7 +1773,7 @@ void SceneMain::execute()
 		UpdatePause();
 		break;
 	case BossPause:
-		UpdateBossPause();
+		//UpdateBossPause();
 		break;
 	case GameOver:
 		UpdateGameOver();
@@ -1873,12 +1834,9 @@ void SceneMain::execute()
 		SetSkillUIRender(false);
 	}
 
-
-
 	//==================================================
 	// ポーズUI
 	//==================================================
-
 	m_pUIBackGroundBlackPause->setRenderEnable(isPause);
 	m_pPauseFrame->setRenderEnable(isPause);
 	m_pPauseFrame2->setRenderEnable(isPause);
@@ -1899,32 +1857,25 @@ void SceneMain::execute()
 		m_buttonData[(int)UIButton::TUTORIAL_REVIEW].visible = false;
 	}
 
-
 	//==================================================
 	// ボタンUI
 	//==================================================
-
 	for (int i = 0; i < (int)UIButton::MaxNum; i++)
 	{
 		m_buttonData[i].sprite->setRenderEnable(
 			m_buttonData[i].visible);
 	}
 
-
 	//==================================================
 	// 説明画像
 	//==================================================
-
 	UpdateExplanationImages();
-
 
 	//==================================================
 	// ミッションUIの表示(ゲーム中かつチュートリアル中のみ表示)
 	//==================================================
-
 	const bool showMissionUI =
 		isPlay && m_isTutorial;
-
 	for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
 	{
 		m_missionUI[i].sprite_back->setRenderEnable(
@@ -1939,7 +1890,6 @@ void SceneMain::execute()
 			m_missionUI[i].isClear);
 	}
 
-
 	//==================================================
 	// 本番へボタン
 	//==================================================
@@ -1952,8 +1902,6 @@ void SceneMain::execute()
 
 	m_buttonData[(int)UIButton::MESSAGE_GAMEPLAY].visible =
 		showGameplayButton;
-
-
 
 	// --- WAVEの状態の切り替え(WAVEクリア→次のWAVEとか) ---
 	UpdateWaveTransition();
@@ -1979,7 +1927,6 @@ void SceneMain::render()
 	float baseY = operationUI_Y+130.0f;
 
 	float text_RIGHT_CLICK_x = 340.0f;
-
 
 	// --- 画面表示 ---
 	switch (m_gameState)
@@ -3937,23 +3884,14 @@ void SceneMain::UpdateMission(float deltaTime)
 		// 初めて全ミッションをクリアしたとき
 		if (!m_tutorialClearUI.isOne)
 		{
-			m_tutorialClearUI.position_x =
-				(float)vnMainFrame::screenWidth / 2;
-
-			m_tutorialClearUI.position_y =
-				(float)vnMainFrame::screenHeight / 2;
-
-			m_tutorialClearUI.oldPosition_x =
-				m_tutorialClearUI.position_x;
-
-			m_tutorialClearUI.oldPosition_y =
-				m_tutorialClearUI.position_y;
-
+			//チュートリアルクリア時のUIの初期化
+			m_tutorialClearUI.position_x = (float)vnMainFrame::screenWidth / 2;
+			m_tutorialClearUI.position_y = (float)vnMainFrame::screenHeight / 2;
+			m_tutorialClearUI.oldPosition_x = m_tutorialClearUI.position_x;
+			m_tutorialClearUI.oldPosition_y = m_tutorialClearUI.position_y;
 			m_tutorialClearUI.textScale = 0.0f;
 			m_tutorialClearUI.animTime = 0.0f;
-
 			m_tutorialClearUI.text = L"チュートリアルクリア";
-
 			// 全ミッションクリア済み
 			m_tutorialClearUI.isOne = true;
 		}
@@ -3963,20 +3901,13 @@ void SceneMain::UpdateMission(float deltaTime)
 			m_tutorialClearUI.state == TutorialClearState::None)
 		{
 			m_tutorialClearUI.animTime += deltaTime;
-
 			if (m_tutorialClearUI.animTime >= 1.0f)
 			{
 				m_tutorialClearUI.animTime = 0.0f;
-
-				m_tutorialClearUI.state =
-					TutorialClearState::ScaleUp;
-
+				m_tutorialClearUI.state = TutorialClearState::ScaleUp;
 				m_tutorialClearUI.visible = true;
-
 				currentState = m_gameState;
-
 				soundManager->PlaySE(SE_TUTORIALCLEAR);
-
 				m_gameState = GameState::TutorialClear;
 			}
 		}
@@ -4034,7 +3965,6 @@ void SceneMain::TutorialClearAnim(float deltaTime)
 
 		break;
 	}
-
 	case TutorialClearState::MoveUp:
 	{
 		float targetY =
@@ -4141,8 +4071,6 @@ void SceneMain::TutorialClearAnim(float deltaTime)
 		break;
 	}
 	}
-
-
 }
 
 
@@ -4470,15 +4398,7 @@ void SceneMain::UpdateTutorialReview()
 	}
 
 }
-
-
-void SceneMain::UpdateBossPause()
-{
-
-}
-
 #pragma endregion
-
 
 
 
@@ -4487,80 +4407,46 @@ void SceneMain::UpdateBossPause()
 //==================================================
 void SceneMain::UpdateTutorial(float deltaTime)
 {
-	//if (!m_isTutorial)return;
 	//ボタンを画面で押すかキーボードで押す（キーボードは仮）
 	if (vnKeyboard::trg(DIK_RETURN))
 	{
 		m_isTutorial = false;
 	}
-
-
-	switch (m_state_tutorial)
-	{
-	case TutorialState::None:
-	{
-
-	}
-	break;
-
 	//===================================================
 	// --- 説明UIが出る ---
 	//===================================================
 	//説明を出して閉じるまでの処理
 	//UpdateExplanation(ExplanationType::チュートリアルのタイプ（例：リーダー撃破など）);
-
-	case TutorialState::ExplainEnemyLeader:
+	switch (m_state_tutorial)
 	{
+	case TutorialState::ExplainEnemyLeader:
 		UpdateExplanation(ExplanationType::EnemyLeader);
-
-	}
-	break;
+		break;
 
 	case TutorialState::ExplainExp:
-	{
 		UpdateExplanation(ExplanationType::Exp);
-	}
-	break;
+		break;
 
 	case TutorialState::ExplainLevelUp:
-	{
 		UpdateExplanation(ExplanationType::LevelUp);
-
-	}
-	break;
+		break;
 
 	case TutorialState::ExplainSkills:
-	{
 		UpdateExplanation(ExplanationType::Skills);
-	}
-	break;
+		break;
 
 	case TutorialState::ExplainPlayerOperation:
-	{
 		UpdateExplanation(ExplanationType::PlayerOperation);
-	}
-	break;
-
+		break;
 
 	case TutorialState::ExplainPlayerDamage:
-	{
 		UpdateExplanation(ExplanationType::PlayerDamage);
-	}
-	break;
+		break;
 
 	case TutorialState::ExplainBoss:
-	{
 		UpdateExplanation(ExplanationType::Boss);
+		break;
 	}
-	break;
-
-	case TutorialState::Finish:
-	{
-
-	}
-	break;
-	}
-
 }
 
 //==================================================
@@ -4596,12 +4482,8 @@ void SceneMain::UpdatePlay(float deltaTime)
 		// 3つの選択肢を表示
 		for (int i = 0; i < 3; i++)
 		{
-			// UI用データの取得（本来はGetterを作るのが理想）
-			// ここでは仮に直接参照するか、公開されたデータを使います
 			const ExperienceManager::UpgradeUIData* pChoices = m_pExpManager->GetUIDisplayChoices();
 			if (!pChoices) break;
-
-			//auto& data = m_pExpManager->GetUIDisplayChoices()[i];
 			ExperienceManager::UpgradeUIData data = pChoices[i];
 			int index = m_pExpManager->GetChoiceIndex();
 			float posY = 300.0f + (i * 100.0f);
@@ -4639,7 +4521,11 @@ void SceneMain::UpdatePlayer(float deltaTime)
 	else {
 		pDustEmitter->setEmit(false, 0);
 	}
-	OnCollider(m_pNewPlayer->GetModel(), pGround, 1.0f, m_pNewPlayer->GetRigidbody());
+
+	//地面との判定
+	Common::OnCollider(m_pNewPlayer->GetModel(), pGround, 1.0f, m_pNewPlayer->GetRigidbody());
+	
+	
 	if (m_pNewPlayer->GetModel()->getPositionY() < -30.0f) {
 		//プレイヤーが一定以上落下したら
 		m_pNewPlayer->GetModel()->setPosition(0.0f, 1.0f, 0.0f);
@@ -4680,14 +4566,11 @@ void SceneMain::UpdatePlayer(float deltaTime)
 
 			float totalRecovery = baseEffect * waveMitigation;
 
-			// 1回の回復に「上限」を作る
-			// これを入れないと、100コンボ超えの時に一気にHPが全快してしまいます
+			// 1回の回復に上限を作る
 			float maxHealCap = 3.0f; // Waveごとのダメージ数秒分に抑える
 			if (totalRecovery > maxHealCap) {
 				totalRecovery = maxHealCap;
 			}
-
-			//pPlayerTest->addHP(totalRecovery);
 			m_pNewPlayer->AddHP(totalRecovery/2,m_isTutorial);
 			m_killCounter = 0;
 		}
@@ -4747,14 +4630,11 @@ void SceneMain::SpawnEnemies(float deltaTime)
 				float angle = r1 * XM_2PI;
 				// ドーナツ型分布で計算
 				float dist = sqrtf(r2 * (maxRadius * maxRadius - minRadius * minRadius) + minRadius * minRadius);
-
-
 				float x = cosf(angle) * dist;
 				float y = spawnHeight;
 				float z = sinf(angle) * dist;
 				XMVECTOR pos = XMVectorSet(x, y, z, 0.0f);
 				enemyPool->Spawn(pos, waveManager->GetCurrentWave(), waveManager->GetMaxWave());
-				//enemyPool->Spawn(pos);
 				if (!isBossWave) {
 					waveManager->OnEnemySpawned(); // 通常Waveのみカウントを進める
 				}
@@ -4798,13 +4678,7 @@ void SceneMain::RemoveEnemiesOnWaveClear()
 	{
 		return;
 	}
-
-	auto& enemies = enemyPool->GetEnemies();
-
-	for (auto enemy : enemies)
-	{
-		enemy->DeSpawn();
-	}
+	enemyPool->AllEnemyDeSpawn();
 }
 
 
@@ -4825,7 +4699,6 @@ void SceneMain::UpdateEnemyMovement()
 		//========================================
 		// 引き寄せ判定
 		//========================================
-
 		XMVECTOR enemyPos =
 			*enemy->GetModel()->getPosition();
 
@@ -4846,7 +4719,6 @@ void SceneMain::UpdateEnemyMovement()
 		//========================================
 		// 移動
 		//========================================
-
 		XMVECTOR moveEnemy =
 			enemy->GetRigidbody().getMoveDelta();
 
@@ -4856,8 +4728,7 @@ void SceneMain::UpdateEnemyMovement()
 		//========================================
 		// 地面判定
 		//========================================
-
-		OnCollider(
+		Common::OnCollider(
 			enemy->GetModel(),
 			pGround,
 			1.0f,
@@ -4906,8 +4777,8 @@ void SceneMain::UpdateEnemyEnemyCollision()
 				//同じ群れ内のリーダーとその他の敵は当たらない
 				if (!a->GetIsLeader() && !b->GetIsLeader())
 				{
-					colliderCtoC(a, b);
-					colliderCtoC(b, a);
+					Common::colliderCtoC(a, b);
+					Common::colliderCtoC(b, a);
 				}
 			}
 			else
@@ -4915,8 +4786,8 @@ void SceneMain::UpdateEnemyEnemyCollision()
 				if (a->GetIsLeader() && b->GetIsLeader())
 				{
 					//リーダー同士の衝突判定
-					colliderCtoC(a, b);
-					colliderCtoC(b, a);
+					Common::colliderCtoC(a, b);
+					Common::colliderCtoC(b, a);
 				}
 			}
 		}
@@ -4954,14 +4825,13 @@ void SceneMain::UpdateEnemyAttackCollision()
 }
 
 
-
 //======================================================================
 // --- 敵とプレイヤーの当たり判定 ---
 //======================================================================
 void SceneMain::CheckEnemyPlayerCollision(NewEnemyClass* enemy)
 {
 	auto dir =
-		colliderStoS(enemy, m_pNewPlayer);
+		Common::colliderStoS(enemy, m_pNewPlayer);
 
 	if (dir != None)
 	{
@@ -4972,8 +4842,6 @@ void SceneMain::CheckEnemyPlayerCollision(NewEnemyClass* enemy)
 		InFence(enemy->GetModel());
 	}
 }
-
-
 
 //======================================================================
 // --- 敵がプレイヤーに倒されたとき ---
@@ -5141,10 +5009,6 @@ void SceneMain::OnEnemyKilledByBullet(NewEnemyClass* enemy)
 }
 
 #pragma endregion
-
-
-
-
 
 //==================================================
 // --- コンボ計算(UI) ---
@@ -5316,24 +5180,12 @@ void SceneMain::UpdateGlobalSystems(float deltaTime)
 
 	if (currentWave > oldWaveCount) {
 		// Waveが増えた瞬間だけここを通る
-		FenceRadius += 3.0f;
-
-		//for (auto& obj : enemyPool->GetEnemies()) // 管理しているリスト
-		//{
-		//	// NewEnemyClassにキャスト（変換）でき、かつリーダーなら
-		//	auto enemy = dynamic_cast<NewEnemyClass*>(obj);
-		//	if (enemy && enemy->GetIsLeader())
-		//	{
-		//		enemy->SetFenceRadius(FenceRadius); // 最新の半径に更新
-		//	}
-		//}
+		FenceRadius += plusFenceRadius;
 		enemyPool->SetFenceRadius(FenceRadius);
 		// 実際にフェンスモデルの座標やスケールを更新する処理
 		UpdateFencePositions();
 		oldWaveCount = currentWave; 
 	}
-
-
 
 	// --- カメラ操作 ---
 	Common::UpdateFlexibleCamera(m_pNewPlayer->GetModel()->getPosition(), phi, radius * 1.5f, theta, FenceRadius*1.1f);
@@ -5363,8 +5215,6 @@ void SceneMain::UpdateWaveTransition()
 
 			//クリアしたと同時にプレイヤーのスキルのクールタイムをリセットする
 			m_pNewPlayer->ResetSkillCoolTime();
-
-
 		}
 		isWaveClear = true;
 
@@ -5377,7 +5227,6 @@ void SceneMain::UpdateWaveTransition()
 			//木の幅を更新
 			SetWAVETree();
 
-
 			isWaveClear = false;
 			m_pBlockManager->RespawnBlocks(waveManager->GetCurrentWave(), FenceRadius,waveManager->GetFinalWave());
 			
@@ -5389,7 +5238,6 @@ void SceneMain::UpdateWaveTransition()
 				enemyPool->SetBossData();
 				soundManager->PlaySE(SE_BOSS_ENEMY);
 			}
-
 		}
 	}
 	if (waveManager->GetState() == WaveManager::WaveState::ClearWait && waveManager->GetCurrentWave() == waveManager->GetMaxWave())
@@ -5397,9 +5245,7 @@ void SceneMain::UpdateWaveTransition()
 		if (!isGameFinish)
 		{
 			m_gameState = GameClear;
-
 			CleanUpScene();
-
 		}
 	}
 
@@ -5444,7 +5290,6 @@ void SceneMain::SetWAVETree()
 	}
 }
 
-
 //==================================================
 // --- レベルアップ画面の更新 ---
 //==================================================
@@ -5455,18 +5300,13 @@ void SceneMain::UpdateLevelUp()
 	{
 		return;
 	}
-
-
-
 	//敵とブロックを全て消す
 	enemyPool->ShowHideAllActiveEnemies(false);
 	m_pBlockManager->AllBlocksShowHide(false, waveManager->GetFinalWave());
 
-
-
 	// 共通の更新（演出など）
 	m_pNewPlayer->UpdateLevelUp();
-	OnCollider(m_pNewPlayer->GetModel(), pGround, 1.0f, m_pNewPlayer->GetRigidbody());
+	Common::OnCollider(m_pNewPlayer->GetModel(), pGround, 1.0f, m_pNewPlayer->GetRigidbody());
 	InFence(m_pNewPlayer->GetModel());
 
 	m_pUpgradeUI->UpdateUI(textFormat[0]);
@@ -5550,26 +5390,7 @@ void SceneMain::UpdateLevelUp()
 }
 
 //==================================================
-//ボタン当たり判定
-//==================================================
-bool SceneMain::OnButton(float x, float y)
-{
-	int mx = vnMouse::getX();
-	int my = vnMouse::getY();
-	
-		
-	if (mx >= x - freamImgW / 2 && mx <= x + freamImgW / 2 &&
-		my >= y - freamImgH / 2 && my <= y + freamImgH / 2) // 中心座標からの判定
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-//==================================================
-//ボタン処理（ボタン押したときにtrue）
+// レベルアップ時の選択肢のボタンUI処理（ボタン押したときにtrue）
 //==================================================
 bool SceneMain::UpdateUpgradeButton(
 	float x,
@@ -5592,7 +5413,7 @@ bool SceneMain::UpdateUpgradeButton(
 
 		return false;
 	}
-	if (OnButton(x, y))
+	if (Common::OnButton(x, y, freamImgW, freamImgH))
 	{
 		if (!isOnButton)
 		{
@@ -5623,8 +5444,6 @@ bool SceneMain::UpdateUpgradeButton(
 
 	return false;
 }
-
-
 
 //==================================================
 // --- ゲームオーバー ---
@@ -5661,8 +5480,6 @@ void SceneMain::UpdateGameOver()
 
 }
 
-
-
 //==================================================
 // --- ゲームクリア ---
 //==================================================
@@ -5688,7 +5505,7 @@ void SceneMain::UpdateGameClear()
 	//ブロックの非表示
 	m_pBlockManager->AllBlocksShowHide(false,waveManager->GetFinalWave());
 
-	OnCollider(m_pNewPlayer->GetModel(), pGround, 1.0f, m_pNewPlayer->GetRigidbody());
+	Common::OnCollider(m_pNewPlayer->GetModel(), pGround, 1.0f, m_pNewPlayer->GetRigidbody());
 
 	InFence(m_pNewPlayer->GetModel());
 
@@ -5711,11 +5528,7 @@ void SceneMain::CleanUpScene()
 	pDustEmitter->setEmit(false, 0);
 
 	//敵を全て消す
-	for (size_t i = 0; i < enemyPool->GetEnemies().size(); ++i)
-	{
-		NewEnemyClass* enemy = enemyPool->GetEnemies()[i];
-		enemy->DeSpawn();
-	}
+	enemyPool->AllEnemyDeSpawn();
 
 	//コンボUIを隠す
 	{
@@ -5732,7 +5545,6 @@ void SceneMain::CleanUpScene()
 
 	}
 }
-
 
 //==================================================
 // --- ブロックとの当たり判定 ---
@@ -5769,8 +5581,8 @@ void SceneMain::UpdateBlocksCollision()
 		}
 
 		// --- 通常の衝突判定と押し戻し ---
-		bool isHit1 = colliderCtoC(m_pNewPlayer, block);
-		bool isHit2 = colliderCtoC(block, m_pNewPlayer);
+		bool isHit1 = Common::colliderCtoC(m_pNewPlayer, block);
+		bool isHit2 = Common::colliderCtoC(block, m_pNewPlayer);
 		bool isColliding = isHit1 || isHit2;
 
 		// 通常の衝突、マグマ接触
@@ -5799,7 +5611,7 @@ void SceneMain::UpdateBlocksCollision()
 			continue;
 		}
 		for (auto* block : m_pBlockManager->GetAllActiveBlocks()) {
-			if (colliderCtoC(enemy, block)) {
+			if (Common::colliderCtoC(enemy, block)) {
 				// 当たった敵にはフラグを立てる
 				enemy->SetWallHit(true);
 
@@ -5808,13 +5620,13 @@ void SceneMain::UpdateBlocksCollision()
 			}
 
 			//if (block->GetModel()->getRenderEnable()) {
-			colliderCtoC(enemy, block);
+			Common::colliderCtoC(enemy, block);
 			//}
 		}
 	}
 
 	for (auto* block : m_pBlockManager->GetAllActiveBlocks()) {
-		if (colliderCtoC(m_pBullet, block)) {
+		if (Common::colliderCtoC(m_pBullet, block)) {
 			m_pBullet->SetIsHitWall(true);
 			break; // 何か一つに当たっていればOK
 		}
@@ -5890,226 +5702,4 @@ void SceneMain::UpdateFencePositions() {
 		pFence[i]->setRotationY(radian);
 	}
 }
-//==================================================
-// --- 当たり判定（地面とキャラクター）
-//==================================================
-void SceneMain::OnCollider(vnCharacter* pCharacter, vnModel* pGround, float footOffset, RigidbodyComponent& rigidBody)
-{
-	XMVECTOR LinePos = *pCharacter->getPosition();
-	//LineDir = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
-
-	// --- モデルデータから内部情報を取得 ---
-	int vnum = pGround->getVertexNum();	//頂点数を獲得
-	int inum = pGround->getIndexNum();	//インデックス数
-
-	//メッシュ単位で走査するため、メッシュデータを取得
-	int meshNum = pGround->getMeshNum();
-	vnModel_MeshData* pMesh = pGround->getMesh();
-
-	vnVertex3D* vtx = pGround->getVertex();	//頂点配列
-	unsigned short* idx = pGround->getIndex();	//インデックス配列
-	//ワールドマトリクス
-	XMMATRIX world = *pGround->getWorld();
-
-	float highestY = -10000.0f; // 初期値は極端に低く
-	int hitMeshID = -1;
-
-	//地面
-	vnCollide::stSegment seg;
-	float safetyMargin = 0.2f;
-
-	seg.Pos = *pCharacter->getPosition() + XMVectorSet(0, footOffset, 0, 0);
-	seg.Dir = XMVectorSet(0, -1, 0, 0);
-	seg.Length = footOffset + safetyMargin;
-	//seg.Pos = *pPlayerTest->GetModel()->getPosition() + XMVectorSet(0.0f, 20.5f, 0.0f, 0.0f);
-	//seg.Dir = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
-	//seg.Length = 0.6f;
-
-	for (int m = 0; m < meshNum; m++)
-	{
-		int m_inum = pMesh[m].IndexNum;
-		int m_sidx = pMesh[m].StartIndex;
-
-		//for(int i=sidx;i<sidx+inum;i+=3)
-		for (int i = 0; i < m_inum; i += 3)
-		{
-			XMVECTOR v1 = XMVector3TransformCoord(
-				XMVectorSet(vtx[idx[m_sidx + i + 0]].x,
-					vtx[idx[m_sidx + i + 0]].y,
-					vtx[idx[m_sidx + i + 0]].z, 0.0f),
-				world);
-
-			XMVECTOR v2 = XMVector3TransformCoord(
-				XMVectorSet(vtx[idx[m_sidx + i + 1]].x,
-					vtx[idx[m_sidx + i + 1]].y,
-					vtx[idx[m_sidx + i + 1]].z, 0.0f),
-				world);
-
-			XMVECTOR v3 = XMVector3TransformCoord(
-				XMVectorSet(vtx[idx[m_sidx + i + 2]].x,
-					vtx[idx[m_sidx + i + 2]].y,
-					vtx[idx[m_sidx + i + 2]].z, 0.0f),
-				world);
-
-			// ここで vnCollide 用の三角形を作る
-			vnCollide::stTriangle tri;
-			tri.fromPoints(&v1, &v2, &v3);
-
-			// ここで Segment と当てる
-			XMVECTOR hit;
-			if (vnCollide::isCollide(&hit, &seg, &tri))
-			{
-				float y = XMVectorGetY(hit);
-				if (y > highestY)
-				{
-					highestY = y;
-				}
-			}
-		}
-	}
-
-	if (highestY > -10000.0f)
-	{
-		//pEnemy->SetIsGround(true);
-		rigidBody.SetVerticalVelocity(0.0f);
-		rigidBody.SetIsGround(true);
-		rigidBody.SetIsUseGravity(false);
-
-		pCharacter->setPositionY(highestY + GROUND_OFFSET);
-	}
-	else {
-		//pEnemy->SetIsGround(false);
-		rigidBody.SetIsUseGravity(true);
-		rigidBody.SetIsGround(false);
-
-	}
-
-
-}
-//==================================================
-// --- 当たり判定（キャラクターとキャラクター）
-//==================================================
-SceneMain::eDirection SceneMain::colliderCtoC(CharacterBase* p1, CharacterBase* p2)
-{
-	eDirection ret = eDirection::None;
-
-	if (!p1 || !p2) return ret;
-
-	XMVECTOR range = XMVectorAdd(p1->GetCollision().GetSize() * 0.5f, p2->GetCollision().GetSize() * 0.5f);
-	float rx = XMVectorGetX(range);
-	float ry = XMVectorGetY(range);
-	float rz = XMVectorGetZ(range);
-
-	XMVECTOR center1 = XMVectorAdd(*p1->GetModel()->getPosition(), p1->GetCollision().GetCenter());
-	XMVECTOR center2 = XMVectorAdd(*p2->GetModel()->getPosition(), p2->GetCollision().GetCenter());
-
-	XMVECTOR dif = XMVectorAbs(center1 - center2);
-
-	float dx = XMVectorGetX(dif);
-	float dy = XMVectorGetY(dif);
-	float dz = XMVectorGetZ(dif);
-
-	if (dx < rx && dy < ry && dz < rz)
-	{
-		float sx = rx - dx;
-		float sy = ry - dy;
-		float sz = rz - dz;
-
-		if (sx < sy && sx < sz)
-		{
-			if (XMVectorGetX(center1) < XMVectorGetX(center2))
-			{
-				p1->GetModel()->addPositionX(-sx);
-				ret = X_Neg;
-			}
-			else
-			{
-				p1->GetModel()->addPositionX(sx);
-				ret = X_Pos;
-			}
-		}
-		else if (sy < sz)
-		{
-			if (XMVectorGetY(center1) < XMVectorGetY(center2))
-			{
-				p1->GetModel()->addPositionY(-sy);
-				ret = Y_Neg;
-			}
-			else
-			{
-				p1->GetModel()->addPositionY(sy);
-				p1->GetRigidbody().SetIsGround(true);
-				ret = Y_Pos;
-			}
-		}
-		else
-		{
-			if (XMVectorGetZ(center1) < XMVectorGetZ(center2))
-			{
-				p1->GetModel()->addPositionZ(-sz);
-				ret = Z_Neg;
-			}
-			else
-			{
-				p1->GetModel()->addPositionZ(sz);
-				ret = Z_Pos;
-			}
-		}
-	}
-
-	return ret;
-}
-//==================================================
-// 球体同士の判定と押し戻し
-//==================================================
-SceneMain::eDirection SceneMain::colliderStoS(CharacterBase* p1, CharacterBase* p2)
-{
-	eDirection ret = eDirection::None;
-	if (!p1 || !p2) return ret;
-
-	auto& col1 = p1->GetCollision();
-	auto& col2 = p2->GetCollision();
-
-	// 半径の取得（size.xを直径として扱う、またはradiusを追加）
-	float r1 = p1->GetEffectiveRadius();
-	float r2 = p2->GetEffectiveRadius();
-	float sumRadii = r1 + r2;
-
-	// 世界座標での中心位置
-	XMVECTOR center1 = XMVectorAdd(*p1->GetModel()->getPosition(), col1.GetCenter());
-	XMVECTOR center2 = XMVectorAdd(*p2->GetModel()->getPosition(), col2.GetCenter());
-
-	// 距離の計算
-	XMVECTOR diff = center2 - center1;
-	XMVECTOR distSqVec = XMVector3LengthSq(diff);
-	float distSq = XMVectorGetX(distSqVec);
-
-	// 衝突判定
-	if (distSq < sumRadii * sumRadii)
-	{
-		float dist = sqrtf(distSq);
-		if (dist < 0.0001f) return ret; // 重なりすぎ防止
-
-		float overlap = (sumRadii - dist) * 1.1f;
-		XMVECTOR pushDir = XMVector3Normalize(diff * -1.0f); // p1を押し戻す方向
-
-		// --- 範囲攻撃かどうかの分岐をここに入れる ---
-		//if (p1->IsAttacking()) {
-		//	// 攻撃中なら敵(p2)を吹っ飛ばす！
-		//	XMVECTOR knockbackDir = XMVector3Normalize(diff);
-		//	p2->GetRigidbody().AddImpulse(knockbackDir * 25.0f);
-		//	p2->ApplyDamage(10);
-		//}
-		//else 
-		{
-			// 通常時は位置を補正
-			XMVECTOR pushVector = pushDir * overlap;
-			p1->GetModel()->addPosition(&pushVector);
-		}
-
-		ret = X_Pos; // 戻り値は必要に応じて調整
-	}
-	return ret;
-}
-
 #pragma endregion
