@@ -145,10 +145,14 @@ namespace {
 
 
 	// --- Comboimgと数値の位置 ---
-	constexpr float combo_num_x = 1000.0f;
-	constexpr float combo_num_y = 300.0f;
+	constexpr float combo_num_x = 1230.0f;
+	constexpr float combo_num_y = 200.0f;
 	constexpr float combo_img_x = 1200.0f;
 	constexpr float combo_img_y = 300.0f;
+	constexpr float combo_w = 25.0f;		//桁が増えたときに左にずらす用
+
+	constexpr int combo_number = 5;	//桁数
+
 
 
 	//UIバー設定（位置、サイズ）
@@ -869,8 +873,8 @@ void SceneMain::InitializeGameUI()
 	pComboWord = new vnSprite(offScreen, offScreen, 128, 96, L"data/image/combo.png");
 	pComboWord->setColor(V_GAME_COLOR_RED);
 	registerObject(pComboWord);
-	//数値（３桁まで）
-	for (int i = 0; i < 3; i++) {       // 桁 (0:百, 1:十, 2:一)
+	//数値（5桁まで）
+	for (int i = 0; i < combo_number; i++) {       // 桁 (0:百, 1:十, 2:一)
 		for (int j = 0; j < 10; j++) {  // 数字 (0〜9)
 			wchar_t path[64];
 			swprintf(path, 64, L"data/image/num%d.png", j);
@@ -1613,7 +1617,7 @@ void SceneMain::terminate()
 	deleteObject(pPullSkillIcon);
 
 	//コンボの画像
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < combo_number; i++) {
 		for (int j = 0; j < 10; j++) {
 			if (pComboSprites[i][j]) {
 				deleteObject(pComboSprites[i][j]);
@@ -4189,8 +4193,12 @@ void SceneMain::UpdateCombo(float deltaTime)
 		currentAlpha = m_comboTimer;
 	}
 
-	// まず30個全員を画面外へ飛ばす
-	for (int i = 0; i < 3; i++) {
+	//=====================================================================
+	// --- 数値の画像 ---
+	
+
+	// まず全員を画面外へ飛ばす
+	for (int i = 0; i < combo_number; i++) {
 		for (int j = 0; j < 10; j++) {
 			pComboSprites[i][j]->setPos(offScreen, offScreen);
 			// ついでに透明度もリセットしておく（次に備えて）
@@ -4200,22 +4208,45 @@ void SceneMain::UpdateCombo(float deltaTime)
 
 	if (m_comboCount > 0) {
 		// 各桁の数字を計算
-		int digits[3];
-		digits[0] = (m_comboCount / 100) % 10; // 百の位
-		digits[1] = (m_comboCount / 10) % 10;  // 十の位
-		digits[2] = m_comboCount % 10;          // 一の位
+		int displayCombo = m_comboCount;
+
+		if (displayCombo > 99999)
+		{
+			displayCombo = 99999;
+		}
+		int digits[combo_number];
+		digits[0] = (displayCombo / 10000) % 10; // 万の位
+		digits[1] = (displayCombo / 1000) % 10; // 千の位
+		digits[2] = (displayCombo / 100) % 10; // 百の位
+		digits[3] = (displayCombo / 10) % 10;  // 十の位
+		digits[4] = displayCombo % 10;          // 一の位
 
 		bool showing = false; // 上位桁に数字が出たかどうかのフラグ
-
-		for (int i = 0; i < 3; i++) {
+		int displayDigits = 0;	//現在の桁数
+		
+		for (int i = 0; i < combo_number; i++) {
 			// 0抑制
-			if (i < 2 && digits[i] == 0 && !showing) continue;
+			if (i < 4 && digits[i] == 0 && !showing) continue;
+			showing = true;
+			displayDigits++;
+		}
+
+		// 表示位置の調整
+		float spacing = (128.0f * 0.5f) * m_comboScale / 1.5f;
+		float totalWidth = (displayDigits - 1) * spacing;
+		float startX = combo_num_x - (totalWidth * 0.5f)-(displayDigits* combo_w);
+
+		showing = false;
+		int displayIndex = 0;
+		for (int i = 0; i < combo_number; i++)
+		{
+			// 0抑制
+			if (i < 4 && digits[i] == 0 && !showing)
+				continue;
+
 			showing = true;
 
-			// 表示位置の調整
-			float startX = combo_num_x;
-			float spacing = (128.0f * 0.5f) * m_comboScale / 1.5f;
-			float posX = startX + (i * spacing);
+			float posX = startX + (displayIndex * spacing);
 
 			// スプライトを取得して設定
 			vnSprite* s = pComboSprites[i][digits[i]];
@@ -4224,8 +4255,9 @@ void SceneMain::UpdateCombo(float deltaTime)
 
 			// 透明度を適用
 			s->setAlpha(currentAlpha);
-		}
 
+			displayIndex++;
+		}
 		// Combo!! の表示
 		pComboWord->setPos(combo_img_x, combo_img_y);
 		pComboWord->setScale(m_comboScale);
@@ -4669,12 +4701,14 @@ void SceneMain::CleanUpScene()
 
 	//コンボUIを隠す
 	{
-		int digits[3];
-		digits[0] = (m_comboCount / 100) % 10; // 百の位
-		digits[1] = (m_comboCount / 10) % 10;  // 十の位
-		digits[2] = m_comboCount % 10;          // 一の位
+		int digits[combo_number];
+		digits[0] = (m_comboCount / 10000) % 10; // 万の位
+		digits[1] = (m_comboCount / 1000) % 10; // 千の位
+		digits[2] = (m_comboCount / 100) % 10; // 百の位
+		digits[3] = (m_comboCount / 10) % 10;  // 十の位
+		digits[4] = m_comboCount % 10;          // 一の位
 		pComboWord->setPos(offScreen, offScreen);
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < combo_number; i++) {
 			// スプライトを取得して設定
 			vnSprite* s = pComboSprites[i][digits[i]];
 			s->setPos(offScreen, offScreen);

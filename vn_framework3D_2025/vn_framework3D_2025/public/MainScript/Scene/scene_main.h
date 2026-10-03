@@ -413,7 +413,7 @@ private:
 	//===============================================
 	// --- UI: スプライト (コンボ・操作説明) ---
 	//===============================================
-	vnSprite* pComboSprites[3][10];
+	vnSprite* pComboSprites[5][10];
 	vnSprite* pComboWord;
 	vnSprite* pImageW;
 	vnSprite* pImageA;
