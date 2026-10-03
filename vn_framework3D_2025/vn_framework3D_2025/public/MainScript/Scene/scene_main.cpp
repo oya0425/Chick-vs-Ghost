@@ -455,6 +455,8 @@ bool SceneMain::initialize()
 	srand((unsigned int)time(nullptr));
 	// --- ウェーブマネージャー ---
 	waveManager = new WaveManager();
+	m_mainTextUI = std::make_unique<SceneMainTextUI>();
+
 
 	InitializeVariables();
 	InitializePlayer();
@@ -475,7 +477,6 @@ bool SceneMain::initialize()
 //=========================================
 // 初期化関数
 //=========================================
-
 void SceneMain::RegisterCharacter(vnCharacter* character)
 {
 	registerObject(character);
@@ -601,6 +602,13 @@ void SceneMain::InitializeEnemies()
 
 	enemyPool->UnlockEnemyType(NewEnemyClass::EnemyType::GHOST);
 	enemyPool->UnlockEnemyType(NewEnemyClass::EnemyType::MUSHROOM);
+
+	//EnemyCollisionManagerの初期化
+	m_enemyCollisionManager = std::make_unique<EnemyCollisionManager>();
+	m_enemyCollisionManager->SetEnemyPool(enemyPool);
+	m_enemyCollisionManager->SetWaveManager(waveManager);
+
+
 }
 
 //地形の初期化
@@ -1444,7 +1452,6 @@ void SceneMain::DeleteObject_Main(CharacterBase* character)
 		{
 			deleteObject(character->GetModel()->getParts(i));
 		}
-
 		deleteObject(character->GetModel());
 	}
 
@@ -1933,348 +1940,29 @@ void SceneMain::render()
 	{
 	case IdelPlay:
 	{
-		//==================================================
-		// 共通設定
-		//==================================================
-		//影の文字の表示のずらし
-		const float shadowOffset = 3.0f;
-
-
-		//==================================================
-		// スタート案内
-		//==================================================
-
-		blinkCounter++;
-
-		const float alpha = (sinf(blinkCounter * 0.1f) + 1.0f) * 0.5f;
-
-		const unsigned int blinkColor = ((unsigned int)(alpha * 255) << 24) | (0x00FFFFFF & GAME_COLOR_WHITE);
-
-		const unsigned int shadowAlpha = ((unsigned int)(alpha * 255) << 24);
-
-		vnFont::setFontSize(textFormat[0], 40);
-
-		// 影
-		vnFont::print(
-			text_RIGHT_CLICK_x + shadowOffset,
-			600.0f + shadowOffset + fontOffset,
-			shadowAlpha,
-			L"[RIGHT CLICK] TO START");
-
-		// 本体
-		vnFont::print(
-			text_RIGHT_CLICK_x,
-			600.0f + fontOffset,
-			blinkColor,
-			L"[RIGHT CLICK] TO START");
-
-
-		//==================================================
-		// 操作説明
-		//==================================================
-		//基準の位置(左側)
-		const float operationX = 50.0f;
-		const float operationY = 50.0f + fontOffset;
-		// 影付き文字
-		auto printShadow =
-			[&](float x, float y, unsigned int color, const wchar_t* text)
-			{
-				vnFont::print(
-					x + shadowOffset,
-					y + shadowOffset,
-					GAME_COLOR_BLACK,
-					text);
-
-				vnFont::print(
-					x,
-					y,
-					color,
-					text);
-			};
-
-		vnFont::setFontSize(textFormat[0], 50);
-		{
-			// 見出し
-			vnFont::print(
-				operationX + shadowOffset,
-				operationY + shadowOffset,
-				GAME_COLOR_BLACK,
-				L"【操作説明】");
-
-			vnFont::print(
-				operationX,
-				operationY,
-				GAME_COLOR_LIME,
-				L"【操作説明】");
-
-
-
-			vnFont::setFontSize(textFormat[0], 30);
-
-			printShadow(
-				operationX,
-				operationY + 70.0f,
-				GAME_COLOR_WHITE,
-				L"移動      : W, A, S, D");
-
-			printShadow(
-				operationX,
-				operationY + 120.0f,
-				GAME_COLOR_WHITE,
-				L"ジャンプ    : MOUSE");
-
-			printShadow(
-				operationX,
-				operationY + 170.0f,
-				GAME_COLOR_WHITE,
-				L"ポーズ      : TAB");
-
-
-		}
-
-		//==================================================
-		// ルール説明
-		//==================================================
-
-		const float ruleX = 820.0f;
-		const float ruleY = 50.0f + fontOffset;
-
-		vnFont::setFontSize(textFormat[0], 50);
-		{
-			printShadow(
-				ruleX,
-				ruleY,
-				GAME_COLOR_YELLOW,
-				L"【ルール】");
-
-
-			vnFont::setFontSize(textFormat[0], 30);
-
-			printShadow(
-				ruleX,
-				ruleY + 60.0f,
-				GAME_COLOR_WHITE,
-				L"操作などわからなくなったら");
-
-			printShadow(
-				ruleX,
-				ruleY + 110.0f,
-				GAME_COLOR_WHITE,
-				L"ポーズ画面で「振り返り」を押し");
-
-			printShadow(
-				ruleX,
-				ruleY + 160.0f,
-				GAME_COLOR_WHITE,
-				L"「基本説明」で基本を確認しよう");
-
-			printShadow(
-				ruleX,
-				ruleY + 260.0f,
-				GAME_COLOR_RED,
-				L"※HPが0になるとゲームオーバー");
-
-		}
-
-
+		//文字の表示
+		m_mainTextUI->RenderIdleText(fontOffset,text_RIGHT_CLICK_x,textFormat[0]);
 		break;
 	}
 
 	case Play:
 	{
-		//==================================================
-		// 共通設定
-		//==================================================
-
-		const float screenWidth = (float)vnMainFrame::screenWidth;
-
-		const float shadowOffset = 3.0f;
-		const unsigned int shadowColor = GAME_COLOR_BLACK;
-
-
-		//==================================================
-		// タイム表示
-		//==================================================
-
-		vnFont::setFontSize(textFormat[0], 40);
-
-		//現在の時間（残り時間）
-		const int remainTime = static_cast<int>(waveManager->GetWaveTimer());
-
-		//残り３秒から文字の色を赤にする
-		const unsigned int timeColor = (remainTime <= 3) ? GAME_COLOR_RED : GAME_COLOR_WHITE;
-
-		//通常のゲームモード以外の時間が変化しない場所では「∞」にする
-		const bool showInfinity =
-			waveManager->GetFinalWave() ||
-			m_isTutorial ||
-			m_isEndless;
-
-		if (showInfinity)
-		{
-			vnFont::print(
-				screenWidth / 2 - 30.0f + shadowOffset,
-				95.0f + shadowOffset + fontOffset,
-				shadowColor,
-				L" ∞");
-
-			vnFont::print(
-				screenWidth / 2 - 30.0f,
-				95.0f + fontOffset,
-				GAME_COLOR_WHITE,
-				L" ∞");
-		}
-		else
-		{
-			vnFont::print(
-				screenWidth / 2 - 40.0f + shadowOffset,
-				95.0f + shadowOffset + fontOffset,
-				shadowColor,
-				L"%02ds",
-				remainTime);
-
-			vnFont::print(
-				screenWidth / 2 - 40.0f,
-				95.0f + fontOffset,
-				timeColor,
-				L"%02ds",
-				remainTime);
-		}
-
-
-		//==================================================
-		// 撃破数
-		//==================================================
-
-		vnFont::setFontSize(textFormat[0], 25);
-
-		int killCount = waveManager->GetTotalKillCount();
-		vnFont::print(
-			330.0f + shadowOffset,
-			100.0f + shadowOffset + fontOffset,
-			GAME_COLOR_WHITE,
-			L"撃破数：%d体",
-			killCount);
-
-		vnFont::print(
-			330.0f,
-			100.0f + fontOffset,
-			GAME_COLOR_BLACK,
-			L"撃破数：%d体",
-			killCount);
-
-		//==================================================
-		// WAVE進捗
-		//==================================================
-
-		vnFont::print(
-			screenWidth / 2 - 25.0f + shadowOffset,
-			10.0f + shadowOffset + fontOffset,
-			shadowColor,
-			L"%d/%d",
-			waveManager->GetCurrentWave(),
-			waveManager->GetMaxWave());
-
-		vnFont::print(
-			screenWidth / 2 - 25.0f,
-			10.0f + fontOffset,
-			GAME_COLOR_WHITE,
-			L"%d/%d",
-			waveManager->GetCurrentWave(),
-			waveManager->GetMaxWave());
-
-		vnFont::print(
-			screenWidth / 2 - 70.0f + shadowOffset,
-			35.0f + shadowOffset + fontOffset,
-			shadowColor,
-			L"WAVE進捗");
-
-		vnFont::print(
-			screenWidth / 2 - 70.0f,
-			35.0f + fontOffset,
-			GAME_COLOR_SILVER,
-			L"WAVE進捗");
-
-
-		//==================================================
-		// WAVE CLEAR表示
-		//==================================================
-
-		if (waveManager->IsWaitingForNext() &&
-			waveManager->GetCurrentWave() < waveManager->GetMaxWave())
-		{
-			//------------------------------
-			// CLEAR
-			//------------------------------
-
-			vnFont::setFontSize(textFormat[0], 80);
-
-			vnFont::print(
-				320.0f + shadowOffset,
-				220.0f + shadowOffset + fontOffset,
-				shadowColor,
-				L"WAVE %d CLEAR!!",
-				waveManager->GetCurrentWave());
-
-			vnFont::print(
-				320.0f,
-				220.0f + fontOffset,
-				GAME_COLOR_WHITE,
-				L"WAVE %d CLEAR!!",
-				waveManager->GetCurrentWave());
-
-
-			//------------------------------
-			// NEXT
-			//------------------------------
-
-			vnFont::setFontSize(textFormat[0], 40);
-
-			vnFont::print(
-				430.0f + shadowOffset,
-				340.0f + shadowOffset + fontOffset,
-				shadowColor,
-				L"NEXT : フィールド拡大");
-
-			vnFont::print(
-				430.0f,
-				340.0f + fontOffset,
-				GAME_COLOR_LIME,
-				L"NEXT : フィールド拡大");
-
-
-			//------------------------------
-			// 次のWave案内（点滅）
-			//------------------------------
-
-			blinkCounter++;
-
-			const float alpha =	(sinf(blinkCounter * 0.1f) + 1.0f) * 0.5f;
-
-			const unsigned int alphaValue =	(unsigned int)(alpha * 255);
-
-			const unsigned int blinkShadow =(alphaValue << 24);
-
-			const unsigned int blinkColor =	(alphaValue << 24)|(GAME_COLOR_CYAN & 0x00FFFFFF);
-
-			vnFont::print(
-				text_RIGHT_CLICK_x + shadowOffset,
-				470.0f + shadowOffset + fontOffset,
-				blinkShadow,
-				L"[RIGHT CLICK] NEXT WAVE");
-
-			vnFont::print(
-				text_RIGHT_CLICK_x,
-				470.0f + fontOffset,
-				blinkColor,
-				L"[RIGHT CLICK] NEXT WAVE");
-		}
-
-
+		//文字の表示
+		m_mainTextUI->RenderPlayText(
+			waveManager,
+			m_isTutorial,
+			m_isEndless,
+			fontOffset,
+			text_RIGHT_CLICK_x,
+			baseX,
+			baseY,
+			m_showBossText,
+			m_bossTextTimer,
+			textFormat[0]
+		);
 		//==================================================
 		// 操作説明
 		//==================================================
-
 		const bool aPressed = vnKeyboard::on(DIK_A);
 		const bool dPressed = vnKeyboard::on(DIK_D);
 		const bool wPressed = vnKeyboard::on(DIK_W);
@@ -2282,111 +1970,40 @@ void SceneMain::render()
 		const bool ePressed = vnKeyboard::on(DIK_E);
 		const bool qPressed = vnKeyboard::on(DIK_Q);
 		const bool tabPressed = vnKeyboard::on(DIK_TAB);
-
-
-		vnFont::setFontSize(textFormat[0], 25);
-
-		vnFont::print(
-			baseX - 25.0f,
-			baseY + 10.0f,
-			GAME_COLOR_YELLOW,
-			L"移動：");
-
-		vnFont::print(
-			baseX - 25.0f,
-			baseY - 35.0f,
-			GAME_COLOR_YELLOW,
-			L"ポーズ：");
-
-
 		//------------------------------
 		// WASD
 		//------------------------------
 		{
-			pImageW->setPos(
-				baseX_WASD + 75.0f,
-				baseY + 35.0f);
+			pImageW->setPos(baseX_WASD + 75.0f, baseY + 35.0f);
+			pImageW->setColor(wPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
-			pImageW->setColor(
-				wPressed
-				? V_GAME_COLOR_GOLD
-				: V_GAME_COLOR_WHITE);
+			pImageA->setPos(baseX_WASD + 15.0f, baseY + 100.0f);
+			pImageA->setColor(aPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
+			pImageS->setPos(baseX_WASD + 75.0f,baseY + 100.0f);
+			pImageS->setColor(sPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
-			pImageA->setPos(
-				baseX_WASD + 15.0f,
-				baseY + 100.0f);
-
-			pImageA->setColor(
-				aPressed
-				? V_GAME_COLOR_GOLD
-				: V_GAME_COLOR_WHITE);
-
-
-			pImageS->setPos(
-				baseX_WASD + 75.0f,
-				baseY + 100.0f);
-
-			pImageS->setColor(
-				sPressed
-				? V_GAME_COLOR_GOLD
-				: V_GAME_COLOR_WHITE);
-
-
-			pImageD->setPos(
-				baseX_WASD + 135.0f,
-				baseY + 100.0f);
-
-			pImageD->setColor(
-				dPressed
-				? V_GAME_COLOR_GOLD
-				: V_GAME_COLOR_WHITE);
-
-
+			pImageD->setPos(baseX_WASD + 135.0f,baseY + 100.0f);
+			pImageD->setColor(dPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 		}
-
 		//------------------------------
 		// スキル
 		//------------------------------
 		{
-			pImageE->setPos(
-				baseX + 55.5f,
-				baseY + 152.5f);
+			pImageE->setPos(baseX + 55.5f, baseY + 152.5f);
+			pImageE->setColor(ePressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 
-			pImageE->setColor(
-				ePressed
-				? V_GAME_COLOR_GOLD
-				: V_GAME_COLOR_WHITE);
-
-
-			pImageQ->setPos(
-				baseX + 55.5f,
-				baseY + 232.5f);
-
-			pImageQ->setColor(
-				qPressed
-				? V_GAME_COLOR_GOLD
-				: V_GAME_COLOR_WHITE);
-
-
+			pImageQ->setPos(baseX + 55.5f, baseY + 232.5f);
+			pImageQ->setColor(qPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 		}
 
 		//------------------------------
 		// ポーズ
 		//------------------------------
 		{
-			pImageTab->setPos(
-				baseX + 150.0f,
-				baseY - 25.0f);
-
-			pImageTab->setColor(
-				tabPressed
-				? V_GAME_COLOR_GOLD
-				: V_GAME_COLOR_WHITE);
-
-
+			pImageTab->setPos(baseX + 150.0f, baseY - 25.0f);
+			pImageTab->setColor(tabPressed ? V_GAME_COLOR_GOLD : V_GAME_COLOR_WHITE);
 		}
-		
 		// --- HPバーの表示 ---
 		{
 			setHPbarRender(true);
@@ -2412,7 +2029,6 @@ void SceneMain::render()
 		// --- Expバーの表示更新 ---
 		{
 			SetExpbarRender(true);
-
 			float expRatio = (float)m_pExpManager->GetCurrentExp() / m_pExpManager->GetNeedExp();
 			if (expRatio > 1.0f) expRatio = 1.0f; // 100%超え防止
 
@@ -2424,7 +2040,6 @@ void SceneMain::render()
 			float currentPosX = barLeftEdgeExp + (maxWExp * expRatio * 0.5f);
 
 			pExpBarFront->setPos(currentPosX, heightYExp); // Y座標も初期化時に合わせた位置に
-
 		}
 
 		// --- スキルバーの表示更新 ---
@@ -2472,60 +2087,6 @@ void SceneMain::render()
 			m_bossTextTimer = 2.0f;
 		}
 
-		// 表示中のみ更新・描画
-		if (m_showBossText)
-		{
-			float dt = vnScene::getDeltaTime();
-			m_bossTextTimer -= dt;
-
-			// 表示時間終了
-			if (m_bossTextTimer <= 0.0f)
-			{
-				m_showBossText = false;
-			}
-
-			//=============================
-			// 拡大アニメーション
-			//=============================
-
-			float bossButtonScale = 1.5f; // 最終倍率
-
-			if (m_bossTextTimer > 1.5f)
-			{
-				// 表示開始から0.5秒間だけ拡大する
-				float progressTime = 2.0f - m_bossTextTimer;
-				float rate = progressTime / 0.5f;
-
-				// 0.2倍 → 1.5倍
-				bossButtonScale = 0.2f + (1.5f - 0.2f) * rate;
-			}
-
-			//=============================
-			// フォント設定
-			//=============================
-
-			float currentFontSize = 50.0f * bossButtonScale;
-			vnFont::setFontSize(textFormat[0], (int)currentFontSize);
-			// 文字サイズから描画位置を計算
-			float textWidth = currentFontSize * 1.5f;
-			float textHeight = currentFontSize * 0.5f;
-
-			float actualTextWidth = currentFontSize * 3.1f;
-			float actualTextHeight = currentFontSize * 0.5f;
-
-			float tx = (vnMainFrame::screenWidth / 2.0f) - actualTextWidth;
-			float ty = (vnMainFrame::screenHeight / 2.0f) - 50 - actualTextHeight;
-
-			//=============================
-			// 描画
-			//=============================
-
-			float off = 4.0f; // 影のずらし量
-
-			vnFont::print(tx + off, ty + off + fontOffset, shadowColor, L"～ボス出現～");
-			vnFont::print(tx, ty + fontOffset, GAME_COLOR_RED, L"～ボス出現～");
-		}
-
 		// --- 最終WAVE：ボス撃破ゲージ ---
 		if (waveManager->GetFinalWave())
 		{
@@ -2537,14 +2098,8 @@ void SceneMain::render()
 
 			if (remainBoss > 0)
 			{
-				vnFont::setFontSize(textFormat[0], 30);
-				vnFont::print(1130.0f + off, 10.0f + off + fontOffset, GAME_COLOR_WHITE, L"ボス");
-				vnFont::print(1130.0f, 10.0f + fontOffset, GAME_COLOR_BLACK, L"ボス");
 				//ボスの位置を知らせる矢印の表示
 				enemyPool->DrawBossDirectionArrow(textFormat[0]);
-
-
-
 				SetBossHPbarRender(true);
 
 				// 必要なボス撃破数
@@ -2610,7 +2165,6 @@ void SceneMain::render()
 				{
 					continue;
 				}
-
 				//ミッション内容
 				//影
 				vnFont::print(
@@ -2625,7 +2179,6 @@ void SceneMain::render()
 					GAME_COLOR_BLACK,
 					mission.GetMissionText().c_str());
 
-
 				//ミッションの進捗
 				//影
 				vnFont::print(
@@ -2639,7 +2192,6 @@ void SceneMain::render()
 					mission.position_y - 10.0f + fontOffset,
 					GAME_COLOR_BLACK,
 					mission.GetMissionProgress().c_str());
-
 			}
 
 			//全てのミッションをクリア
@@ -2663,253 +2215,44 @@ void SceneMain::render()
 
 	}
 	break;
-
 	case GameOver:
 	{
-		//==================================================
-		// 共通設定
-		//==================================================
-
-		const float shadowOffset = 3.0f;
-		const unsigned int shadowColor = GAME_COLOR_BLACK;
-
-
-		//==================================================
-		// GAME OVER
-		//==================================================
-
-		// 上下移動（ふわふわ）
-		const float offsetY =
-			sinf(blinkCounter * 0.08f) * 15.0f;
-
-		vnFont::setFontSize(textFormat[0], 100);
-
-		// 影
-		vnFont::print(
-			280.0f + shadowOffset,
-			190.0f + offsetY + shadowOffset + fontOffset,
-			shadowColor,
-			L"GAME OVER");
-
-		// 本体
-		vnFont::print(
-			280.0f,
-			190.0f + offsetY + fontOffset,
-			GAME_COLOR_RED,
-			L"GAME OVER");
-
-
-		//==================================================
-		// タイトルに戻る案内（点滅）
-		//==================================================
-
-		blinkCounter++;
-
-		const float alpha =
-			(sinf(blinkCounter * 0.1f) + 1.0f) * 0.5f;
-
-		const unsigned int alphaValue =
-			(unsigned int)(alpha * 255);
-
-		// 影
-		const unsigned int blinkShadow =
-			alphaValue << 24;
-
-		// 本体
-		const unsigned int blinkColor =
-			(alphaValue << 24) |
-			(GAME_COLOR_LIGHT_BLUE & GAME_COLOR_CYAN);
-
-
-		vnFont::setFontSize(textFormat[0], 40);
-
-		// 影
-		vnFont::print(
-			text_RIGHT_CLICK_x + shadowOffset,
-			450.0f + shadowOffset + fontOffset,
-			blinkShadow,
-			L"[RIGHT CLICK]  BACK TITLE");
-
-		// 本体
-		vnFont::print(
-			text_RIGHT_CLICK_x,
-			450.0f + fontOffset,
-			blinkColor,
-			L"[RIGHT CLICK]  BACK TITLE");
+		m_mainTextUI->RenderGameOverText(m_isEndless, fontOffset, text_RIGHT_CLICK_x, textFormat[0]);
 
 		break;
 	}
 
 	case GameClear:
 	{
-		//==================================================
-		// 共通設定
-		//==================================================
-
-		const float shadowOffset = 5.0f;
-		const unsigned int shadowColor = GAME_COLOR_BLACK;
-
-
-		//==================================================
-		// ALL WAVE CLEAR!!
-		//==================================================
-
-		blinkCounter++;
-
-		// クリア文字を上下にふわふわさせる
-		const float offsetY =
-			sinf(blinkCounter * 0.08f) * 15.0f;
-
-
-		vnFont::setFontSize(textFormat[0], 90);
-
-		// 影
-		vnFont::print(
-			150.0f + shadowOffset,
-			200.0f + offsetY + shadowOffset + fontOffset,
-			shadowColor,
-			L"ALL WAVE CLEAR!!");
-
-		// 本体
-		vnFont::print(
-			150.0f,
-			200.0f + offsetY + fontOffset,
-			GAME_COLOR_GOLD,
-			L"ALL WAVE CLEAR!!");
-
-		//==================================================
-		// THANK YOU FOR PLAYING!
-		//==================================================
-		vnFont::setFontSize(textFormat[0], 50);
-		vnFont::print(
-			270.0f + shadowOffset,
-			450.0f + shadowOffset + fontOffset,
-			shadowColor,
-			L"THANK YOU FOR PLAYING!");
-
-		vnFont::print(
-			270.0f,
-			450.0f + fontOffset,
-			GAME_COLOR_LIME,
-			L"THANK YOU FOR PLAYING!");
-
-
-		//==================================================
-		// タイトルに戻る案内（点滅）
-		//==================================================
-
-		const float alpha = (sinf(blinkCounter * 0.1f) + 1.0f) * 0.5f;
-
-		const unsigned int alphaValue = (unsigned int)(alpha * 255);
-
-		const unsigned int blinkShadow = alphaValue << 24;
-
-		const unsigned int blinkColor = (alphaValue << 24) | (GAME_COLOR_CYAN & GAME_COLOR_LIGHT_BLUE);
-
-
-		vnFont::setFontSize(textFormat[0], 40);
-
-		// 影
-		vnFont::print(
-			text_RIGHT_CLICK_x + shadowOffset,
-			600.0f + shadowOffset + fontOffset,
-			blinkShadow,
-			L"[RIGHT CLICK]  BACK TITLE");
-
-		// 本体
-		vnFont::print(
-			text_RIGHT_CLICK_x,
-			600.0f + fontOffset,
-			blinkColor,
-			L"[RIGHT CLICK]  BACK TITLE");
-
+		m_mainTextUI->RenderGameClearText(fontOffset, text_RIGHT_CLICK_x, textFormat[0]);
 
 		break;
 	}
 
 	case Pause:
 	{
-		//==================================================
-		// 共通設定
-		//==================================================
-
-		const float shadowOffset = 5.0f;
-		const unsigned int shadowColor = GAME_COLOR_BLACK;
-
-		//==================================================
-		// ～遊び方～
-		//==================================================
-
 		//遊び方ボタンを押した時にのみ表示
 		if (m_tutorialReviewState == TutorialReviewState::Select)
 		{
-			vnFont::setFontSize(textFormat[0], 50);
-
-			// 影
-			vnFont::print(
-				530.0f + shadowOffset,
-				100.0f +  shadowOffset + fontOffset,
-				shadowColor,
-				L"～遊び方～");
-			// 本体
-			vnFont::print(
-				530.0f,
-				100.0f + fontOffset,
-				GAME_COLOR_WHITE,
-				L"～遊び方～");
-
+			m_mainTextUI->RenderPauseText(fontOffset, textFormat[0]);
 		}
-
 	}
 		break;
 	case TutorialClear:
 	{
-		float off = 3.0f;
-
 		// 全てのミッションをクリア
 		if (IsAllMissionClear())
 		{
-			int fontSize =
-				(int)(70.0f * m_tutorialClearUI.textScale);
-
-			vnFont::setFontSize(textFormat[0], fontSize);
-
-			size_t len = wcslen(m_tutorialClearUI.text);
-
-			// 文字の大きさから幅・高さを計算
-			float textWidth =
-				fontSize * 0.95f * len;
-
-			float textHeight =
-				fontSize * 0.5f;
-
-			// 文字の中心を基準に座標を計算
-			float tx =
-				m_tutorialClearUI.position_x -
-				textWidth * 0.5f;
-
-			float ty =
-				m_tutorialClearUI.position_y -
-				textHeight * 0.5f;
-
-			// 影
-			vnFont::print(
-				tx+30.0f + off,
-				ty + off  + fontOffset,
-				GAME_COLOR_BLACK,
-				m_tutorialClearUI.text);
-
-			// 本体
-			vnFont::print(
-				tx+30.0f,
-				ty + fontOffset,
-				GAME_COLOR_YELLOW,
-				m_tutorialClearUI.text);
+			m_mainTextUI->RenderTutorialClearText(
+				m_tutorialClearUI.textScale,
+				m_tutorialClearUI.position_x,
+				m_tutorialClearUI.position_y,
+				m_tutorialClearUI.text,
+				fontOffset,
+				textFormat[0]);
 		}
-
 		break;
 	}
-
 
 	}
 
@@ -2930,13 +2273,8 @@ void SceneMain::render()
 			button.isOn,
 			button.text, textFormat[0]);
 	}
-
-
-
 	vnScene::render();
 }
-
-
 
 //黒い画像を拡大・縮小する
 // 拡大縮小とシーン遷移を一括管理する関数
@@ -2982,92 +2320,23 @@ void SceneMain::HandleBackgroundFade(bool isFadeOut, float& scale, float speed =
 }
 
 
-
-//====================================================================================
-// --- チュートリアルの画像の表示（チュートリアルにあった画像、その番号を表示） ---
-//====================================================================================
-void SceneMain::UpdateExplanationImages()
-{
-	if (m_currentExplanationType == ExplanationType::None)
-	{
-		return;
-	}
-	auto& explanation =
-		m_explanationUI[(int)m_currentExplanationType];
-
-	for (size_t i = 0; i < explanation.images.size(); i++)
-	{
-		bool isVisible = false;
-
-		// アニメーション中
-		if (m_explanationSlideState != ExplanationSlideState::None)
-		{
-			// 現在のページ
-			if (i == m_explanationSlidePage)
-			{
-				isVisible = true;
-			}
-
-			// 進むなら次のページも表示
-			if (m_explanationSlideState == ExplanationSlideState::SlideLeft &&
-				i == m_explanationSlidePage + 1)
-			{
-				isVisible = true;
-			}
-
-			// 戻るなら前のページも表示
-			if (m_explanationSlideState == ExplanationSlideState::SlideRight &&
-				i == m_explanationSlidePage - 1)
-			{
-				isVisible = true;
-			}
-		}
-		else
-		{
-			// 通常時は現在のページだけ
-			isVisible = explanation.visible &&
-				i == m_explanationPage;
-		}
-
-		explanation.images[i]->setRenderEnable(isVisible);
-	}
-}
-
 #pragma region バー（HPバーなど）UIの表示非表示
 
 void SceneMain::setHPbarRender(bool on)
-
 {
-
 	pHpBarBackBlack->setRenderEnable(on);
-
 	pHpBarFront->setRenderEnable(on);
-
 	pHpBarBack->setRenderEnable(on);
-
-
-
 	pIconPlayer->setRenderEnable(on);
-
 }
-
 
 //ボスHPバー表示非表示
 void SceneMain::SetBossHPbarRender(bool on)
-
 {
-
 	pBossHpBarBackBlack->setRenderEnable(on);
-
 	pBossHpBarBack->setRenderEnable(on);
-
 	pBossHpBarFront->setRenderEnable(on);
-
-
-
 	pIconBoss->setRenderEnable(on);
-
-
 	for (int i = 1; i < 5; i++)
 	{
 		divide[i - 1]->setRenderEnable(on);
@@ -3364,6 +2633,56 @@ bool SceneMain::UpdateMessageWindow(float targetScale,const WCHAR* text,WindowMo
 
 	return false;
 
+}
+
+//====================================================================================
+// --- チュートリアルの画像の表示（チュートリアルにあった画像、その番号を表示） ---
+//====================================================================================
+void SceneMain::UpdateExplanationImages()
+{
+	if (m_currentExplanationType == ExplanationType::None)
+	{
+		return;
+	}
+	auto& explanation =
+		m_explanationUI[(int)m_currentExplanationType];
+
+	for (size_t i = 0; i < explanation.images.size(); i++)
+	{
+		bool isVisible = false;
+
+		// アニメーション中
+		if (m_explanationSlideState != ExplanationSlideState::None)
+		{
+			// 現在のページ
+			if (i == m_explanationSlidePage)
+			{
+				isVisible = true;
+			}
+
+			// 進むなら次のページも表示
+			if (m_explanationSlideState == ExplanationSlideState::SlideLeft &&
+				i == m_explanationSlidePage + 1)
+			{
+				isVisible = true;
+			}
+
+			// 戻るなら前のページも表示
+			if (m_explanationSlideState == ExplanationSlideState::SlideRight &&
+				i == m_explanationSlidePage - 1)
+			{
+				isVisible = true;
+			}
+		}
+		else
+		{
+			// 通常時は現在のページだけ
+			isVisible = explanation.visible &&
+				i == m_explanationPage;
+		}
+
+		explanation.images[i]->setRenderEnable(isVisible);
+	}
 }
 
 
@@ -4525,12 +3844,6 @@ void SceneMain::UpdatePlayer(float deltaTime)
 	//地面との判定
 	Common::OnCollider(m_pNewPlayer->GetModel(), pGround, 1.0f, m_pNewPlayer->GetRigidbody());
 	
-	
-	if (m_pNewPlayer->GetModel()->getPositionY() < -30.0f) {
-		//プレイヤーが一定以上落下したら
-		m_pNewPlayer->GetModel()->setPosition(0.0f, 1.0f, 0.0f);
-	}
-
 	InFence(m_pNewPlayer->GetModel());
 
 	if (waveManager->GetState() == WaveManager::WaveState::InProgress)
@@ -4545,11 +3858,8 @@ void SceneMain::UpdatePlayer(float deltaTime)
 		{
 			m_gameState = GameOver;
 			CleanUpScene();
-
 		}
-
 	}
-
 #pragma region 回復処理
 	// --- 敵を倒した瞬間の処理（SceneMain内） ---
 	if (waveManager->GetState() == WaveManager::WaveState::InProgress)
@@ -4655,146 +3965,13 @@ void SceneMain::UpdateEnemies(float deltaTime)
 	// 敵AI・ステータス更新
 	enemyPool->Update(deltaTime);
 
-	// WAVEクリア時の敵削除
-	RemoveEnemiesOnWaveClear();
-
-	// 敵の移動・引き寄せ・地面判定
-	UpdateEnemyMovement();
-
-	// 敵同士の衝突
-	UpdateEnemyEnemyCollision();
-
+	// 敵の動き、当たり判定
+	m_enemyCollisionManager->UpdateEnemyCollision(m_pNewPlayer, pGround);
 	// 敵とプレイヤー・弾の衝突
 	UpdateEnemyAttackCollision();
+
 }
 #pragma region 敵のUpdate処理
-
-//======================================================================
-// --- Waveクリア時に敵を消す ---
-//======================================================================
-void SceneMain::RemoveEnemiesOnWaveClear()
-{
-	if (waveManager->GetWaveTimer() > waveManager->GetWaveTimeLimit())
-	{
-		return;
-	}
-	enemyPool->AllEnemyDeSpawn();
-}
-
-
-//======================================================================
-// --- 動き（引き寄せられるを含む）--- 
-//======================================================================
-void SceneMain::UpdateEnemyMovement()
-{
-	auto& enemies = enemyPool->GetEnemies();
-
-	for (auto enemy : enemies)
-	{
-		if (!enemy->GetActive())
-		{
-			continue;
-		}
-
-		//========================================
-		// 引き寄せ判定
-		//========================================
-		XMVECTOR enemyPos =
-			*enemy->GetModel()->getPosition();
-
-		XMVECTOR toPlayerVec =
-			*m_pNewPlayer->GetModel()->getPosition()
-			- enemyPos;
-
-		float dist =
-			XMVectorGetX(
-				XMVector3LengthSq(toPlayerVec));
-
-		enemy->CheckPullTrigger(
-			m_pNewPlayer->IsPulling(),
-			m_pNewPlayer->GetPullRadius(),
-			dist);
-
-
-		//========================================
-		// 移動
-		//========================================
-		XMVECTOR moveEnemy =
-			enemy->GetRigidbody().getMoveDelta();
-
-		enemy->GetModel()->addPosition(&moveEnemy);
-
-
-		//========================================
-		// 地面判定
-		//========================================
-		Common::OnCollider(
-			enemy->GetModel(),
-			pGround,
-			1.0f,
-			enemy->GetRigidbody());
-	}
-}
-
-
-//======================================================================
-// --- 敵と敵の当たり判定 ---
-//======================================================================
-void SceneMain::UpdateEnemyEnemyCollision()
-{
-	auto& enemies = enemyPool->GetEnemies();
-
-	for (size_t i = 0; i < enemies.size(); ++i)
-	{
-		NewEnemyClass* a = enemies[i];
-
-		if (!a->GetActive() || !a->GetRigidbody().GetIsGround() || a->IsAttracted())
-		{
-			continue;
-		}
-
-		for (size_t j = i + 1; j < enemies.size(); ++j)
-		{
-			NewEnemyClass* b = enemies[j];
-
-			if (!b->GetActive() || !b->GetRigidbody().GetIsGround() || b->IsAttracted())
-			{
-				continue;
-			}
-
-			//個体同士が遠ければスキップ
-			XMVECTOR diff = *a->GetModel()->getPosition() - *b->GetModel()->getPosition();
-			float distSq = XMVectorGetX(XMVector3LengthSq(diff));
-			if (distSq > 25.0f) //取りたい距離の２乗
-			{
-				continue;
-			}		
-			// 同じグループのその他の敵同士
-			bool sameGroup = (a->GetGroupID() == b->GetGroupID());
-
-			if (sameGroup)
-			{
-				//同じ群れ内のリーダーとその他の敵は当たらない
-				if (!a->GetIsLeader() && !b->GetIsLeader())
-				{
-					Common::colliderCtoC(a, b);
-					Common::colliderCtoC(b, a);
-				}
-			}
-			else
-			{
-				if (a->GetIsLeader() && b->GetIsLeader())
-				{
-					//リーダー同士の衝突判定
-					Common::colliderCtoC(a, b);
-					Common::colliderCtoC(b, a);
-				}
-			}
-		}
-	}
-}
-
-
 
 //======================================================================
 // --- 敵がプレイヤーか弾に当たったか ---
@@ -4813,7 +3990,14 @@ void SceneMain::UpdateEnemyAttackCollision()
 		// プレイヤーとの衝突
 		if (enemy->GetState() != NewEnemyClass::eState::KnockBack)
 		{
-			CheckEnemyPlayerCollision(enemy);
+			if (m_enemyCollisionManager->CheckEnemyPlayerCollision(enemy, m_pNewPlayer))
+			{
+				OnEnemyKilledByPlayer(enemy);
+			}
+			else
+			{
+				InFence(enemy->GetModel());
+			}
 		}
 
 		// 弾との衝突
@@ -4823,26 +4007,6 @@ void SceneMain::UpdateEnemyAttackCollision()
 		}
 	}
 }
-
-
-//======================================================================
-// --- 敵とプレイヤーの当たり判定 ---
-//======================================================================
-void SceneMain::CheckEnemyPlayerCollision(NewEnemyClass* enemy)
-{
-	auto dir =
-		Common::colliderStoS(enemy, m_pNewPlayer);
-
-	if (dir != None)
-	{
-		OnEnemyKilledByPlayer(enemy);
-	}
-	else
-	{
-		InFence(enemy->GetModel());
-	}
-}
-
 //======================================================================
 // --- 敵がプレイヤーに倒されたとき ---
 //======================================================================
@@ -4851,7 +4015,6 @@ void SceneMain::OnEnemyKilledByPlayer(NewEnemyClass* enemy)
 	//========================================
 	// チュートリアル
 	//========================================
-
 	if (!enemy->GetIsLeader())
 	{
 		if (m_state_tutorial == TutorialState::None)
@@ -4870,20 +4033,15 @@ void SceneMain::OnEnemyKilledByPlayer(NewEnemyClass* enemy)
 			false);
 	}
 
-
 	//========================================
 	// 死亡演出
 	//========================================
-
 	PlayEnemyDeathEffect(enemy);
-
 	AddCombo(enemy);
-
 
 	//========================================
 	// 特攻状態
 	//========================================
-
 	if (enemy->GetState() == NewEnemyClass::eState::Charge)
 	{
 		if (!m_pNewPlayer->IsAreaAttack())
@@ -4904,8 +4062,6 @@ void SceneMain::OnEnemyKilledByPlayer(NewEnemyClass* enemy)
 			}
 		}
 	}
-
-
 	//========================================
 	// 死因
 	//========================================
@@ -4924,23 +4080,16 @@ void SceneMain::OnEnemyKilledByPlayer(NewEnemyClass* enemy)
 		source =
 			NewEnemyClass::DamageSource::PullAttack;
 	}
-
 	if (enemy->GetIsLeader())
 	{
 		enemy->OnDie(source);
 	}
-
 	enemy->SetIsHitPlayer(true);
-
-
 	//========================================
 	// WAVE撃破数
 	//========================================
-
 	UpdateWaveKillCount(enemy);
 }
-
-
 
 //======================================================================
 // --- 敵が倒されたときのエフェクト,音 ---
@@ -4948,21 +4097,12 @@ void SceneMain::OnEnemyKilledByPlayer(NewEnemyClass* enemy)
 void SceneMain::PlayEnemyDeathEffect(NewEnemyClass* enemy)
 {
 	soundManager->PlaySE(SE_ENEMY_DEAD);
+	pEmitter->setPosition(enemy->GetModel()->getPosition());
+	pEmitter->setPositionY(enemy->GetModel()->getPositionY() + 2.0f);
 
-	pEmitter->setPosition(
-		enemy->GetModel()->getPosition());
+	int index =	rand() %(sizeof(vnEmitter::colors) /sizeof(vnEmitter::colors[0]));
 
-	pEmitter->setPositionY(
-		enemy->GetModel()->getPositionY() + 2.0f);
-
-	int index =
-		rand() %
-		(sizeof(vnEmitter::colors) /
-			sizeof(vnEmitter::colors[0]));
-
-	pEmitter->SetColor(
-		vnEmitter::colors[index]);
-
+	pEmitter->SetColor(vnEmitter::colors[index]);
 	pEmitter->setEmit(true, 0.3f);
 }
 
@@ -4973,9 +4113,7 @@ void SceneMain::PlayEnemyDeathEffect(NewEnemyClass* enemy)
 //======================================================================
 void SceneMain::UpdateWaveKillCount(NewEnemyClass* enemy)
 {
-	bool isBossWave =
-		(waveManager->GetCurrentWave() ==
-			waveManager->GetMaxWave());
+	bool isBossWave = (waveManager->GetCurrentWave() == waveManager->GetMaxWave());
 
 	if (isBossWave)
 	{
@@ -4991,7 +4129,6 @@ void SceneMain::UpdateWaveKillCount(NewEnemyClass* enemy)
 		waveManager->OnEnemyKilled();
 	}
 }
-
 
 
 //======================================================================
@@ -5640,17 +4777,7 @@ void SceneMain::UpdateBlocksCollision()
 	}
 }
 
-void SceneMain::DebugDraw() 
-{
-
-
-}
-
-
-
 #pragma region 物理演算（地面との当たり判定など）
-
-
 //フェンスの外に出ないようにする関数
 void SceneMain::InFence(vnCharacter* pObject)
 {

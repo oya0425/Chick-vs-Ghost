@@ -207,6 +207,12 @@
     <ClInclude Include="public\MainScript\Sound\SoundManager.h">
       <Filter>public\MainScript\Sound</Filter>
     </ClInclude>
+    <ClInclude Include="public\MainScript\Character\Enemy\EnemyCollisionManager.h">
+      <Filter>public\MainScript\Character\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="public\MainScript\UI\SceneMainTextUI.h">
+      <Filter>public\MainScript\UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vn_framework3D_2025.cpp">
@@ -343,6 +349,12 @@
     </ClCompile>
     <ClCompile Include="public\MainScript\Sound\SoundManager.cpp">
       <Filter>public\MainScript\Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\Character\Enemy\EnemyCollisionManager.cpp">
+      <Filter>public\MainScript\Character\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="public\MainScript\UI\SceneMainTextUI.cpp">
+      <Filter>public\MainScript\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

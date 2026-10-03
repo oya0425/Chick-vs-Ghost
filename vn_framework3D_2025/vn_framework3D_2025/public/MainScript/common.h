@@ -100,4 +100,7 @@ namespace Common {
     //ƒLƒƒƒ‰‚Æ’n–Ê‚Ì”»’è
     void OnCollider(vnCharacter* pCharacter, vnModel* pGround, float footOffset, RigidbodyComponent& rigidBody);
 
+
+
+
 }

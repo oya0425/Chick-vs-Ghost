@@ -152,6 +152,7 @@
     <ClInclude Include="public\MainScript\Character\CharacterBase.h" />
     <ClInclude Include="public\MainScript\Character\CollisionComponent.h" />
     <ClInclude Include="public\MainScript\Character\Enemy\EnemyAIDebug.h" />
+    <ClInclude Include="public\MainScript\Character\Enemy\EnemyCollisionManager.h" />
     <ClInclude Include="public\MainScript\Character\Enemy\EnemyGhost.h" />
     <ClInclude Include="public\MainScript\Character\Enemy\EnemyMushroomMon.h" />
     <ClInclude Include="public\MainScript\Character\Enemy\EnemyPool.h" />
@@ -163,6 +164,7 @@
     <ClInclude Include="public\MainScript\Scene\scene_main.h" />
     <ClInclude Include="public\MainScript\Scene\scene_title.h" />
     <ClInclude Include="public\MainScript\Sound\SoundManager.h" />
+    <ClInclude Include="public\MainScript\UI\SceneMainTextUI.h" />
     <ClInclude Include="public\MainScript\UI\UpgradeSelectionUI.h" />
     <ClInclude Include="public\MainScript\WaveManager.h" />
     <ClInclude Include="public\scene\scene_table.h" />
@@ -201,6 +203,7 @@
     <ClCompile Include="public\MainScript\Character\CharacterBase.cpp" />
     <ClCompile Include="public\MainScript\Character\CollisionComponent.cpp" />
     <ClCompile Include="public\MainScript\Character\Enemy\EnemyAIDebug.cpp" />
+    <ClCompile Include="public\MainScript\Character\Enemy\EnemyCollisionManager.cpp" />
     <ClCompile Include="public\MainScript\Character\Enemy\EnemyGhost.cpp" />
     <ClCompile Include="public\MainScript\Character\Enemy\EnemyMushroomMon.cpp" />
     <ClCompile Include="public\MainScript\Character\Enemy\EnemyPool.cpp" />
@@ -212,6 +215,7 @@
     <ClCompile Include="public\MainScript\Scene\scene_main.cpp" />
     <ClCompile Include="public\MainScript\Scene\scene_title.cpp" />
     <ClCompile Include="public\MainScript\Sound\SoundManager.cpp" />
+    <ClCompile Include="public\MainScript\UI\SceneMainTextUI.cpp" />
     <ClCompile Include="public\MainScript\UI\UpgradeSelectionUI.cpp" />
     <ClCompile Include="public\MainScript\WaveManager.cpp" />
     <ClCompile Include="public\scene\scene_table.cpp" />

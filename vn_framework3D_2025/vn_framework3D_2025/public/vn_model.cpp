@@ -822,7 +822,7 @@ vnModel::vnModel(const WCHAR* folder, const WCHAR* file) : vnObject()
 
 
 #else
-	// ★ TEX_ONLY が 0 の時は共通ローダーを使用
+	//  TEX_ONLY が 0 の時は共通ローダーを使用
 	hr = vnResourceLoader::load(path, &pModelData, &pVertexBuffer, &pIndexBuffer);
 	if (FAILED(hr))
 	{

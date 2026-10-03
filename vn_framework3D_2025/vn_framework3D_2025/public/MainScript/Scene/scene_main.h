@@ -317,6 +317,8 @@ private:
 
 	// --- 敵・ウェーブ関連 ---
 	EnemyPool* enemyPool;
+	std::unique_ptr<EnemyCollisionManager>m_enemyCollisionManager = nullptr;
+
 	//std::unique_ptr<EnemyPool> enemyPool;
 	WaveManager* waveManager;
 	int           oldWaveCount;
@@ -467,7 +469,9 @@ private:
 
 	//vnSound** pSound;
 
-	std::unique_ptr<SoundManager> soundManager;
+	std::unique_ptr<SceneMainTextUI>m_mainTextUI = nullptr;
+
+	std::unique_ptr<SoundManager> soundManager = nullptr;
 
 	
 
@@ -586,18 +590,9 @@ private:
 	// --- 敵のUpdate処理 ---
 	//==========================
 	void UpdateEnemies(float deltaTime);		//敵の移動・衝突・プレイヤーとの判定
-	// WAVEクリア時の敵処理
-	void RemoveEnemiesOnWaveClear();
-
-	// 敵の移動・地面判定・引き寄せ判定
-	void UpdateEnemyMovement();
-
-	// 敵同士の衝突
-	void UpdateEnemyEnemyCollision();
 
     // 敵とプレイヤー・弾の衝突
 	void UpdateEnemyAttackCollision();
-	void CheckEnemyPlayerCollision(NewEnemyClass* enemy);
 	void OnEnemyKilledByPlayer(NewEnemyClass* enemy);
 	void PlayEnemyDeathEffect(NewEnemyClass* enemy);
 	void UpdateWaveKillCount(NewEnemyClass* enemy);

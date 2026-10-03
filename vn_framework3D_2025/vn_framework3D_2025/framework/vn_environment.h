@@ -122,6 +122,9 @@ using namespace DirectX;
 #include "../public/scene/vn_scene.h"
 #include"../public/MainScript/Character/Enemy/EnemyPool.h"
 #include"../public/MainScript/Character/Enemy/EnemyGhost.h"
+#include"../public/MainScript/Character/Enemy/EnemyCollisionManager.h"
+
+#include"../public/MainScript/UI/SceneMainTextUI.h"
 #include"../public/MainScript/common.h"
 #include "../public/scene/scene_table.h"
 #include "vn_mainframe.h"
