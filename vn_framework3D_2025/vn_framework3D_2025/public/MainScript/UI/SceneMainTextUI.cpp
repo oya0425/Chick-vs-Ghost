@@ -398,7 +398,7 @@ void SceneMainTextUI::RenderPlayText(
 //================================================================
 // --- ゲームオーバー時の文字の表示 ---
 //================================================================
-void SceneMainTextUI::RenderGameOverText(bool isEndless, float fontOffset, float text_RIGHT_CLICK_x, IDWriteTextFormat* pFormat)
+void SceneMainTextUI::RenderGameOverText(bool isEndless,float maxKillCount,float fontOffset, float text_RIGHT_CLICK_x, IDWriteTextFormat* pFormat)
 {
     //==================================================
     // 共通設定
@@ -442,6 +442,29 @@ void SceneMainTextUI::RenderGameOverText(bool isEndless, float fontOffset, float
         blinkColor,
         blinkShadow,
         L"[RIGHT CLICK]  BACK TITLE");
+
+    //エンドレスモードの時のみ、、最大撃破数を表示する
+    if (isEndless)
+    {
+        PrintShadowValue_int(
+            280.0f,
+            520.0f + fontOffset,
+            GAME_COLOR_WHITE,
+            shadowColor,
+            L"あなたの最大撃破数 ： %d 体",
+            maxKillCount
+        );
+        PrintShadowValue_int(
+            280.0f,
+            580.0f + fontOffset,
+            GAME_COLOR_AQUA_GREEN,
+            shadowColor,
+            L"制作者の最大撃破数 ： %d 体",
+            92182
+        );
+
+    }
+
 
 }
 

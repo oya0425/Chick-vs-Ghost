@@ -15,7 +15,7 @@ public:
 		IDWriteTextFormat* pFormat);
 
 	//ゲームオーバー時の文字の表示
-	void RenderGameOverText(bool isEndless,float fontOffset,float text_RIGHT_CLICK_x,IDWriteTextFormat*pFormat);
+	void RenderGameOverText(bool isEndless, float maxKillCount, float fontOffset,float text_RIGHT_CLICK_x,IDWriteTextFormat*pFormat);
 
 	//ゲームクリア時の文字の表示
 	void RenderGameClearText(float fontOffset, float text_RIGHT_CLICK_x, IDWriteTextFormat* pFormat);

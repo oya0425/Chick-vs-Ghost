@@ -2221,7 +2221,7 @@ void SceneMain::render()
 	break;
 	case GameOver:
 	{
-		m_mainTextUI->RenderGameOverText(m_isEndless, fontOffset, text_RIGHT_CLICK_x, textFormat[0]);
+		m_mainTextUI->RenderGameOverText(m_isEndless, waveManager->GetTotalKillCount(), fontOffset, text_RIGHT_CLICK_x, textFormat[0]);
 
 		break;
 	}
@@ -4622,6 +4622,8 @@ void SceneMain::UpdateGameOver()
 	soundManager->StopSE(SE_GRILL);
 	soundManager->PlayBGM(BGM_GAMEOVER);
 	
+	CleanUpScene();
+
 	//=====================================================
 	// プレイヤーのモデルを隠し、画像を表示する
 	//=====================================================
