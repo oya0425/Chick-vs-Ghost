@@ -77,9 +77,9 @@ void CharacterBase::AddHP(float value,bool isMuteki)
         m_currentHP = m_maxHP;
     if (m_currentHP < 0)
         m_currentHP = 0;
-    if (isMuteki && m_currentHP <= 0.0f)
+    if (isMuteki && m_currentHP <= 5.0f)
     {
-        m_currentHP = 1.0f;
+        m_currentHP = 5.0f;
     }
 }
 //======================================================================

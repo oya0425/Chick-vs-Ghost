@@ -1407,7 +1407,6 @@ void SceneMain::InitializeFont()
 	textFormat = new IDWriteTextFormat * [FontNum];
 
 	textFormat[0] = vnFont::create(L"Mochiy Pop P One", 50);
-
 }
 
 //音の初期化
@@ -1423,6 +1422,7 @@ void SceneMain::InitializeTutorial()
 {
 	// タイトル画面の設定を引き継ぐ
 	m_isTutorial = g_isTutorial;
+
 
 	if (!m_isTutorial)
 	{
@@ -3730,11 +3730,6 @@ void SceneMain::UpdateTutorialReview()
 //==================================================
 void SceneMain::UpdateTutorial(float deltaTime)
 {
-	//ボタンを画面で押すかキーボードで押す（キーボードは仮）
-	if (vnKeyboard::trg(DIK_RETURN))
-	{
-		m_isTutorial = false;
-	}
 	//===================================================
 	// --- 説明UIが出る ---
 	//===================================================
@@ -4761,7 +4756,7 @@ void SceneMain::UpdateBlocksCollision()
 		// 通常の衝突、マグマ接触
 		if (block->GetIsMagma() && (isColliding || isNearMagma))
 		{
-			m_pNewPlayer->Damage(defualtDamage * 0.05f,m_isTutorial);
+			m_pNewPlayer->Damage(defualtDamage * 0.05f,m_pNewPlayer->GetIsMuteki());
 			isTouchingMagma = true;
 		}
 	}

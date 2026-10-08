@@ -398,7 +398,7 @@ void SceneMainTextUI::RenderPlayText(
 //================================================================
 // --- ゲームオーバー時の文字の表示 ---
 //================================================================
-void SceneMainTextUI::RenderGameOverText(bool isEndless,float maxKillCount,float fontOffset, float text_RIGHT_CLICK_x, IDWriteTextFormat* pFormat)
+void SceneMainTextUI::RenderGameOverText(bool isEndless,int maxKillCount,float fontOffset, float text_RIGHT_CLICK_x, IDWriteTextFormat* pFormat)
 {
     //==================================================
     // 共通設定

@@ -81,6 +81,7 @@ void NewPlayerClass::ResetSkillCoolTime()
 void NewPlayerClass::SetUpKaraModel(vnModel* model)
 {
 	m_pUpKara = model;
+	
 	ResetUpKara();
 }
 
