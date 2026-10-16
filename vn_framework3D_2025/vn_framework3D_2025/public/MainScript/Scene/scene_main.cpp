@@ -460,8 +460,6 @@ bool SceneMain::initialize()
 	// --- ウェーブマネージャー ---
 	waveManager = new WaveManager();
 	m_mainTextUI = std::make_unique<SceneMainTextUI>();
-
-
 	InitializeVariables();
 	InitializePlayer();
 	InitializeEnemies();
@@ -1406,7 +1404,8 @@ void SceneMain::InitializeFont()
 	FontNum = 1;
 	textFormat = new IDWriteTextFormat * [FontNum];
 
-	textFormat[0] = vnFont::create(L"Mochiy Pop P One", 50);
+	//textFormat[0] = vnFont::create(L"Mochiy Pop P One", 50);
+	textFormat[0] = vnFont::create(FontName, 50);
 }
 
 //音の初期化
@@ -1468,30 +1467,19 @@ void SceneMain::terminate()
 	// GPUの完了待ち
 	vnDirect3D::waitForGpu();
 
-	DeleteObject_Main(m_pBullet);
-	m_pBullet = nullptr;
-	DeleteObject_Main(m_pNewPlayer);
-	m_pNewPlayer = nullptr; 
-
-	deleteObject(m_pGameOverPlayer);
-	m_pGameOverPlayer = nullptr;
-
+	if (m_pBullet) { DeleteObject_Main(m_pBullet); m_pBullet = nullptr; }
+	if (m_pNewPlayer) { DeleteObject_Main(m_pNewPlayer); m_pNewPlayer = nullptr; }
+	if (m_pGameOverPlayer) { deleteObject(m_pGameOverPlayer); m_pGameOverPlayer = nullptr; }
 
 	// --- ポーズ中の棒グラフ ---
 	auto& meleebar = enemyPool->GetMeleeBar();
-	deleteObject(meleebar.pFront);
-	deleteObject(meleebar.pBack);
-	deleteObject(meleebar.pBackBlack);
+	{ deleteObject(meleebar.pFront); deleteObject(meleebar.pBack); deleteObject(meleebar.pBackBlack); }
 
 	auto& rangebar = enemyPool->GetRangeBar();
-	deleteObject(rangebar.pFront);
-	deleteObject(rangebar.pBack);
-	deleteObject(rangebar.pBackBlack);
+	{ deleteObject(rangebar.pFront); deleteObject(rangebar.pBack); deleteObject(rangebar.pBackBlack); }
 
 	auto& pullbar = enemyPool->GetPullBar();
-	deleteObject(pullbar.pFront);
-	deleteObject(pullbar.pBack);
-	deleteObject(pullbar.pBackBlack);
+	{ deleteObject(pullbar.pFront); deleteObject(pullbar.pBack); deleteObject(pullbar.pBackBlack); }
 
 	deleteObject(enemyPool->GetImageTab());
 	deleteObject(enemyPool->GetImageA());
@@ -1526,60 +1514,42 @@ void SceneMain::terminate()
 		enemyPool = nullptr;
 	}
 
-
-
 	// --- 背景・ギミック ---
 	for (int i = 0; i < FENCE_NUM_MAIN; i++) {
-		deleteObject(pFence[i]);
-		pFence[i] = nullptr;
+		deleteObject(pFence[i]); pFence[i] = nullptr;		
 	}
 
 	for (int i = 0; i < TREE_NUM*2; i++) {
-		deleteObject(pTree[i]);
-		pTree[i] = nullptr;
+		deleteObject(pTree[i]); pTree[i] = nullptr;
 	}
 
 	deleteObject(pGround); pGround = nullptr;
 	deleteObject(pSky);    pSky = nullptr;
-
 	// --- ブロック ---
 	if (m_pBlockManager)
 	{
 		auto& blocks = m_pBlockManager->GetAllBlocks();
 		for (auto block : blocks)
 		{
-			if (!block)continue;
-			// ブロックのモデルとパーツを先に削除
-			DeleteObject_Main(block);
+			if (!block)continue; DeleteObject_Main(block);// ブロックのモデルとパーツを先に削除
 		}
 		// リストを空にしてゴミを掃除
 		blocks.clear();
 		// プール本体を削除してNULLにする
-		delete m_pBlockManager;
-		m_pBlockManager = nullptr;
+		delete m_pBlockManager; m_pBlockManager = nullptr;		
 	}
 
 	// --- その他 ---
-	delete waveManager;
-	waveManager = nullptr;
-
-	deleteObject(pEmitter);
-	pEmitter = nullptr;
-
-	deleteObject(pDustEmitter);
-	pDustEmitter = nullptr;
+	if (waveManager) { delete waveManager; waveManager = nullptr; }
+	if (pEmitter) { deleteObject(pEmitter); pEmitter = nullptr; }
+	if (pDustEmitter) { deleteObject(pDustEmitter); pDustEmitter = nullptr; }
 
 	//プレイヤーHPバー
-	deleteObject(pHpBarBackBlack);
-	deleteObject(pHpBarBack);
-	deleteObject(pHpBarFront);
-	pHpBarBackBlack = nullptr;
-	pHpBarBack = nullptr;
-	pHpBarFront = nullptr;
+	deleteObject(pHpBarBackBlack);	 pHpBarBackBlack = nullptr;
+	deleteObject(pHpBarBack);		 pHpBarBack = nullptr;
+	deleteObject(pHpBarFront);		 pHpBarFront = nullptr;
 
-	deleteObject(pIconPlayer);
-	pIconPlayer = nullptr;
-
+	deleteObject(pIconPlayer);	     pIconPlayer = nullptr;
 	//ボスHPバー
 	deleteObject(pBossHpBarBackBlack);
 	deleteObject(pBossHpBarBack);
@@ -1597,24 +1567,21 @@ void SceneMain::terminate()
 	}
 
 	//経験値バー
-	deleteObject(pExpBarBackBlack);
-	deleteObject(pExpBarBack);
-	deleteObject(pExpBarFront);
-	pExpBarBackBlack = nullptr;
-	pExpBarBack = nullptr;
-	pExpBarFront = nullptr;
-
+	deleteObject(pExpBarBackBlack);    pExpBarBackBlack = nullptr;
+	deleteObject(pExpBarBack);		   pExpBarBack = nullptr;
+	deleteObject(pExpBarFront);		   pExpBarFront = nullptr;
+	
 	//範囲攻撃バー
-	deleteObject(pAreaAtkBtnBackBlack);
-	deleteObject(pAreaAtkBtnBack);
-	deleteObject(pAreaAtkBtnFront);
-	deleteObject(pAreaSkillIcon);
-
+	deleteObject(pAreaAtkBtnBackBlack);	  pAreaAtkBtnBackBlack = nullptr;
+	deleteObject(pAreaAtkBtnBack);		  pAreaAtkBtnBack = nullptr;
+	deleteObject(pAreaAtkBtnFront);		  pAreaAtkBtnFront = nullptr;
+	deleteObject(pAreaSkillIcon);		  pAreaSkillIcon = nullptr;	
+	
 	//引き寄せ攻撃バー
-	deleteObject(pPullBtnBackBlack);
-	deleteObject(pPullBtnBack);
-	deleteObject(pPullBtnFront);
-	deleteObject(pPullSkillIcon);
+	deleteObject(pPullBtnBackBlack);	  pPullBtnBackBlack = nullptr;
+	deleteObject(pPullBtnBack);			  pPullBtnBack = nullptr;
+	deleteObject(pPullBtnFront);		  pPullBtnFront = nullptr;
+	deleteObject(pPullSkillIcon);		  pPullSkillIcon = nullptr;
 
 	//コンボの画像
 	for (int i = 0; i < combo_number; i++) {
@@ -1628,21 +1595,13 @@ void SceneMain::terminate()
 	deleteObject(pComboWord);
 
 	// --- WASDのキーボードの画像 ---
-	deleteObject(pImageW);
-	deleteObject(pImageA);
-	deleteObject(pImageS);
-	deleteObject(pImageD);
-	deleteObject(pImageE);
-	deleteObject(pImageQ);
-	deleteObject(pImageTab);
-
-	pImageW = nullptr;
-	pImageA = nullptr;
-	pImageS = nullptr;
-	pImageD = nullptr;
-	pImageE = nullptr;
-	pImageQ = nullptr;
-	pImageTab = nullptr;
+	deleteObject(pImageW);		pImageW = nullptr;
+	deleteObject(pImageA);		pImageA = nullptr;
+	deleteObject(pImageS);		pImageS = nullptr;
+	deleteObject(pImageD);		pImageD = nullptr;
+	deleteObject(pImageE);		pImageE = nullptr;
+	deleteObject(pImageQ);		pImageQ = nullptr;
+	deleteObject(pImageTab);	pImageTab = nullptr;
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -1670,23 +1629,15 @@ void SceneMain::terminate()
 	}
 
 	// --- ポーズ中に出る奴 ---
-	deleteObject(m_pUIBackGroundBlackPause);
-	deleteObject(m_pPauseFrame);
-	deleteObject(m_pPauseFrame2);
-	deleteObject(pBackGroundBlack);
-	deleteObject(m_messageBackground);
-	m_pUIBackGroundBlackPause = nullptr;
-	m_pPauseFrame = nullptr;
-	m_pPauseFrame2 = nullptr;
-	pBackGroundBlack = nullptr;
-	m_messageBackground = nullptr;
-
+	deleteObject(m_pUIBackGroundBlackPause);	 m_pUIBackGroundBlackPause = nullptr;
+	deleteObject(m_pPauseFrame);				 m_pPauseFrame = nullptr;
+	deleteObject(m_pPauseFrame2);				 m_pPauseFrame2 = nullptr;
+	deleteObject(pBackGroundBlack);				 pBackGroundBlack = nullptr;
+	deleteObject(m_messageBackground);			 m_messageBackground = nullptr;
 	//Play中
-	deleteObject(pTimeBackGround);
-	deleteObject(pEnemyKillCountBack);
-	pTimeBackGround = nullptr;
-	pEnemyKillCountBack = nullptr;
-	
+	deleteObject(pTimeBackGround);				 pTimeBackGround = nullptr;
+	deleteObject(pEnemyKillCountBack);			 pEnemyKillCountBack = nullptr;
+		
 	//ボタン
 	for (int i = 0; i < (int)UIButton::MaxNum; i++)
 	{
@@ -1707,19 +1658,13 @@ void SceneMain::terminate()
 		deleteObject(m_pUpgradeUI->GetBackGroundImg(i));
 		deleteObject(m_pUpgradeUI->GetMainImg(i));
 	}
-	delete m_pUpgradeUI;
-	m_pUpgradeUI = nullptr;
-
-	// --- レベルアップシステム ---
-	delete m_pExpManager;
-	m_pExpManager = nullptr;
-
+	delete m_pUpgradeUI;         m_pUpgradeUI = nullptr;
+		// --- レベルアップシステム ---
+	delete m_pExpManager;        m_pExpManager = nullptr;
 
 	// ...フォント処理...
 	delete[] textFormat;
 	textFormat = nullptr;
-
-
 }
 
 

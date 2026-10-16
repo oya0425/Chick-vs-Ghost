@@ -202,7 +202,7 @@ IDWriteTextFormat *vnFont::create(const WCHAR *fontname, int size)
 	{
 		IDWriteFontFile* fontFile = nullptr;
 		// 使用したいフォントファイルのパス
-		const wchar_t* filePath = L"data/font/Mochiy_Pop_P_One/MochiyPopPOne-Regular.ttf";
+		const wchar_t* filePath = FontFamilyName;
 
 		if (SUCCEEDED(pDWFactory5->CreateFontFileReference(filePath, NULL, &fontFile)))
 		{

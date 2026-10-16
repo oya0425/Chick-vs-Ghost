@@ -13,6 +13,8 @@
 #define vnFontCHARACTER_MAX	(0x8000)	//1フレームで描画できる文字の数
 
 #define vnFontNUM_MAX		(256)		//確保しておける使用可能フォント名の最大数
+#define FontName (L"Mochiy Pop P One")
+#define FontFamilyName (L"data/font/Mochiy_Pop_P_One/MochiyPopPOne-Regular.ttf")
 
 class vnFont
 {
