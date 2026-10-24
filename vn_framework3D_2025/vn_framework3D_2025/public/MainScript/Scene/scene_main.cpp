@@ -9,10 +9,6 @@
 //グローバル変数
 extern bool g_isTutorial;	//タイトルシーンのチュートリアルをするかどうかの変数（trueでする）
 extern bool g_isEndless;	//タイトルシーンのエンドレスモードにするかどうかの変数（trueでする）
-
-
-
-
 // --- メンバ変数 ---
 namespace {
 
@@ -110,7 +106,6 @@ namespace {
 	constexpr float offScreen = -1000.0f;	//2Dにおける画面外（縦、横共通）
 	constexpr float operationUI_Y = 20.0f;	//操作説明のUIの基準の高さ
 	
-	
 	FXMVECTOR enemyGhostModelSize = XMVectorSet(2, 2, 2, 0);
 	FXMVECTOR enemyGhostColSize = XMVectorSet(2, 2, 2, 0);
 	
@@ -123,7 +118,6 @@ namespace {
 	constexpr float plusFenceRadius = 3.0f;		//フェンスの拡大値
 
 	constexpr float treeRadius = 6.0f;
-
 
 	//================================================================================================
 	// --- UI ---
@@ -152,8 +146,6 @@ namespace {
 	constexpr float combo_w = 25.0f;		//桁が増えたときに左にずらす用
 
 	constexpr int combo_number = 5;	//桁数
-
-
 
 	//UIバー設定（位置、サイズ）
 	// --- HPバー ---
@@ -229,14 +221,10 @@ namespace {
 	constexpr float baseBarWidth = 300.0f;
 	constexpr float baseBarHeight = 12.0f;
 
-
-
-
 	// --- カメラ関係 ---
 	constexpr float defualtRadius = 30.0f;
 	constexpr float defualtTheta  = 92.688f;
 	constexpr float defualtPhi	  = 0.7f;
-
 
 	//特攻状態敵から受けるダメージ
 	constexpr float defualtDamage = 2.0f;
@@ -268,20 +256,16 @@ namespace {
 			L"data/image/BackGroundWhite.png",
 			L"data/image/引き寄せ攻撃のアイコン.png"
 		},
-
 		{
 			L"data/image/IMG_E6067.png",
 			L"data/image/BackGroundWhite.png",
 			L"data/image/IMG_E6067.png"
 		},
-
 		{
 			L"data/image/IMG_E6067.png",
 			L"data/image/BackGround.png",
 			L"data/image/IMG_E6067.png"
 		}
-
-
 	};
 }
 
@@ -1605,26 +1589,22 @@ void SceneMain::terminate()
 
 	for (int i = 0; i < 2; i++)
 	{
-		deleteObject(m_pUIBackGroundBlack[i]);
-		m_pUIBackGroundBlack[i] = nullptr;
+		deleteObject(m_pUIBackGroundBlack[i]);	m_pUIBackGroundBlack[i] = nullptr;
 	}
 	//ミッションの画像
 	for (int i = 0; i < (int)TutorialMission::MaxNum; i++)
 	{
 		if (m_missionUI[i].sprite_back != nullptr)
 		{
-			deleteObject(m_missionUI[i].sprite_back);
-			m_missionUI[i].sprite_back= nullptr;
+			deleteObject(m_missionUI[i].sprite_back);	m_missionUI[i].sprite_back= nullptr;
 		}
 		if (m_missionUI[i].sprite_check_box!= nullptr)
 		{
-			deleteObject(m_missionUI[i].sprite_check_box);
-			m_missionUI[i].sprite_check_box =nullptr;
+			deleteObject(m_missionUI[i].sprite_check_box);	m_missionUI[i].sprite_check_box =nullptr;
 		}
 		if (m_missionUI[i].sprite_check!= nullptr)
 		{
-			deleteObject(m_missionUI[i].sprite_check);
-			m_missionUI[i].sprite_check=nullptr;
+			deleteObject(m_missionUI[i].sprite_check);	m_missionUI[i].sprite_check=nullptr;
 		}
 	}
 
