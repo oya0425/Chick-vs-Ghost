@@ -532,6 +532,8 @@ private:
 	int m_activeCount = 0;
 	int m_spawnNum = 0;
 
+	float m_fpsTimer = 0.0f; int m_frameCount = 0; float m_fps = 0.0f;
+
 private:
 	void RegisterCharacter(vnCharacter* character);
 	void SetModelRenderEnable(vnCharacter* character);

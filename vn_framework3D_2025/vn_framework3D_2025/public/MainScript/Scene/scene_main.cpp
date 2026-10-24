@@ -1652,6 +1652,16 @@ void SceneMain::terminate()
 void SceneMain::execute()
 {
 	float deltaTime = vnScene::getDeltaTime();
+	m_fpsTimer += deltaTime;
+	m_frameCount++;
+	if (m_fpsTimer >= 1.0f)
+	{
+		m_fps = m_frameCount / m_fpsTimer;
+		m_frameCount = 0;
+		m_fpsTimer = 0.0f;
+	}
+
+	vnFont::print(370, 520, L"FPS: %.1f", m_fps);
 
 	//ゲーム開始前、クリア、ゲームオーバー、終了時以外鳴らし続ける
 	if (m_gameState != GameState::GameClear &&
