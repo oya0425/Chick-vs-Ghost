@@ -3138,7 +3138,15 @@ void SceneMain::DebugDraw()
 {
 
 	// 2. 変数の値（float）を文字列に整形（%.0f で小数点以下を非表示、整数として表示）
-	vnFont::print(370,550,L"EXP: %.0f / %.0f", m_pExpManager->GetCurrentExp(), m_pExpManager->GetNeedExp());
+	//vnFont::print(370,550,L"EXP: %.0f / %.0f", m_pExpManager->GetCurrentExp(), m_pExpManager->GetNeedExp());
 
-
+	m_fpsTimer += vnScene::getDeltaTime();
+	m_frameCount++;
+	if (m_fpsTimer >= 1.0f)
+	{
+		m_fps = m_frameCount / m_fpsTimer;
+		m_frameCount = 0;
+		m_fpsTimer = 0.0f;
+	}
+	vnFont::print(370, 520, L"FPS: %.1f", m_fps);
 }
